@@ -14,13 +14,16 @@ class Settings(BaseSettings):
     aws_profile: str = ""
     aws_region: str = ""
 
-    # Bedrock Models
-    bedrock_screening_model: str = "anthropic.claude-3-5-haiku-20241022-v1:0"
-    bedrock_analysis_model: str = "anthropic.claude-sonnet-4-5-20250514-v1:0"
-    bedrock_deep_model: str = "anthropic.claude-opus-4-0-20250514-v1:0"
+    # Bedrock Models (cross-region inference profiles)
+    bedrock_screening_model: str = "us.anthropic.claude-3-5-haiku-20241022-v1:0"
+    bedrock_analysis_model: str = "us.anthropic.claude-sonnet-4-5-20250929-v1:0"
+    bedrock_deep_model: str = "us.anthropic.claude-opus-4-20250514-v1:0"
 
     # Deepgram (cloud STT fallback)
     deepgram_api_key: str = ""
+
+    # Screening
+    screening_interval_seconds: int = 5
 
     # Server
     host: str = "0.0.0.0"

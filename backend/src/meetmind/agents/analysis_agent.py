@@ -6,6 +6,7 @@ risks, and ideas.
 """
 
 import json
+import re
 
 import structlog
 
@@ -100,8 +101,19 @@ class AnalysisAgent:
 
         try:
             result = await self._provider.invoke_analysis(prompt)
-            content = result.get("content", "")
-            parsed = json.loads(str(content))
+            content = str(result.get("content", ""))
+
+            # Extract JSON from response (handles markdown fences, extra text)
+            json_str = content
+            fence_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", content, re.DOTALL)
+            if fence_match:
+                json_str = fence_match.group(1)
+            else:
+                brace_match = re.search(r"\{.*\}", content, re.DOTALL)
+                if brace_match:
+                    json_str = brace_match.group(0)
+
+            parsed = json.loads(json_str)
 
             insight = AnalysisInsight(
                 title=str(parsed.get("title", "Untitled Insight")),

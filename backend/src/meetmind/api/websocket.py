@@ -18,6 +18,7 @@ from meetmind.agents.screening_agent import ScreeningAgent
 from meetmind.core.transcript import TranscriptManager
 from meetmind.providers.bedrock import BedrockProvider
 from meetmind.providers.whisper_stt import transcribe_audio_bytes
+from meetmind.config.settings import settings
 
 logger = structlog.get_logger(__name__)
 
@@ -61,7 +62,9 @@ class ConnectionManager:
         connection_id = str(uuid.uuid4())
         self._active[connection_id] = websocket
 
-        transcript = TranscriptManager()
+        transcript = TranscriptManager(
+            screening_interval=settings.screening_interval_seconds,
+        )
         transcript.set_meeting_id(connection_id)
         self._transcripts[connection_id] = transcript
 

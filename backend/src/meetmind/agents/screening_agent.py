@@ -5,6 +5,7 @@ worth analyzing?" Runs every 30 seconds on buffered text.
 """
 
 import json
+import re
 
 import structlog
 
@@ -66,10 +67,19 @@ class ScreeningAgent:
 
         try:
             result = await self._provider.invoke_screening(text)
-            content = result.get("content", "")
+            content = str(result.get("content", ""))
 
-            # Parse JSON response from Haiku
-            parsed = json.loads(str(content))
+            # Extract JSON from response (handles markdown fences, extra text)
+            json_str = content
+            fence_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", content, re.DOTALL)
+            if fence_match:
+                json_str = fence_match.group(1)
+            else:
+                brace_match = re.search(r"\{.*\}", content, re.DOTALL)
+                if brace_match:
+                    json_str = brace_match.group(0)
+
+            parsed = json.loads(json_str)
             relevant = bool(parsed.get("relevant", False))
             reason = str(parsed.get("reason", "No reason provided"))
 
