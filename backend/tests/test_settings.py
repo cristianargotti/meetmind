@@ -3,10 +3,19 @@
 from meetmind.config.settings import Settings
 
 
-def test_settings_defaults() -> None:
+def test_settings_defaults(monkeypatch: object) -> None:
     """Settings have correct defaults for non-sensitive fields."""
-    # Arrange & Act
-    settings = Settings()
+    # Arrange
+    import os
+    import pytest
+
+    mp = pytest.MonkeyPatch()
+    for key in os.environ:
+        if key.startswith("MEETMIND_"):
+            mp.delenv(key, raising=False)
+
+    # Act
+    settings = Settings(_env_file=None)
 
     # Assert
     assert settings.environment == "dev"
@@ -14,15 +23,30 @@ def test_settings_defaults() -> None:
     assert settings.port == 8000
     assert settings.log_level == "INFO"
 
+    # Cleanup
+    mp.undo()
 
-def test_settings_aws_no_hardcoded_defaults() -> None:
+
+def test_settings_aws_no_hardcoded_defaults(monkeypatch: object) -> None:
     """AWS credentials must come from environment, not hardcoded defaults."""
-    # Arrange & Act
-    settings = Settings()
+    # Arrange
+    import os
+    import pytest
+
+    mp = pytest.MonkeyPatch()
+    for key in os.environ:
+        if key.startswith("MEETMIND_AWS_"):
+            mp.delenv(key, raising=False)
+
+    # Act
+    settings = Settings(_env_file=None)
 
     # Assert — SEC-005: no hardcoded AWS defaults
     assert settings.aws_profile == ""
     assert settings.aws_region == ""
+
+    # Cleanup
+    mp.undo()
 
 
 def test_settings_from_env(monkeypatch: object) -> None:

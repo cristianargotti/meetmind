@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "MeetMind — AI Meeting Assistant",
+  "description": "Capture tab audio from Google Meet, Zoom, and Teams. Get real-time AI insights powered by MeetMind.",
+  "version": "0.1.0",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "48": "icons/icon-48.png"
+    },
+    "default_title": "MeetMind"
+  },
+  "background": {
+    "service_worker": "service-worker.js",
+    "type": "module"
+  },
+  "permissions": [
+    "tabCapture",
+    "offscreen",
+    "storage",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "ws://localhost:8000/*",
+    "wss://localhost:8000/*"
+  ]
+}

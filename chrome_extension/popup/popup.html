@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=400">
+    <title>MeetMind</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <span class="logo">🧠</span>
+            <h1 class="title">MeetMind</h1>
+        </div>
+        <div class="header-right">
+            <span id="connection-badge" class="badge badge--disconnected">
+                <span class="badge-dot"></span>
+                <span class="badge-text">Offline</span>
+            </span>
+        </div>
+    </header>
+
+    <!-- Main Controls -->
+    <main class="main">
+        <!-- Capture Button -->
+        <button id="capture-btn" class="capture-btn">
+            <span class="capture-btn__icon" id="capture-icon">🎙️</span>
+            <span class="capture-btn__label" id="capture-label">Start Capture</span>
+        </button>
+
+        <!-- Status -->
+        <p class="status-text" id="status-text">Ready to capture tab audio</p>
+
+        <!-- Live Transcript -->
+        <section class="transcript-section" id="transcript-section" style="display: none;">
+            <h2 class="section-title">📝 Live Transcript</h2>
+            <div class="transcript-box" id="transcript-box"></div>
+        </section>
+
+        <!-- Insights -->
+        <section class="insights-section" id="insights-section" style="display: none;">
+            <h2 class="section-title">
+                ✨ AI Insights
+                <span class="insight-count" id="insight-count">0</span>
+            </h2>
+            <div class="insights-list" id="insights-list"></div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <button id="settings-btn" class="icon-btn" title="Settings">⚙️</button>
+        <span class="version">v0.1.0</span>
+    </footer>
+
+    <!-- Settings Modal -->
+    <div class="modal" id="settings-modal" style="display: none;">
+        <div class="modal-content">
+            <h2>Settings</h2>
+            <label class="form-label">
+                Backend URL
+                <input type="text" id="backend-url" class="form-input" placeholder="ws://localhost:8000/ws"
+                    value="ws://localhost:8000/ws">
+            </label>
+            <div class="modal-actions">
+                <button id="save-settings-btn" class="btn btn--primary">Save</button>
+                <button id="close-settings-btn" class="btn btn--ghost">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+
+</html>

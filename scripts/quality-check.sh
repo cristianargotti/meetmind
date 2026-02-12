@@ -250,21 +250,94 @@ echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━�
 
 if [[ -d "$FLUTTER_DIR" ]]; then
     cd "$FLUTTER_DIR"
-    
-    # Check FVM config exists
-    if [[ -f ".fvmrc" ]]; then
+
+    # Detect Flutter command (FVM or global)
+    if command -v fvm &> /dev/null && [[ -f ".fvmrc" ]]; then
+        FLUTTER_CMD="fvm flutter"
+        DART_CMD="fvm dart"
         FVM_VERSION=$(cat .fvmrc | grep -o '"flutter".*"[0-9.]*"' | grep -o '[0-9.]*' || echo "?")
         pass "FVM: Pinned to Flutter $FVM_VERSION"
+    elif command -v flutter &> /dev/null; then
+        FLUTTER_CMD="flutter"
+        DART_CMD="dart"
+        warn "FVM: Not using FVM — falling back to global Flutter"
     else
-        warn "FVM: No .fvmrc found — version not pinned"
+        warn "FLUTTER: Flutter SDK not found — skipping Flutter checks"
+        FLUTTER_CMD=""
     fi
-    
-    # Check for dynamic types in Dart
+
+    if [[ -n "$FLUTTER_CMD" ]]; then
+        # FLUTTER ANALYZE (strict — 0 errors)
+        echo ""
+        ANALYZE_OUTPUT=$(FLUTTER_SUPPRESS_ANALYTICS=true $FLUTTER_CMD analyze --no-pub 2>&1 || true)
+        ANALYZE_ERRORS=$(echo "$ANALYZE_OUTPUT" | grep -oE '[0-9]+ issue' | grep -oE '[0-9]+' || echo "0")
+        if echo "$ANALYZE_OUTPUT" | grep -q "No issues found"; then
+            pass "DART-LINT: flutter analyze — 0 issues"
+        else
+            fail "DART-LINT: flutter analyze — $ANALYZE_ERRORS issue(s)"
+            echo "$ANALYZE_OUTPUT" | grep -E "error|warning|info" | head -15
+        fi
+
+        # FLUTTER FORMAT CHECK
+        echo ""
+        DART_FORMAT_OUTPUT=$($DART_CMD format --set-exit-if-changed --output=none lib/ 2>&1)
+        DART_FORMAT_EXIT=$?
+        if [[ $DART_FORMAT_EXIT -eq 0 ]]; then
+            pass "DART-FORMAT: All Dart files formatted"
+        else
+            if $FIX_MODE; then
+                info "Running dart format..."
+                $DART_CMD format lib/ 2>/dev/null || true
+                pass "DART-FORMAT: Auto-formatted"
+            else
+                FORMAT_FILES=$(echo "$DART_FORMAT_OUTPUT" | grep -c "\.dart$" || echo "?")
+                fail "DART-FORMAT: $FORMAT_FILES file(s) need formatting. Run: dart format lib/"
+            fi
+        fi
+
+        # FLUTTER TESTS
+        echo ""
+        FLUTTER_TEST_OUTPUT=$(FLUTTER_SUPPRESS_ANALYTICS=true $FLUTTER_CMD test --no-pub 2>&1 || true)
+        if echo "$FLUTTER_TEST_OUTPUT" | grep -q "All tests passed"; then
+            FLUTTER_PASSED=$(echo "$FLUTTER_TEST_OUTPUT" | grep -oE '[0-9]+ test' | grep -oE '[0-9]+' || echo "?")
+            pass "DART-TESTS: $FLUTTER_PASSED test(s) passed"
+        elif echo "$FLUTTER_TEST_OUTPUT" | grep -q "No tests ran"; then
+            warn "DART-TESTS: No tests found — add tests to flutter_app/test/"
+        else
+            fail "DART-TESTS: Flutter tests failed"
+            echo "$FLUTTER_TEST_OUTPUT" | tail -10
+        fi
+    fi
+
+    # CODE-005: No 'dynamic' types in Dart
+    echo ""
     DYNAMIC_COUNT=$(grep -rn "dynamic " "$FLUTTER_DIR/lib/" 2>/dev/null | grep -v "// ignore" | wc -l | tr -d ' ')
     if [[ "$DYNAMIC_COUNT" -eq 0 ]]; then
         pass "CODE-005: No 'dynamic' types in Dart"
     else
-        warn "CODE-005: $DYNAMIC_COUNT uses of 'dynamic' in Dart — prefer explicit types"
+        fail "CODE-005: $DYNAMIC_COUNT uses of 'dynamic' in Dart — use explicit types"
+        grep -rn "dynamic " "$FLUTTER_DIR/lib/" 2>/dev/null | grep -v "// ignore" | head -5
+    fi
+
+    # ANTI-PATTERN: No print() in Dart
+    DART_PRINTS=$(grep -rn "print(" "$FLUTTER_DIR/lib/" 2>/dev/null | grep -v "// ignore" | wc -l | tr -d ' ')
+    if [[ "$DART_PRINTS" -eq 0 ]]; then
+        pass "DART-ANTI: No print() in Dart source — use debugPrint or logger"
+    else
+        fail "DART-ANTI: $DART_PRINTS print() found — use debugPrint or logger"
+    fi
+
+    # Dart file size check
+    DART_BIG_FILES=0
+    while IFS= read -r file; do
+        lines=$(wc -l < "$file" | tr -d ' ')
+        if [[ "$lines" -gt 500 ]]; then
+            warn "CODE-001: $file — $lines lines (limit: 500)"
+            ((DART_BIG_FILES++))
+        fi
+    done < <(find "$FLUTTER_DIR/lib" -name "*.dart" -type f 2>/dev/null)
+    if [[ "$DART_BIG_FILES" -eq 0 ]]; then
+        pass "CODE-001: All Dart files ≤500 lines"
     fi
 else
     warn "FLUTTER: flutter_app/ not found — skipping Flutter checks"
