@@ -1,7 +1,5 @@
 """Tests for MeetMind configuration settings."""
 
-import os
-
 from meetmind.config.settings import Settings
 
 
