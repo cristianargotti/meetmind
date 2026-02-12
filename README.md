@@ -1,18 +1,25 @@
 # 🧠 MeetMind
 
-> The most powerful meeting AI tool — on-device transcription, real-time AI, Digital Cris.
+> The most powerful meeting AI tool — on-device transcription, real-time AI insights, proactive participation as "Digital Cris".
 
 ## Architecture
 
 ```
-📱 Flutter App → dart:ffi → ONNX Runtime → Voxtral 4B (on-device STT)
+📱 Flutter App (Dart) ──► dart:ffi ──► whisper.cpp ──► Whisper Base (on-device STT)
+       │                                    └──► CoreML/Metal (iOS) + NNAPI (Android)
        │
-       └── WebSocket → ☁️ FastAPI Backend
-                              ├── Haiku 3.5 (screening)
-                              ├── Sonnet 4.5 (analysis)
-                              └── Opus 4.6 (deep think)
+       └──► WebSocket ──► ☁️ FastAPI Backend (Python)
+                                  │
+                                  ├──► Haiku 3.5 (screening, $0.05/hr)
+                                  ├──► Sonnet 4.5 (analysis, $0.50/hr)
+                                  └──► Opus 4.6 (deep think, $1.00/hr)
 
-🌐 Chrome Extension (MV3) → Same Backend
+🌐 Chrome Extension (MV3) ──► tabCapture ──► MediaRecorder (5s chunks)
+                                                    │
+                                                    ▼
+                                            ☁️ FastAPI Backend
+                                                    │
+                                      ffmpeg ──► faster-whisper ──► AI Pipeline
 ```
 
 ## Quick Start
@@ -21,8 +28,9 @@
 ```bash
 cd backend
 uv sync
-uv run pytest                        # Run tests
-uv run uvicorn meetmind.main:app     # Start server
+cp .env.example .env          # Configure environment
+uv run pytest                 # Run tests (41 tests, 84% coverage)
+uv run uvicorn meetmind.main:app --reload  # Start server
 ```
 
 ### Flutter App
@@ -30,47 +38,78 @@ uv run uvicorn meetmind.main:app     # Start server
 cd flutter_app
 fvm use 3.38.3
 fvm flutter pub get
-fvm flutter test                     # Run tests
-fvm flutter run                      # Run app
+fvm flutter test              # Run tests
+fvm flutter run               # Run app
+```
+
+### Chrome Extension
+```bash
+# 1. Open chrome://extensions/
+# 2. Enable Developer Mode
+# 3. Load unpacked → select chrome_extension/
+# 4. Start backend, then click 🧠 MeetMind icon
 ```
 
 ### Quality Gates
 ```bash
-# Python
-uv run ruff check src/ tests/
-uv run mypy --strict src/
-uv run pytest --cov=src --cov-fail-under=80
-
-# Flutter
-fvm dart analyze
-fvm dart format --set-exit-if-changed .
-fvm flutter test --coverage
+./scripts/quality-check.sh    # 18/18 gates: Security, Lint, Format, Types, Tests, Coverage
 ```
 
 ## Project Structure
 
 ```
 meetmind/
-├── flutter_app/          # 📱 Flutter (Dart) — Mobile + Web
-├── backend/              # ☁️ FastAPI (Python) — Hexagonal Architecture
+├── flutter_app/              # 📱 Flutter (Dart) — Mobile + Web
+│   ├── lib/
+│   │   ├── config/           # Theme, Router
+│   │   ├── features/         # Screens (Home, Meeting, History, Settings)
+│   │   ├── models/           # Domain models (Freezed-style)
+│   │   ├── providers/        # Riverpod state management
+│   │   ├── services/         # WebSocket, Audio, Permissions
+│   │   └── native/           # dart:ffi whisper.cpp bridge
+│   └── native/               # C++ plugin (whisper.cpp + CMake)
+├── backend/                  # ☁️ FastAPI (Python 3.12) — Hexagonal Architecture
 │   └── src/meetmind/
-│       ├── agents/       # AI agents (Screening, Analysis, Digital Cris)
-│       ├── providers/    # External adapters (Bedrock, Deepgram)
-│       ├── core/         # Domain logic
-│       ├── api/          # HTTP + WebSocket endpoints
-│       ├── config/       # Settings (Pydantic)
-│       ├── security/     # Input validation
-│       └── utils/        # Logging, helpers
-├── chrome_extension/     # 🌐 Chrome Extension (MV3)
-└── docs/                 # 📚 ADRs, documentation
+│       ├── agents/           # AI agents (Screening, Analysis)
+│       ├── providers/        # Bedrock, Whisper STT, Deepgram
+│       ├── core/             # Domain logic (Transcript)
+│       ├── api/              # HTTP + WebSocket endpoints
+│       ├── config/           # Settings (Pydantic)
+│       └── security/         # Input validation
+├── chrome_extension/         # 🌐 Chrome Extension (MV3)
+│   ├── popup/                # Control panel UI (dark theme)
+│   ├── offscreen/            # Audio recording (MediaRecorder)
+│   └── service-worker.js     # Tab capture + message routing
+├── infra/                    # 🏗️ Terraform (IAM for Bedrock)
+├── scripts/                  # 🔧 quality-check.sh (18 gates)
+└── docs/                     # 📚 Documentation
 ```
 
 ## Tech Stack
 
-| Component | Technology |
-|-----------|-----------|
-| Mobile/Web | Flutter (Dart) via FVM |
-| STT on-device | Voxtral Mini 4B (ONNX Runtime) |
-| Backend | FastAPI (Python 3.12) |
-| AI | Claude Haiku/Sonnet/Opus (AWS Bedrock) |
-| AWS Profile | `mibaggy-co` |
+| Component | Technology | Rationale |
+|-----------|------------|-----------|
+| Mobile/Web | **Flutter** (Dart) via FVM 3.38.3 | AOT native, `dart:ffi` → C++ |
+| STT on-device | **whisper.cpp** (ggerganov, MIT) | CoreML/Metal, 99 languages |
+| STT server | **faster-whisper** (CTranslate2) | CPU int8, local processing |
+| Backend | **FastAPI** (Python 3.12) | Hexagonal Architecture |
+| AI screening | **Claude Haiku 3.5** (Bedrock) | $0.05/hr |
+| AI analysis | **Claude Sonnet 4.5** (Bedrock) | $0.50/hr |
+| AI deep think | **Claude Opus 4.6** (Bedrock) | 1M token context |
+| State mgmt | **Riverpod** | Compile-safe DI |
+| Extension | **Manifest V3** | `tabCapture` + Offscreen |
+
+## Quality
+
+| Metric | Value |
+|--------|-------|
+| Python tests | 41 passing |
+| Coverage | 84% (≥80% required) |
+| Quality gates | 18/18 |
+| MyPy | `--strict` mode, 0 errors |
+| Ruff | 0 lint errors, 100% formatted |
+| Security | gitleaks scan, no secrets |
+
+## License
+
+Private — © Cristian Reyes

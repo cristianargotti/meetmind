@@ -42,3 +42,15 @@ backend/.venv/
 *.pem
 *.key
 credentials.json
+
+# ==== ML Models ====
+*.bin
+*.ggml
+*.onnx
+
+# ==== Temp Audio ====
+*.webm
+*.wav
+
+# ==== Misc ====
+.pub-cache/
