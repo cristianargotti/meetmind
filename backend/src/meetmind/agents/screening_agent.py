@@ -1,0 +1,112 @@
+"""Screening agent — Haiku 3.5 for fast relevance filtering.
+
+Uses the cheapest model to answer: "Is this transcript segment
+worth analyzing?" Runs every 30 seconds on buffered text.
+"""
+
+import json
+
+import structlog
+
+from meetmind.providers.bedrock import BedrockProvider
+
+logger = structlog.get_logger(__name__)
+
+
+class ScreeningResult:
+    """Result of a screening invocation."""
+
+    def __init__(self, relevant: bool, reason: str, text_length: int) -> None:
+        """Initialize a screening result.
+
+        Args:
+            relevant: Whether the segment is relevant.
+            reason: Why the segment is/isn't relevant.
+            text_length: Length of the screened text.
+        """
+        self.relevant = relevant
+        self.reason = reason
+        self.text_length = text_length
+
+    def to_dict(self) -> dict[str, object]:
+        """Convert to dictionary for WebSocket transmission."""
+        return {
+            "relevant": self.relevant,
+            "reason": self.reason,
+            "text_length": self.text_length,
+        }
+
+
+class ScreeningAgent:
+    """AI screening agent — filters transcript for relevance.
+
+    Uses Claude Haiku 3.5 via Bedrock to quickly determine if
+    a transcript segment contains actionable content.
+    """
+
+    def __init__(self, provider: BedrockProvider) -> None:
+        """Initialize with a Bedrock provider.
+
+        Args:
+            provider: Bedrock LLM provider instance.
+        """
+        self._provider = provider
+
+    async def screen(self, text: str) -> ScreeningResult:
+        """Screen a transcript segment for relevance.
+
+        Args:
+            text: Transcript text to screen.
+
+        Returns:
+            ScreeningResult with relevance determination.
+        """
+        if not text.strip():
+            return ScreeningResult(relevant=False, reason="Empty text", text_length=0)
+
+        try:
+            result = await self._provider.invoke_screening(text)
+            content = result.get("content", "")
+
+            # Parse JSON response from Haiku
+            parsed = json.loads(str(content))
+            relevant = bool(parsed.get("relevant", False))
+            reason = str(parsed.get("reason", "No reason provided"))
+
+            logger.info(
+                "screening_complete",
+                relevant=relevant,
+                reason=reason,
+                text_length=len(text),
+                latency_ms=result.get("latency_ms"),
+            )
+
+            return ScreeningResult(
+                relevant=relevant,
+                reason=reason,
+                text_length=len(text),
+            )
+
+        except json.JSONDecodeError:
+            logger.warning(
+                "screening_json_parse_error",
+                text_length=len(text),
+                raw_content=str(result.get("content", ""))[:200],
+            )
+            # Default to relevant on parse failure — better safe than sorry
+            return ScreeningResult(
+                relevant=True,
+                reason="Failed to parse screening response",
+                text_length=len(text),
+            )
+        except Exception as e:
+            logger.error(
+                "screening_error",
+                error=str(e),
+                text_length=len(text),
+            )
+            return ScreeningResult(
+                relevant=False,
+                reason=f"Screening error: {e!s}",
+                text_length=len(text),
+            )
