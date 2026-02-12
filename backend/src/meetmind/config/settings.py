@@ -10,9 +10,9 @@ class Settings(BaseSettings):
     environment: str = "dev"
     debug: bool = False
 
-    # AWS
-    aws_profile: str = "mibaggy-co"
-    aws_region: str = "us-east-1"
+    # AWS (loaded from .env — never hardcoded)
+    aws_profile: str = ""
+    aws_region: str = ""
 
     # Bedrock Models
     bedrock_screening_model: str = "anthropic.claude-3-5-haiku-20241022-v1:0"

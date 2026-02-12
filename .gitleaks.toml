@@ -1,0 +1,12 @@
+# Gitleaks config for MeetMind
+# Ignore lock files and generated Flutter assets
+
+[allowlist]
+paths = [
+    '''flutter_app/pubspec\.lock''',
+    '''flutter_app/ios/.*''',
+    '''flutter_app/android/.*''',
+    '''flutter_app/web/.*''',
+    '''\.fvmrc''',
+    '''uv\.lock''',
+]

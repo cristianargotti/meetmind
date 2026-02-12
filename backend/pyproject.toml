@@ -38,6 +38,10 @@ target-version = "py312"
 [tool.ruff.lint]
 select = ["E", "W", "F", "I", "N", "UP", "S", "B", "A", "C4", "SIM", "TCH", "RUF"]
 
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101"]  # assert is fine in tests
+"src/meetmind/config/settings.py" = ["S104"]  # 0.0.0.0 binding is overridden by env
+
 [tool.mypy]
 strict = true
 python_version = "3.12"
