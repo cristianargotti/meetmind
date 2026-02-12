@@ -1,30 +1,62 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'package:meetmind/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  setUp(() {
+    // Prevent GoogleFonts from making HTTP requests in tests
+    GoogleFonts.config.allowRuntimeFetching = false;
+  });
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+  Widget buildApp() {
+    return const ProviderScope(child: MeetMindApp());
+  }
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+  testWidgets('App renders home screen with title', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(1170, 2532);
+    tester.view.devicePixelRatio = 3.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    await tester.pumpWidget(buildApp());
+    // Use pump with duration instead of pumpAndSettle —
+    // flutter_animate has repeat animations that never settle
+    await tester.pump(const Duration(seconds: 2));
+
+    expect(find.text('MeetMind'), findsWidgets);
+    expect(find.text('Your AI meeting companion'), findsOneWidget);
+  });
+
+  testWidgets('Home screen has start meeting FAB', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1170, 2532);
+    tester.view.devicePixelRatio = 3.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(buildApp());
+    await tester.pump(const Duration(seconds: 2));
+
+    expect(find.byType(FloatingActionButton), findsOneWidget);
+    expect(find.byIcon(Icons.mic), findsWidgets);
+  });
+
+  testWidgets('Bottom navigation has 3 items', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1170, 2532);
+    tester.view.devicePixelRatio = 3.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(buildApp());
+    await tester.pump(const Duration(seconds: 2));
+
+    expect(find.byType(BottomNavigationBar), findsOneWidget);
+    expect(find.text('Home'), findsOneWidget);
+    expect(find.text('History'), findsOneWidget);
+    expect(find.text('Settings'), findsOneWidget);
   });
 }
