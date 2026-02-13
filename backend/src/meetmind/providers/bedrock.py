@@ -172,6 +172,50 @@ class BedrockProvider:
             ),
         )
 
+    async def invoke_copilot(self, prompt: str) -> dict[str, Any]:
+        """Invoke Sonnet for copilot — conversational meeting assistant.
+
+        Uses the Cris Persona system prompt for natural, actionable responses.
+        Keeps responses short (2-5 lines) since the user is in a live meeting.
+
+        Args:
+            prompt: User question with meeting transcript context.
+
+        Returns:
+            Bedrock response dict.
+        """
+        from meetmind.agents.copilot_agent import CRIS_PERSONA
+
+        return await self.invoke(
+            model_id=settings.bedrock_copilot_model,
+            prompt=prompt,
+            max_tokens=1024,
+            temperature=0.5,
+            system_prompt=CRIS_PERSONA,
+        )
+
+    async def invoke_summary(self, prompt: str) -> dict[str, Any]:
+        """Invoke Sonnet for post-meeting summary — structured JSON output.
+
+        Uses higher max_tokens (2048) for comprehensive summaries with
+        decisions, action items, risks, and next steps.
+
+        Args:
+            prompt: Full meeting transcript for summarization.
+
+        Returns:
+            Bedrock response dict.
+        """
+        from meetmind.agents.summary_agent import SUMMARY_SYSTEM_PROMPT
+
+        return await self.invoke(
+            model_id=settings.bedrock_analysis_model,
+            prompt=prompt,
+            max_tokens=2048,
+            temperature=0.3,
+            system_prompt=SUMMARY_SYSTEM_PROMPT,
+        )
+
     @property
     def usage_stats(self) -> dict[str, int]:
         """Return cumulative token usage and request count."""
