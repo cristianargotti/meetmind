@@ -17,17 +17,28 @@ logger = structlog.get_logger(__name__)
 class ScreeningResult:
     """Result of a screening invocation."""
 
-    def __init__(self, relevant: bool, reason: str, text_length: int) -> None:
+    def __init__(
+        self,
+        relevant: bool,
+        reason: str,
+        text_length: int,
+        input_tokens: int = 0,
+        output_tokens: int = 0,
+    ) -> None:
         """Initialize a screening result.
 
         Args:
             relevant: Whether the segment is relevant.
             reason: Why the segment is/isn't relevant.
             text_length: Length of the screened text.
+            input_tokens: Number of input tokens used.
+            output_tokens: Number of output tokens used.
         """
         self.relevant = relevant
         self.reason = reason
         self.text_length = text_length
+        self.input_tokens = input_tokens
+        self.output_tokens = output_tokens
 
     def to_dict(self) -> dict[str, object]:
         """Convert to dictionary for WebSocket transmission."""
@@ -74,9 +85,7 @@ class ScreeningAgent:
                 parsed = json.loads(content)
             except json.JSONDecodeError:
                 json_str = content
-                fence_match = re.search(
-                    r"```(?:json)?\s*(\{.*?\})\s*```", content, re.DOTALL
-                )
+                fence_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", content, re.DOTALL)
                 if fence_match:
                     json_str = fence_match.group(1)
                 else:
@@ -99,6 +108,8 @@ class ScreeningAgent:
                 relevant=relevant,
                 reason=reason,
                 text_length=len(text),
+                input_tokens=result.get("input_tokens", 0),
+                output_tokens=result.get("output_tokens", 0),
             )
 
         except json.JSONDecodeError:

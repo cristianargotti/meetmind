@@ -96,7 +96,7 @@ async def test_invoke_screening(mock_session: MagicMock, mock_bedrock_client: Ma
     provider = BedrockProvider()
 
     # Act
-    result = await provider.invoke_screening("test transcript")
+    await provider.invoke_screening("test transcript")
 
     # Assert
     call_args = mock_bedrock_client.invoke_model.call_args

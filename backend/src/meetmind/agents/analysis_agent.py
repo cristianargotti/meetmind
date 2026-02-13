@@ -24,6 +24,8 @@ class AnalysisInsight:
         analysis: str,
         recommendation: str,
         category: str,
+        input_tokens: int = 0,
+        output_tokens: int = 0,
     ) -> None:
         """Initialize an analysis insight.
 
@@ -32,11 +34,15 @@ class AnalysisInsight:
             analysis: Detailed analysis text.
             recommendation: Actionable recommendation.
             category: Category (decision, action, risk, idea).
+            input_tokens: Number of input tokens used.
+            output_tokens: Number of output tokens used.
         """
         self.title = title
         self.analysis = analysis
         self.recommendation = recommendation
         self.category = category
+        self.input_tokens = input_tokens
+        self.output_tokens = output_tokens
 
     def to_dict(self) -> dict[str, str]:
         """Convert to dictionary for WebSocket transmission."""
@@ -108,9 +114,7 @@ class AnalysisAgent:
                 parsed = json.loads(content)
             except json.JSONDecodeError:
                 json_str = content
-                fence_match = re.search(
-                    r"```(?:json)?\s*(\{.*?\})\s*```", content, re.DOTALL
-                )
+                fence_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", content, re.DOTALL)
                 if fence_match:
                     json_str = fence_match.group(1)
                 else:
@@ -124,6 +128,8 @@ class AnalysisAgent:
                 analysis=str(parsed.get("analysis", "")),
                 recommendation=str(parsed.get("recommendation", "")),
                 category=str(parsed.get("category", "idea")),
+                input_tokens=result.get("input_tokens", 0),
+                output_tokens=result.get("output_tokens", 0),
             )
 
             logger.info(
