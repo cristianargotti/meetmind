@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -202,10 +201,33 @@ class MeetingNotifier extends StateNotifier<MeetingSession?> {
         debugPrint('[MeetingNotifier] Connected, agents=$agentsReady');
 
       case 'transcript_ack':
+        final String? text = message['text'] as String?;
+        final bool isPartial = message['partial'] as bool? ?? false;
+        final String speaker = message['speaker'] as String? ?? 'unknown';
+
+        if (text != null && text.isNotEmpty && state != null) {
+          if (isPartial) {
+            // Live preview of partial transcription
+            state = state!.copyWith(partialTranscript: text);
+          } else {
+            // Finalized transcription — add as segment
+            final TranscriptSegment segment = TranscriptSegment(
+              text: text,
+              speaker: speaker,
+              timestamp: DateTime.now(),
+            );
+            state = state!.copyWith(
+              segments: [...state!.segments, segment],
+              partialTranscript: '',
+            );
+          }
+        }
+
         debugPrint(
           '[MeetingNotifier] Ack: '
-          'segments=${message['segments']}, '
-          'buffer=${message['buffer_size']}',
+          'text=${text?.substring(0, (text.length > 50 ? 50 : text.length))}, '
+          'partial=$isPartial, '
+          'speaker=$speaker',
         );
 
       case 'screening':
@@ -255,7 +277,7 @@ class MeetingNotifier extends StateNotifier<MeetingSession?> {
     state = state!.copyWith(insights: [...state!.insights, insight]);
   }
 
-  /// Start audio capture and pipe to Whisper STT.
+  /// Start audio capture and send to backend via WebSocket.
   Future<void> _startAudioCapture() async {
     try {
       final AudioService audio = _ref.read(audioProvider);
@@ -267,7 +289,7 @@ class MeetingNotifier extends StateNotifier<MeetingSession?> {
         (List<int> data) {
           _audioBuffer.addAll(data);
 
-          // When we have enough audio (~2s), send to STT
+          // When we have enough audio (~2s), send to backend
           if (_audioBuffer.length >= _sttChunkSamples * 2) {
             // PCM16 = 2 bytes per sample
             _processAudioChunk();
@@ -283,29 +305,33 @@ class MeetingNotifier extends StateNotifier<MeetingSession?> {
     }
   }
 
-  /// Process accumulated audio through Whisper STT.
+  /// Send accumulated audio to backend via WebSocket.
   void _processAudioChunk() {
     if (_audioBuffer.isEmpty) return;
 
-    final WhisperSttService stt = _ref.read(whisperProvider);
-    if (stt.status != WhisperModelStatus.loaded) {
+    final WebSocketService ws = _ref.read(webSocketProvider);
+    if (ws.status != ConnectionStatus.connected) {
       _audioBuffer.clear();
       return;
     }
 
-    // Convert byte buffer to Int16List
-    final Uint8List bytes = Uint8List.fromList(_audioBuffer);
-    final Int16List pcm16 = bytes.buffer.asInt16List();
+    // Send raw PCM bytes to server for STT
+    ws.sendAudio(List<int>.from(_audioBuffer));
     _audioBuffer.clear();
-
-    // Send to Whisper (runs in isolate, non-blocking)
-    stt.pushAudio(pcm16);
   }
 
-  /// Listen to STT transcript stream.
+  /// Listen to STT transcript stream (no-op when using server-side STT).
   void _listenToStt() {
+    // Server-side STT: transcripts arrive via WebSocket messages
+    // handled in _handleMessage (transcript_ack with text field).
+    // On-device STT would be initialized here if the model was loaded.
     final WhisperSttService stt = _ref.read(whisperProvider);
-    if (stt.status != WhisperModelStatus.loaded) return;
+    if (stt.status != WhisperModelStatus.loaded) {
+      debugPrint(
+        '[MeetingNotifier] On-device STT not loaded, using server-side STT',
+      );
+      return;
+    }
 
     stt.startStream();
 

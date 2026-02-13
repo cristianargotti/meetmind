@@ -2,23 +2,38 @@
 
 Handles WebSocket connections for:
   - Receiving audio chunks (PCM 16kHz mono)
-  - Sending transcription results
+  - Sending transcription results (streaming or chunked mode)
   - Triggering AI screening pipeline
+  - Secret Copilot chat (user queries with meeting context)
+  - Post-meeting summary generation
+  - Real-time cost tracking and budget enforcement
+  - Speaker diarization with consistent session-wide IDs
 """
 
 import asyncio
 import json
 import uuid
+from typing import TYPE_CHECKING
 
 import structlog
 from fastapi import WebSocket, WebSocketDisconnect
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
 from meetmind.agents.analysis_agent import AnalysisAgent
+from meetmind.agents.copilot_agent import CopilotAgent
 from meetmind.agents.screening_agent import ScreeningAgent
+from meetmind.agents.summary_agent import SummaryAgent
+from meetmind.api import handlers
+from meetmind.config.settings import settings
+from meetmind.core.speaker_tracker import SpeakerTracker
 from meetmind.core.transcript import TranscriptManager
 from meetmind.providers.bedrock import BedrockProvider
-from meetmind.providers.whisper_stt import transcribe_audio_bytes
-from meetmind.config.settings import settings
+from meetmind.providers.streaming_stt import StreamingTranscriber, TranscriptSegment
+from meetmind.providers.whisper_stt import transcribe_with_speaker
+from meetmind.utils.cost_tracker import CostTracker
+from meetmind.utils.response_cache import ResponseCache
 
 logger = structlog.get_logger(__name__)
 
@@ -30,9 +45,16 @@ class ConnectionManager:
         """Initialize the connection manager."""
         self._active: dict[str, WebSocket] = {}
         self._transcripts: dict[str, TranscriptManager] = {}
+        self._cost_trackers: dict[str, CostTracker] = {}
+        self._speaker_trackers: dict[str, SpeakerTracker] = {}
+        self._streaming_transcribers: dict[str, StreamingTranscriber] = {}
+        self._response_cache: ResponseCache = ResponseCache()
+        self._event_loop: asyncio.AbstractEventLoop | None = None
         self._bedrock: BedrockProvider | None = None
         self._screening_agent: ScreeningAgent | None = None
         self._analysis_agent: AnalysisAgent | None = None
+        self._copilot_agent: CopilotAgent | None = None
+        self._summary_agent: SummaryAgent | None = None
 
     def init_agents(self) -> None:
         """Initialize Bedrock provider and AI agents.
@@ -42,6 +64,8 @@ class ConnectionManager:
         self._bedrock = BedrockProvider()
         self._screening_agent = ScreeningAgent(self._bedrock)
         self._analysis_agent = AnalysisAgent(self._bedrock)
+        self._copilot_agent = CopilotAgent(self._bedrock)
+        self._summary_agent = SummaryAgent(self._bedrock)
         logger.info("agents_initialized")
 
     @property
@@ -62,15 +86,38 @@ class ConnectionManager:
         connection_id = str(uuid.uuid4())
         self._active[connection_id] = websocket
 
+        # Store event loop reference for thread→async bridging
+        if self._event_loop is None:
+            self._event_loop = asyncio.get_running_loop()
+
         transcript = TranscriptManager(
             screening_interval=settings.screening_interval_seconds,
         )
         transcript.set_meeting_id(connection_id)
         self._transcripts[connection_id] = transcript
 
+        # Per-connection cost tracking
+        self._cost_trackers[connection_id] = CostTracker(
+            budget_usd=settings.session_budget_usd,
+        )
+
+        # Per-connection speaker tracking
+        self._speaker_trackers[connection_id] = SpeakerTracker()
+
+        # Streaming STT (real-time mode)
+        if settings.stt_mode == "streaming":
+            streamer = StreamingTranscriber(
+                language=settings.whisper_language,
+                on_transcript=self._make_stream_callback(connection_id),
+                min_transcribe_interval=1.0,
+            )
+            self._streaming_transcribers[connection_id] = streamer
+            streamer.start()
+
         logger.info(
             "ws_connected",
             connection_id=connection_id,
+            stt_mode=settings.stt_mode,
             active_connections=len(self._active),
         )
         return connection_id
@@ -83,11 +130,65 @@ class ConnectionManager:
         """
         self._active.pop(connection_id, None)
         self._transcripts.pop(connection_id, None)
+        self._cost_trackers.pop(connection_id, None)
+        self._speaker_trackers.pop(connection_id, None)
+
+        # Stop streaming transcriber
+        streamer = self._streaming_transcribers.pop(connection_id, None)
+        if streamer:
+            streamer.stop()
         logger.info(
             "ws_disconnected",
             connection_id=connection_id,
             active_connections=len(self._active),
         )
+
+    def _make_stream_callback(
+        self,
+        connection_id: str,
+    ) -> "Callable[[TranscriptSegment], None]":
+        """Create a callback for streaming transcriber → WebSocket.
+
+        The callback runs in the transcriber's background thread,
+        so it uses run_coroutine_threadsafe to bridge to async.
+        """
+
+        def callback(segment: TranscriptSegment) -> None:
+            if self._event_loop is None:
+                return
+
+            async def _send() -> None:
+                # Send transcript to extension
+                await self.send_json(
+                    connection_id,
+                    {
+                        "type": "transcript_ack",
+                        "text": segment.text,
+                        "partial": segment.is_partial,
+                        "speaker": "Speaker A",
+                        "speaker_color": "#60a5fa",
+                    },
+                )
+
+                # Add finalized text to transcript manager (for Copilot/Summary)
+                if not segment.is_partial:
+                    transcript = self._transcripts.get(connection_id)
+                    if transcript:
+                        transcript.add_chunk(segment.text, speaker="Speaker A")
+
+                        # Trigger screening if due
+                        if transcript.should_screen():
+                            screening_text = transcript.get_screening_text()
+                            full_context = transcript.get_full_transcript()
+                            await self.run_screening_pipeline(
+                                connection_id,
+                                screening_text,
+                                full_context,
+                            )
+
+            asyncio.run_coroutine_threadsafe(_send(), self._event_loop)
+
+        return callback
 
     async def send_json(self, connection_id: str, data: dict[str, object]) -> None:
         """Send JSON data to a specific connection.
@@ -123,50 +224,49 @@ class ConnectionManager:
         screening_text: str,
         full_context: str,
     ) -> None:
-        """Run the AI screening + analysis pipeline as a background task.
+        """Run the AI screening + analysis pipeline.
 
-        Args:
-            connection_id: WebSocket connection to send results to.
-            screening_text: Text buffer to screen.
-            full_context: Full meeting transcript for analysis context.
+        Delegates to handlers module.
         """
-        if not self._screening_agent or not self._analysis_agent:
-            await self.send_json(
-                connection_id,
-                {
-                    "type": "screening",
-                    "relevant": False,
-                    "reason": "Agents not initialized (no AWS credentials)",
-                },
-            )
-            return
-
-        # Step 1: Screening (Haiku — fast, cheap)
-        screening_result = await self._screening_agent.screen(screening_text)
-        await self.send_json(
-            connection_id,
-            {
-                "type": "screening",
-                **screening_result.to_dict(),
-            },
+        await handlers.run_screening_pipeline(
+            send_fn=self.send_json,
+            connection_id=connection_id,
+            screening_text=screening_text,
+            full_context=full_context,
+            screening_agent=self._screening_agent,
+            analysis_agent=self._analysis_agent,
+            tracker=self._cost_trackers.get(connection_id),
         )
 
-        # Step 2: Analysis (Sonnet — only if relevant)
-        if screening_result.relevant:
-            insight = await self._analysis_agent.analyze(
-                segment=screening_text,
-                context=full_context,
-                screening_reason=screening_result.reason,
-            )
+    async def run_copilot(
+        self,
+        connection_id: str,
+        question: str,
+        transcript_context: str,
+    ) -> None:
+        """Run the copilot agent. Delegates to handlers module."""
+        await handlers.run_copilot(
+            send_fn=self.send_json,
+            connection_id=connection_id,
+            question=question,
+            transcript_context=transcript_context,
+            copilot_agent=self._copilot_agent,
+            tracker=self._cost_trackers.get(connection_id),
+        )
 
-            if insight:
-                await self.send_json(
-                    connection_id,
-                    {
-                        "type": "analysis",
-                        "insight": insight.to_dict(),
-                    },
-                )
+    async def run_summary(
+        self,
+        connection_id: str,
+        full_transcript: str,
+    ) -> None:
+        """Generate a post-meeting summary. Delegates to handlers module."""
+        await handlers.run_summary(
+            send_fn=self.send_json,
+            connection_id=connection_id,
+            full_transcript=full_transcript,
+            summary_agent=self._summary_agent,
+            tracker=self._cost_trackers.get(connection_id),
+        )
 
     @property
     def active_count(self) -> int:
@@ -205,9 +305,8 @@ async def websocket_transcription(websocket: WebSocket) -> None:
             },
         )
 
-        # Audio buffer for binary frames (Chrome Extension)
-        audio_buffer = bytearray()
-        audio_buffer_threshold = 32000  # ~2s at 16kHz mono
+        # Track background tasks to prevent garbage collection
+        background_tasks: set[asyncio.Task[None]] = set()
 
         while True:
             raw = await websocket.receive()
@@ -233,19 +332,43 @@ async def websocket_transcription(websocket: WebSocket) -> None:
                                     "type": "transcript_ack",
                                     "segments": transcript.segment_count,
                                     "buffer_size": transcript.buffer_size,
+                                    "speaker": speaker,
                                 },
                             )
 
                             if transcript.should_screen():
                                 screening_text = transcript.get_screening_text()
                                 full_context = transcript.get_full_transcript()
-                                asyncio.create_task(
+                                task = asyncio.create_task(
                                     manager.run_screening_pipeline(
                                         connection_id,
                                         screening_text,
                                         full_context,
                                     )
                                 )
+                                background_tasks.add(task)
+                                task.add_done_callback(background_tasks.discard)
+
+                    elif msg_type == "copilot_query":
+                        question = message.get("question", "")
+                        if question.strip():
+                            transcript = manager.get_transcript(connection_id)
+                            context = transcript.get_full_transcript() if transcript else ""
+                            task = asyncio.create_task(
+                                manager.run_copilot(connection_id, question, context)
+                            )
+                            background_tasks.add(task)
+                            task.add_done_callback(background_tasks.discard)
+
+                    elif msg_type == "generate_summary":
+                        transcript = manager.get_transcript(connection_id)
+                        if transcript:
+                            full_text = transcript.get_full_transcript()
+                            task = asyncio.create_task(
+                                manager.run_summary(connection_id, full_text)
+                            )
+                            background_tasks.add(task)
+                            task.add_done_callback(background_tasks.discard)
 
                     elif msg_type == "ping":
                         await manager.send_json(connection_id, {"type": "pong"})
@@ -257,49 +380,69 @@ async def websocket_transcription(websocket: WebSocket) -> None:
                             msg_type=msg_type,
                         )
 
-                elif "bytes" in raw and raw["bytes"]:
-                    # Complete webm blob from Chrome Extension
-                    # Each blob is a full 5s recording with headers
+                elif raw.get("bytes"):
                     audio_data = raw["bytes"]
-                    logger.info(
+                    logger.debug(
                         "ws_audio_received",
                         connection_id=connection_id,
                         size=len(audio_data),
                     )
 
-                    text = await asyncio.to_thread(transcribe_audio_bytes, audio_data)
+                    if settings.stt_mode == "streaming":
+                        # Streaming mode: feed audio to StreamingTranscriber
+                        # (background thread handles Whisper + callbacks)
+                        streamer = manager._streaming_transcribers.get(connection_id)
+                        if streamer:
+                            await asyncio.to_thread(streamer.feed_audio, audio_data)
+                    else:
+                        # Legacy chunked mode
+                        result = await asyncio.to_thread(
+                            transcribe_with_speaker,
+                            audio_data,
+                        )
 
-                    if text:
-                        transcript = manager.get_transcript(connection_id)
-                        if transcript:
-                            transcript.add_chunk(text, speaker="user")
+                        if result.text:
+                            tracker = manager._speaker_trackers.get(connection_id)
+                            speaker = "unknown"
+                            speaker_color = "#6B7280"
+                            if tracker:
+                                speaker = tracker.map_speaker(result.speaker)
+                                speaker_color = tracker.get_color(speaker)
 
-                        try:
-                            await manager.send_json(
-                                connection_id,
-                                {
-                                    "type": "transcript_ack",
-                                    "text": text,
-                                    "partial": False,
-                                },
-                            )
-                        except Exception:
-                            logger.warning(
-                                "ws_send_after_disconnect",
-                                connection_id=connection_id,
-                            )
-                            break
+                            transcript = manager.get_transcript(connection_id)
+                            if transcript:
+                                transcript.add_chunk(result.text, speaker=speaker)
 
-                        if transcript and transcript.should_screen():
-                            screening_text = transcript.get_screening_text()
-                            full_context = transcript.get_full_transcript()
-                            asyncio.create_task(
-                                manager.run_screening_pipeline(
+                            try:
+                                await manager.send_json(
                                     connection_id,
-                                    screening_text,
-                                    full_context,
+                                    {
+                                        "type": "transcript_ack",
+                                        "text": result.text,
+                                        "partial": False,
+                                        "speaker": speaker,
+                                        "speaker_color": speaker_color,
+                                    },
                                 )
-                            )
+                            except Exception:
+                                logger.warning(
+                                    "ws_send_after_disconnect",
+                                    connection_id=connection_id,
+                                )
+                                break
+
+                            if transcript and transcript.should_screen():
+                                screening_text = transcript.get_screening_text()
+                                full_context = transcript.get_full_transcript()
+                                task = asyncio.create_task(
+                                    manager.run_screening_pipeline(
+                                        connection_id,
+                                        screening_text,
+                                        full_context,
+                                    )
+                                )
+                                background_tasks.add(task)
+                                task.add_done_callback(background_tasks.discard)
 
             elif msg_type_ws == "websocket.disconnect":
                 break

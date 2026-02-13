@@ -45,5 +45,13 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>MeetMind needs microphone access to transcribe meeting audio in real-time.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>MeetMind needs local network access to connect to the transcription server.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_dartVmService._tcp</string>
+	</array>
 </dict>
 </plist>

@@ -23,7 +23,7 @@ class WebSocketService {
   String? get connectionId => _connectionId;
 
   /// Connect to the backend WebSocket.
-  Future<void> connect({String host = 'localhost', int port = 8000}) async {
+  Future<void> connect({String host = '192.168.0.12', int port = 8000}) async {
     if (_status == ConnectionStatus.connected) return;
 
     _status = ConnectionStatus.connecting;
@@ -79,6 +79,12 @@ class WebSocketService {
   void sendPing() {
     if (_status != ConnectionStatus.connected || _channel == null) return;
     _channel!.sink.add(jsonEncode(<String, String>{'type': 'ping'}));
+  }
+
+  /// Send raw PCM audio bytes to the backend for server-side STT.
+  void sendAudio(List<int> pcmBytes) {
+    if (_status != ConnectionStatus.connected || _channel == null) return;
+    _channel!.sink.add(pcmBytes);
   }
 
   /// Disconnect from the backend.

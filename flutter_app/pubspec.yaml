@@ -21,7 +21,7 @@ dependencies:
   web_socket_channel: ^3.0.2
 
   # Audio
-  record: ^5.2.1
+  record: ^6.2.0
   permission_handler: ^11.4.0
 
   # UI

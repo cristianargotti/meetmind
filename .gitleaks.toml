@@ -9,4 +9,5 @@ paths = [
     '''flutter_app/web/.*''',
     '''\.fvmrc''',
     '''uv\.lock''',
+    '''backend/\.env''',
 ]
