@@ -236,6 +236,18 @@ class MeetingNotifier extends StateNotifier<MeetingSession?> {
       case 'analysis':
         _handleAnalysis(message);
 
+      case 'copilot_response':
+        _handleCopilotResponse(message);
+
+      case 'meeting_summary':
+        _handleMeetingSummary(message);
+
+      case 'cost_update':
+        _handleCostUpdate(message);
+
+      case 'budget_exceeded':
+        _handleBudgetExceeded();
+
       case 'screening_pending':
         if (state != null) {
           state = state!.copyWith(isScreening: true);
@@ -275,6 +287,95 @@ class MeetingNotifier extends StateNotifier<MeetingSession?> {
     );
 
     state = state!.copyWith(insights: [...state!.insights, insight]);
+  }
+
+  /// Handle a copilot response from the backend.
+  void _handleCopilotResponse(Map<String, Object?> message) {
+    if (state == null) return;
+
+    final String answer = message['answer'] as String? ?? '';
+    final bool isError = message['error'] as bool? ?? false;
+    final int? latencyMs = message['latency_ms'] as int?;
+    final String? modelTier = message['model_tier'] as String?;
+
+    final CopilotMessage aiMsg = CopilotMessage(
+      text: answer,
+      sender: isError ? CopilotSender.error : CopilotSender.ai,
+      timestamp: DateTime.now(),
+      latencyMs: latencyMs,
+      modelTier: modelTier,
+    );
+
+    state = state!.copyWith(
+      copilotMessages: [...state!.copilotMessages, aiMsg],
+      isCopilotLoading: false,
+    );
+  }
+
+  /// Handle meeting summary from the backend.
+  void _handleMeetingSummary(Map<String, Object?> message) {
+    if (state == null) return;
+
+    final bool isError = message['error'] as bool? ?? false;
+    final Map<String, Object?>? summaryData =
+        message['summary'] as Map<String, Object?>?;
+
+    if (isError || summaryData == null) {
+      debugPrint('[MeetingNotifier] Summary error');
+      state = state!.copyWith(isSummaryLoading: false);
+      return;
+    }
+
+    final MeetingSummary summary = MeetingSummary.fromJson(summaryData);
+    debugPrint('[MeetingNotifier] Summary: ${summary.title}');
+
+    state = state!.copyWith(meetingSummary: summary, isSummaryLoading: false);
+  }
+
+  /// Handle cost update from the backend.
+  void _handleCostUpdate(Map<String, Object?> message) {
+    if (state == null) return;
+    state = state!.copyWith(costData: CostData.fromJson(message));
+  }
+
+  /// Handle budget exceeded notification.
+  void _handleBudgetExceeded() {
+    if (state == null) return;
+    final CostData current =
+        state!.costData ??
+        const CostData(
+          totalCostUsd: 0,
+          budgetUsd: 0.50,
+          budgetRemainingUsd: 0,
+          budgetPct: 1.0,
+        );
+    state = state!.copyWith(costData: current.withBudgetExceeded());
+  }
+
+  /// Send a copilot query to the backend.
+  void sendCopilotQuery(String question) {
+    if (state == null || question.trim().isEmpty) return;
+
+    // Add user message to chat
+    final CopilotMessage userMsg = CopilotMessage(
+      text: question,
+      sender: CopilotSender.user,
+      timestamp: DateTime.now(),
+    );
+    state = state!.copyWith(
+      copilotMessages: [...state!.copilotMessages, userMsg],
+      isCopilotLoading: true,
+    );
+
+    // Send via WebSocket
+    _wsService.sendCopilotQuery(question);
+  }
+
+  /// Request a meeting summary from the backend.
+  void requestSummary() {
+    if (state == null) return;
+    state = state!.copyWith(isSummaryLoading: true);
+    _wsService.sendSummaryRequest();
   }
 
   /// Start audio capture and send to backend via WebSocket.

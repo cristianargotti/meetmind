@@ -81,6 +81,25 @@ class WebSocketService {
     _channel!.sink.add(jsonEncode(<String, String>{'type': 'ping'}));
   }
 
+  /// Send a copilot question to the backend.
+  void sendCopilotQuery(String question) {
+    if (_status != ConnectionStatus.connected || _channel == null) return;
+    _channel!.sink.add(
+      jsonEncode(<String, String>{
+        'type': 'copilot_query',
+        'question': question,
+      }),
+    );
+  }
+
+  /// Request meeting summary generation from the backend.
+  void sendSummaryRequest() {
+    if (_status != ConnectionStatus.connected || _channel == null) return;
+    _channel!.sink.add(
+      jsonEncode(<String, String>{'type': 'generate_summary'}),
+    );
+  }
+
   /// Send raw PCM audio bytes to the backend for server-side STT.
   void sendAudio(List<int> pcmBytes) {
     if (_status != ConnectionStatus.connected || _channel == null) return;

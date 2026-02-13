@@ -3,9 +3,13 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:meetmind/config/theme.dart';
+import 'package:meetmind/features/meeting/widgets/copilot_panel.dart';
+import 'package:meetmind/features/meeting/widgets/cost_bar.dart';
 import 'package:meetmind/features/meeting/widgets/input_bar.dart';
 import 'package:meetmind/features/meeting/widgets/insight_widgets.dart';
 import 'package:meetmind/features/meeting/widgets/stt_widgets.dart';
+import 'package:meetmind/features/meeting/widgets/summary_panel.dart';
+import 'package:meetmind/features/meeting/widgets/transcript_widgets.dart';
 import 'package:meetmind/models/meeting_models.dart';
 import 'package:meetmind/providers/meeting_provider.dart';
 import 'package:meetmind/services/whisper_stt_service.dart';
@@ -18,13 +22,17 @@ class MeetingScreen extends ConsumerStatefulWidget {
   ConsumerState<MeetingScreen> createState() => _MeetingScreenState();
 }
 
-class _MeetingScreenState extends ConsumerState<MeetingScreen> {
+class _MeetingScreenState extends ConsumerState<MeetingScreen>
+    with SingleTickerProviderStateMixin {
   final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  late final TabController _tabController;
 
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final MeetingSession? meeting = ref.read(meetingProvider);
       if (meeting == null) {
@@ -40,6 +48,7 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen> {
   void dispose() {
     _textController.dispose();
     _scrollController.dispose();
+    _tabController.dispose();
     super.dispose();
   }
 
@@ -78,46 +87,73 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen> {
               ),
             ),
         ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(48),
+          child: _MeetingTabBar(controller: _tabController),
+        ),
       ),
       body: Column(
-        children: [
-          _StatusBar(
+        children: <Widget>[
+          // Cost bar (shown when AI calls have been made)
+          CostBar(costData: meeting?.costData),
+
+          // Status bar
+          StatusBar(
             status: meeting?.status ?? MeetingStatus.idle,
             segmentCount: meeting?.segments.length ?? 0,
             isScreening: meeting?.isScreening ?? false,
             insightCount: meeting?.insights.length ?? 0,
           ).animate().fadeIn(duration: 300.ms),
-          if (meeting != null && meeting.insights.isNotEmpty)
-            InsightsPanel(insights: meeting.insights),
+
+          // Tab content
           Expanded(
-            child: meeting == null || meeting.segments.isEmpty
-                ? const _EmptyTranscriptState()
-                : _TranscriptList(
-                    segments: meeting.segments,
-                    scrollController: _scrollController,
-                  ),
-          ),
-          // Live partial transcript from Whisper STT
-          if (meeting != null && meeting.partialTranscript.isNotEmpty)
-            PartialTranscriptBar(text: meeting.partialTranscript),
-          InputBar(
-            controller: _textController,
-            isRecording: meeting?.status == MeetingStatus.recording,
-            onSend: () {
-              final String text = _textController.text.trim();
-              if (text.isNotEmpty) {
-                ref.read(meetingProvider.notifier).addTranscript(text);
-                _textController.clear();
-                _scrollToBottom();
-              }
-            },
-            onToggleRecording: () {
-              if (meeting?.status == MeetingStatus.recording) {
-                ref.read(meetingProvider.notifier).pauseMeeting();
-              } else {
-                ref.read(meetingProvider.notifier).resumeMeeting();
-              }
-            },
+            child: TabBarView(
+              controller: _tabController,
+              children: <Widget>[
+                // Tab 1: Transcript
+                _TranscriptTab(
+                  meeting: meeting,
+                  scrollController: _scrollController,
+                  textController: _textController,
+                  onSend: () {
+                    final String text = _textController.text.trim();
+                    if (text.isNotEmpty) {
+                      ref.read(meetingProvider.notifier).addTranscript(text);
+                      _textController.clear();
+                      _scrollToBottom();
+                    }
+                  },
+                  onToggleRecording: () {
+                    if (meeting?.status == MeetingStatus.recording) {
+                      ref.read(meetingProvider.notifier).pauseMeeting();
+                    } else {
+                      ref.read(meetingProvider.notifier).resumeMeeting();
+                    }
+                  },
+                ),
+
+                // Tab 2: Copilot
+                CopilotPanel(
+                  messages: meeting?.copilotMessages ?? const [],
+                  isLoading: meeting?.isCopilotLoading ?? false,
+                  onSend: (String question) {
+                    ref
+                        .read(meetingProvider.notifier)
+                        .sendCopilotQuery(question);
+                  },
+                ),
+
+                // Tab 3: Summary
+                SummaryPanel(
+                  summary: meeting?.meetingSummary,
+                  isLoading: meeting?.isSummaryLoading ?? false,
+                  hasTranscript: (meeting?.segments.length ?? 0) > 0,
+                  onGenerate: () {
+                    ref.read(meetingProvider.notifier).requestSummary();
+                  },
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -139,22 +175,19 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen> {
   void _showStopConfirmation(BuildContext context) {
     showDialog<void>(
       context: context,
-      builder: (BuildContext ctx) => AlertDialog(
-        backgroundColor: MeetMindTheme.darkCard,
+      builder: (BuildContext dialogContext) => AlertDialog(
         title: const Text('End Meeting?'),
-        content: const Text(
-          'This will stop transcription and save the session.',
-        ),
+        content: const Text('This will stop recording and disconnect.'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx),
+            onPressed: () => Navigator.of(dialogContext).pop(),
             child: const Text('Cancel'),
           ),
-          ElevatedButton(
+          FilledButton(
             onPressed: () {
               ref.read(meetingProvider.notifier).stopMeeting();
-              Navigator.pop(ctx);
-              Navigator.pop(context);
+              Navigator.of(dialogContext).pop();
+              Navigator.of(context).pop();
             },
             child: const Text('End Meeting'),
           ),
@@ -164,41 +197,114 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen> {
   }
 
   String _formatDuration(Duration d) {
-    final String hours = d.inHours.toString().padLeft(2, '0');
-    final String minutes = (d.inMinutes % 60).toString().padLeft(2, '0');
-    final String seconds = (d.inSeconds % 60).toString().padLeft(2, '0');
-    return '$hours:$minutes:$seconds';
+    final String h = d.inHours.toString().padLeft(2, '0');
+    final String m = (d.inMinutes % 60).toString().padLeft(2, '0');
+    final String s = (d.inSeconds % 60).toString().padLeft(2, '0');
+    return '$h:$m:$s';
+  }
+}
+
+/// Tab bar for meeting screen.
+class _MeetingTabBar extends StatelessWidget {
+  const _MeetingTabBar({required this.controller});
+
+  final TabController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return TabBar(
+      controller: controller,
+      indicatorColor: MeetMindTheme.primary,
+      indicatorWeight: 3,
+      labelColor: Colors.white,
+      unselectedLabelColor: Colors.white54,
+      labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+      tabs: const <Tab>[
+        Tab(icon: Icon(Icons.subtitles_outlined, size: 18), text: 'Transcript'),
+        Tab(icon: Icon(Icons.smart_toy_outlined, size: 18), text: 'Copilot'),
+        Tab(icon: Icon(Icons.summarize_outlined, size: 18), text: 'Summary'),
+      ],
+    );
+  }
+}
+
+/// Transcript tab — insights panel + transcript list + input.
+class _TranscriptTab extends StatelessWidget {
+  const _TranscriptTab({
+    required this.meeting,
+    required this.scrollController,
+    required this.textController,
+    required this.onSend,
+    required this.onToggleRecording,
+  });
+
+  final MeetingSession? meeting;
+  final ScrollController scrollController;
+  final TextEditingController textController;
+  final VoidCallback onSend;
+  final VoidCallback onToggleRecording;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: <Widget>[
+        if (meeting != null && meeting!.insights.isNotEmpty)
+          InsightsPanel(insights: meeting!.insights),
+        Expanded(
+          child: meeting == null || meeting!.segments.isEmpty
+              ? const EmptyTranscriptState()
+              : TranscriptList(
+                  segments: meeting!.segments,
+                  scrollController: scrollController,
+                ),
+        ),
+        // Live partial transcript from STT
+        if (meeting != null && meeting!.partialTranscript.isNotEmpty)
+          PartialTranscriptBar(text: meeting!.partialTranscript),
+        InputBar(
+          controller: textController,
+          isRecording: meeting?.status == MeetingStatus.recording,
+          onSend: onSend,
+          onToggleRecording: onToggleRecording,
+        ),
+      ],
+    );
   }
 }
 
 /// Connection status badge.
-class _ConnectionBadge extends StatelessWidget {
+class _ConnectionBadge extends ConsumerWidget {
   const _ConnectionBadge({required this.status});
 
   final ConnectionStatus status;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final Color color;
     final String label;
+    final IconData icon;
 
     switch (status) {
       case ConnectionStatus.connected:
         color = MeetMindTheme.success;
-        label = 'Connected';
+        label = 'Live';
+        icon = Icons.wifi;
       case ConnectionStatus.connecting:
         color = MeetMindTheme.warning;
-        label = 'Connecting...';
-      case ConnectionStatus.error:
-        color = MeetMindTheme.error;
-        label = 'Error';
+        label = 'Connecting';
+        icon = Icons.sync;
       case ConnectionStatus.disconnected:
         color = Colors.white38;
         label = 'Offline';
+        icon = Icons.wifi_off;
+      case ConnectionStatus.error:
+        color = MeetMindTheme.error;
+        label = 'Error';
+        icon = Icons.error_outline;
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(12),
@@ -207,240 +313,14 @@ class _ConnectionBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.fiber_manual_record, color: color, size: 8),
-          const SizedBox(width: 6),
+          Icon(icon, size: 12, color: color),
+          const SizedBox(width: 4),
           Text(
             label,
             style: TextStyle(
               color: color,
               fontSize: 11,
               fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Status bar with recording state, segment count, and AI indicator.
-class _StatusBar extends StatelessWidget {
-  const _StatusBar({
-    required this.status,
-    required this.segmentCount,
-    required this.isScreening,
-    required this.insightCount,
-  });
-
-  final MeetingStatus status;
-  final int segmentCount;
-  final bool isScreening;
-  final int insightCount;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      color: MeetMindTheme.darkSurface,
-      child: Row(
-        children: [
-          if (status == MeetingStatus.recording) ...[
-            const Icon(
-                  Icons.fiber_manual_record,
-                  color: MeetMindTheme.error,
-                  size: 12,
-                )
-                .animate(onPlay: (AnimationController c) => c.repeat())
-                .fadeIn(duration: 800.ms)
-                .then()
-                .fadeOut(duration: 800.ms),
-            const SizedBox(width: 8),
-            const Text(
-              'Recording',
-              style: TextStyle(color: MeetMindTheme.error, fontSize: 13),
-            ),
-          ] else if (status == MeetingStatus.paused) ...[
-            const Icon(Icons.pause, color: MeetMindTheme.warning, size: 14),
-            const SizedBox(width: 8),
-            const Text(
-              'Paused',
-              style: TextStyle(color: MeetMindTheme.warning, fontSize: 13),
-            ),
-          ],
-          const Spacer(),
-          if (isScreening)
-            const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(
-                  width: 12,
-                  height: 12,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: MeetMindTheme.accent,
-                  ),
-                ),
-                SizedBox(width: 6),
-                Text(
-                  'AI analyzing...',
-                  style: TextStyle(color: MeetMindTheme.accent, fontSize: 11),
-                ),
-              ],
-            ),
-          if (insightCount > 0) ...[
-            const SizedBox(width: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: MeetMindTheme.accent.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                '💡 $insightCount',
-                style: const TextStyle(
-                  color: MeetMindTheme.accent,
-                  fontSize: 11,
-                ),
-              ),
-            ),
-          ],
-          const SizedBox(width: 12),
-          Text(
-            '$segmentCount segments',
-            style: const TextStyle(color: Colors.white38, fontSize: 12),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Empty transcript state.
-class _EmptyTranscriptState extends StatelessWidget {
-  const _EmptyTranscriptState();
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-                Icons.graphic_eq,
-                size: 48,
-                color: MeetMindTheme.primary.withValues(alpha: 0.3),
-              )
-              .animate(onPlay: (AnimationController c) => c.repeat())
-              .scaleXY(begin: 0.9, end: 1.1, duration: 1500.ms)
-              .then()
-              .scaleXY(begin: 1.1, end: 0.9, duration: 1500.ms),
-          const SizedBox(height: 16),
-          const Text(
-            'Listening...',
-            style: TextStyle(color: Colors.white38, fontSize: 16),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Type a message or speak to add transcript',
-            style: TextStyle(color: Colors.white24, fontSize: 13),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Scrollable transcript list.
-class _TranscriptList extends StatelessWidget {
-  const _TranscriptList({
-    required this.segments,
-    required this.scrollController,
-  });
-
-  final List<TranscriptSegment> segments;
-  final ScrollController scrollController;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView.builder(
-      controller: scrollController,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      itemCount: segments.length,
-      itemBuilder: (BuildContext context, int index) {
-        final TranscriptSegment segment = segments[index];
-        return _TranscriptBubble(
-          segment: segment,
-        ).animate().fadeIn(duration: 200.ms).slideX(begin: 0.05);
-      },
-    );
-  }
-}
-
-/// Individual transcript bubble.
-class _TranscriptBubble extends StatelessWidget {
-  const _TranscriptBubble({required this.segment});
-
-  final TranscriptSegment segment;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          CircleAvatar(
-            radius: 16,
-            backgroundColor: MeetMindTheme.primary.withValues(alpha: 0.2),
-            child: Text(
-              segment.speaker[0].toUpperCase(),
-              style: const TextStyle(
-                color: MeetMindTheme.primaryLight,
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: MeetMindTheme.darkCard,
-                borderRadius: const BorderRadius.only(
-                  topRight: Radius.circular(14),
-                  bottomLeft: Radius.circular(14),
-                  bottomRight: Radius.circular(14),
-                ),
-                border: segment.isRelevant
-                    ? Border.all(
-                        color: MeetMindTheme.accent.withValues(alpha: 0.4),
-                      )
-                    : null,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    segment.speaker,
-                    style: const TextStyle(
-                      color: MeetMindTheme.primaryLight,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    segment.text,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      height: 1.4,
-                    ),
-                  ),
-                ],
-              ),
             ),
           ),
         ],
