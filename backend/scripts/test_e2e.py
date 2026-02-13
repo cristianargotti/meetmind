@@ -82,14 +82,68 @@ async def test_e2e() -> None:
         except asyncio.TimeoutError:
             pass
 
-        # Step 4: Summary
-        print(f"\n[4/4] Results:")
+        # Step 3.5: Test Secret Copilot
+        print("\n[3.5/4] Testing Secret Copilot ...")
+        await ws.send(json.dumps({
+            "type": "copilot_query",
+            "question": "¿Qué riesgos ves en la migración a PostgreSQL?",
+        }))
+
+        copilot_ok = False
+        try:
+            copilot_msg = json.loads(await asyncio.wait_for(ws.recv(), timeout=20))
+            if copilot_msg.get("type") == "copilot_response":
+                answer = copilot_msg.get("answer", "")[:120]
+                latency = copilot_msg.get("latency_ms", 0)
+                error = copilot_msg.get("error", False)
+                if error:
+                    print(f"  ⚠️  Copilot error: {answer}")
+                else:
+                    print(f"  🕵️ Copilot: {answer}")
+                    print(f"     latency: {latency:.0f}ms")
+                    copilot_ok = True
+            else:
+                print(f"  📩 Unexpected: {copilot_msg.get('type')}")
+        except asyncio.TimeoutError:
+            print("  ⏰ Copilot timeout (20s)")
+
+        # Step 4: Generate Summary
+        print("\n[4/5] 📊 Requesting post-meeting summary...")
+        await ws.send(json.dumps({"type": "generate_summary"}))
+
+        summary_ok = False
+        try:
+            summary_msg = json.loads(await asyncio.wait_for(ws.recv(), timeout=30))
+            if summary_msg.get("type") == "meeting_summary":
+                summary = summary_msg.get("summary", {})
+                error = summary_msg.get("error", False)
+                latency = summary_msg.get("latency_ms", 0)
+                if error:
+                    print(f"  ⚠️  Summary error: {summary.get('summary', '')[:120]}")
+                else:
+                    print(f"  📊 Title: {summary.get('title', 'N/A')}")
+                    print(f"     Decisions: {len(summary.get('decisions', []))}")
+                    print(f"     Actions:   {len(summary.get('action_items', []))}")
+                    print(f"     Risks:     {len(summary.get('risks', []))}")
+                    print(f"     latency:   {latency:.0f}ms")
+                    summary_ok = True
+            else:
+                print(f"  📩 Unexpected: {summary_msg.get('type')}")
+        except asyncio.TimeoutError:
+            print("  ⏰ Summary timeout (30s)")
+
+        # Step 5: Results
+        print(f"\n[5/5] Results:")
         print(f"  ✅ WebSocket: OK")
         print(f"  ✅ Transcript: {len(chunks)} chunks sent")
         print(f"  {'✅' if ai_responses else '⚠️ '} AI Responses: {len(ai_responses)}")
+        print(f"  {'✅' if copilot_ok else '⚠️ '} Copilot: {'OK' if copilot_ok else 'FAILED'}")
+        print(f"  {'✅' if summary_ok else '⚠️ '} Summary: {'OK' if summary_ok else 'FAILED'}")
 
-        if ai_responses:
+        if ai_responses and copilot_ok and summary_ok:
             print("\n🏆 FULL E2E PIPELINE WORKING!")
+        elif ai_responses:
+            print("\n🏆 E2E pipeline partial — check failed steps above")
         else:
             print("\n⚠️  No AI responses received — check Bedrock access")
 

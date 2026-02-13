@@ -4,6 +4,9 @@
  * Handles:
  *   - Start/stop capture via service worker
  *   - Live transcript and insight display
+ *   - Tab navigation (Transcript ↔ Copilot ↔ Summary)
+ *   - Secret Copilot chat with AI
+ *   - Post-meeting summary generation
  *   - Settings (backend URL)
  */
 
@@ -15,6 +18,11 @@ const captureLabel = document.getElementById('capture-label');
 const statusText = document.getElementById('status-text');
 const connBadge = document.getElementById('connection-badge');
 
+const tabNav = document.getElementById('tab-nav');
+const transcriptPanel = document.getElementById('panel-transcript');
+const copilotPanel = document.getElementById('panel-copilot');
+const summaryPanel = document.getElementById('panel-summary');
+
 const transcriptSection = document.getElementById('transcript-section');
 const transcriptBox = document.getElementById('transcript-box');
 
@@ -22,17 +30,29 @@ const insightsSection = document.getElementById('insights-section');
 const insightsList = document.getElementById('insights-list');
 const insightCount = document.getElementById('insight-count');
 
+const chatMessages = document.getElementById('chat-messages');
+const chatInput = document.getElementById('chat-input');
+const chatSendBtn = document.getElementById('chat-send-btn');
+
 const settingsBtn = document.getElementById('settings-btn');
 const settingsModal = document.getElementById('settings-modal');
 const backendUrlInput = document.getElementById('backend-url');
 const saveSettingsBtn = document.getElementById('save-settings-btn');
 const closeSettingsBtn = document.getElementById('close-settings-btn');
 
+// Cost bar elements
+const costBar = document.getElementById('cost-bar');
+const costValue = document.getElementById('cost-value');
+const costBudget = document.getElementById('cost-budget');
+const costFill = document.getElementById('cost-fill');
+
 // ─── State ─────────────────────────────────
 
 let isCapturing = false;
 let insights = [];
 let backendUrl = 'ws://localhost:8000/ws';
+let copilotWaiting = false;
+let lastSummaryData = null;
 
 // ─── Init ──────────────────────────────────
 
@@ -50,7 +70,34 @@ document.addEventListener('DOMContentLoaded', async () => {
             setCapturingState(true);
         }
     });
+
+    // Set up tab navigation
+    initTabs();
 });
+
+// ─── Tab Navigation ────────────────────────
+
+function initTabs() {
+    const tabs = document.querySelectorAll('.tab');
+    tabs.forEach((tab) => {
+        tab.addEventListener('click', () => {
+            // Update active tab
+            tabs.forEach((t) => t.classList.remove('tab--active'));
+            tab.classList.add('tab--active');
+
+            // Show correct panel
+            const target = tab.dataset.tab;
+            transcriptPanel.classList.toggle('tab-panel--active', target === 'transcript');
+            copilotPanel.classList.toggle('tab-panel--active', target === 'copilot');
+            summaryPanel.classList.toggle('tab-panel--active', target === 'summary');
+
+            // Focus chat input when switching to copilot
+            if (target === 'copilot') {
+                setTimeout(() => chatInput.focus(), 100);
+            }
+        });
+    });
+}
 
 // ─── Capture Controls ──────────────────────
 
@@ -95,7 +142,8 @@ function setCapturingState(capturing) {
         captureBtn.classList.add('capture-btn--recording');
         captureIcon.textContent = '⏹️';
         captureLabel.textContent = 'Stop Capture';
-        transcriptSection.style.display = 'block';
+        transcriptSection.style.display = 'flex';
+        tabNav.style.display = 'flex';
     } else {
         captureBtn.classList.remove('capture-btn--recording');
         captureIcon.textContent = '🎙️';
@@ -119,36 +167,85 @@ chrome.runtime.onMessage.addListener((message) => {
             handleScreening(message);
             break;
 
+        case 'COPILOT_RESPONSE':
+            handleCopilotResponse(message);
+            break;
+
+        case 'MEETING_SUMMARY':
+            handleMeetingSummary(message);
+            break;
+
         case 'CONNECTION_STATUS':
             updateConnectionBadge(message.status);
+            break;
+
+        case 'COST_UPDATE':
+            handleCostUpdate(message);
+            break;
+
+        case 'BUDGET_EXCEEDED':
+            handleBudgetExceeded(message);
             break;
     }
 });
 
 /**
- * Display transcript text.
- * @param {{ text: string, partial: boolean }} message
+ * Display transcript text with timestamps and live partial indicator.
+ * Partials update in-place at the bottom; finals are timestamped segments.
+ * @param {{ text: string, partial: boolean, speaker?: string, speaker_color?: string }} message
  */
+let lastTranscriptText = '';
+let segmentCount = 0;
+
 function handleTranscript(message) {
     if (message.partial) {
-        // Replace or add partial element
-        let partial = transcriptBox.querySelector('.partial');
-        if (!partial) {
-            partial = document.createElement('span');
-            partial.className = 'partial';
-            transcriptBox.appendChild(partial);
+        // Live partial: update the "typing" element at bottom
+        let liveEl = transcriptBox.querySelector('.transcript-live');
+        if (!liveEl) {
+            liveEl = document.createElement('div');
+            liveEl.className = 'transcript-live';
+            liveEl.innerHTML = '<span class="live-dot"></span><span class="live-text"></span>';
+            transcriptBox.appendChild(liveEl);
         }
-        partial.textContent = message.text;
+        liveEl.querySelector('.live-text').textContent = message.text;
     } else {
-        // Remove partial, add finalized
-        const partial = transcriptBox.querySelector('.partial');
-        if (partial) partial.remove();
+        // Finalized segment
+        const trimmed = message.text.trim();
+        if (!trimmed || trimmed === lastTranscriptText) return;
+        lastTranscriptText = trimmed;
 
-        const span = document.createElement('span');
-        span.textContent = message.text + ' ';
-        transcriptBox.appendChild(span);
+        // Remove live partial
+        const liveEl = transcriptBox.querySelector('.transcript-live');
+        if (liveEl) liveEl.remove();
+
+        // Create timestamped segment
+        segmentCount++;
+        const seg = document.createElement('div');
+        seg.className = 'transcript-segment';
+
+        // Timestamp
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const ts = document.createElement('span');
+        ts.className = 'segment-time';
+        ts.textContent = timeStr;
+        seg.appendChild(ts);
+
+        // Text content
+        const textEl = document.createElement('p');
+        textEl.className = 'segment-text';
+        textEl.textContent = trimmed;
+        seg.appendChild(textEl);
+
+        transcriptBox.appendChild(seg);
     }
-    transcriptBox.scrollTop = transcriptBox.scrollHeight;
+
+    // Smart auto-scroll: only scroll if user is near the bottom
+    const isNearBottom = (transcriptBox.scrollHeight - transcriptBox.scrollTop - transcriptBox.clientHeight) < 100;
+    if (isNearBottom) {
+        const last = transcriptBox.lastElementChild;
+        if (last) last.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
 }
 
 /**
@@ -192,6 +289,307 @@ function handleScreening(message) {
     }
 }
 
+// ─── Copilot Chat ──────────────────────────
+
+/**
+ * Send a copilot query to the backend.
+ */
+function sendCopilotQuery() {
+    const question = chatInput.value.trim();
+    if (!question || copilotWaiting) return;
+
+    // Remove welcome message
+    const welcome = chatMessages.querySelector('.chat-welcome');
+    if (welcome) welcome.remove();
+
+    // Add user bubble
+    addChatBubble(question, 'user');
+
+    // Show typing indicator
+    showTypingIndicator();
+    copilotWaiting = true;
+    chatSendBtn.disabled = true;
+
+    // Send to service worker → backend
+    chrome.runtime.sendMessage({
+        type: 'COPILOT_QUERY',
+        question,
+    });
+
+    chatInput.value = '';
+    chatInput.focus();
+}
+
+/**
+ * Handle copilot response from backend.
+ * @param {{ answer: string, error: boolean }} message
+ */
+function handleCopilotResponse(message) {
+    removeTypingIndicator();
+    copilotWaiting = false;
+    chatSendBtn.disabled = false;
+
+    if (message.error) {
+        addChatBubble(message.answer, 'error');
+    } else {
+        addChatBubble(message.answer, 'ai');
+    }
+
+    chatInput.focus();
+}
+
+/**
+ * Add a chat bubble to the messages area.
+ * @param {string} text - Message text
+ * @param {'user' | 'ai' | 'error'} sender
+ */
+function addChatBubble(text, sender) {
+    const bubble = document.createElement('div');
+    bubble.className = `chat-bubble chat-bubble--${sender}`;
+
+    if (sender === 'ai') {
+        bubble.innerHTML = `
+      <span class="chat-bubble__label">🕵️ Copilot</span>
+      <div class="chat-bubble__content">${simpleMarkdown(text)}</div>
+    `;
+    } else if (sender === 'error') {
+        bubble.innerHTML = `
+      <span class="chat-bubble__label">⚠️ Error</span>
+      <div class="chat-bubble__content">${escapeHtml(text)}</div>
+    `;
+    } else {
+        bubble.textContent = text;
+    }
+
+    chatMessages.appendChild(bubble);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+/**
+ * Show the typing indicator animation.
+ */
+function showTypingIndicator() {
+    const indicator = document.createElement('div');
+    indicator.className = 'typing-indicator';
+    indicator.id = 'typing-indicator';
+    indicator.innerHTML = `
+    <span class="typing-dot"></span>
+    <span class="typing-dot"></span>
+    <span class="typing-dot"></span>
+  `;
+    chatMessages.appendChild(indicator);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+/**
+ * Remove the typing indicator.
+ */
+function removeTypingIndicator() {
+    const indicator = document.getElementById('typing-indicator');
+    if (indicator) indicator.remove();
+}
+
+// Chat input events
+chatSendBtn.addEventListener('click', sendCopilotQuery);
+chatInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendCopilotQuery();
+    }
+});
+
+// ─── Post-Meeting Summary ──────────────────
+
+const summaryEmpty = document.getElementById('summary-empty');
+const summaryLoading = document.getElementById('summary-loading');
+const summaryContent = document.getElementById('summary-content');
+const summaryTitle = document.getElementById('summary-title');
+const summaryText = document.getElementById('summary-text');
+const summaryCards = document.getElementById('summary-cards');
+const generateSummaryBtn = document.getElementById('generate-summary-btn');
+const copySummaryBtn = document.getElementById('copy-summary-btn');
+
+/**
+ * Request summary generation from backend.
+ */
+function generateSummary() {
+    summaryEmpty.style.display = 'none';
+    summaryLoading.style.display = 'flex';
+    summaryContent.style.display = 'none';
+
+    chrome.runtime.sendMessage({
+        type: 'GENERATE_SUMMARY',
+    });
+}
+
+/**
+ * Handle summary response from backend.
+ * @param {{ summary: object, error: boolean }} message
+ */
+function handleMeetingSummary(message) {
+    summaryLoading.style.display = 'none';
+
+    if (message.error) {
+        summaryEmpty.style.display = 'flex';
+        const text = summaryEmpty.querySelector('.summary-empty__text');
+        text.innerHTML = `⚠️ ${escapeHtml(message.summary?.summary || 'Error generating summary')}`;
+        return;
+    }
+
+    lastSummaryData = message.summary;
+    renderSummary(message.summary);
+}
+
+/**
+ * Render structured summary with cards.
+ * @param {object} data - Meeting summary data
+ */
+function renderSummary(data) {
+    summaryContent.style.display = 'block';
+    summaryTitle.textContent = data.title || 'Meeting Summary';
+    summaryText.textContent = data.summary || '';
+    summaryCards.innerHTML = '';
+
+    // Key Topics
+    if (data.key_topics?.length) {
+        addCardGroup('🏷️ Key Topics', data.key_topics.map(t => ({
+            text: t,
+            cssClass: 'summary-card--topic',
+        })));
+    }
+
+    // Decisions
+    if (data.decisions?.length) {
+        addCardGroup('📌 Decisions', data.decisions.map(d => ({
+            text: d.what,
+            meta: d.who ? `By: ${d.who}` : null,
+            cssClass: 'summary-card--decision',
+        })));
+    }
+
+    // Action Items
+    if (data.action_items?.length) {
+        addCardGroup('✅ Action Items', data.action_items.map(a => ({
+            text: a.task,
+            meta: [a.owner, a.deadline].filter(Boolean).join(' · ') || null,
+            cssClass: 'summary-card--action',
+        })));
+    }
+
+    // Risks
+    if (data.risks?.length) {
+        addCardGroup('⚠️ Risks', data.risks.map(r => ({
+            text: r.description,
+            meta: r.severity ? `Severity: ${r.severity}` : null,
+            cssClass: `summary-card--risk-${r.severity || 'medium'}`,
+        })));
+    }
+
+    // Next Steps
+    if (data.next_steps?.length) {
+        addCardGroup('🚀 Next Steps', data.next_steps.map(s => ({
+            text: s,
+            cssClass: 'summary-card--topic',
+        })));
+    }
+}
+
+/**
+ * Add a group of cards to the summary.
+ * @param {string} title - Group title
+ * @param {Array<{text: string, meta?: string, cssClass: string}>} items
+ */
+function addCardGroup(title, items) {
+    const group = document.createElement('div');
+    group.className = 'summary-card-group';
+    group.innerHTML = `<h4 class="summary-card-group__title">${escapeHtml(title)}</h4>`;
+
+    items.forEach(item => {
+        const card = document.createElement('div');
+        card.className = `summary-card ${item.cssClass}`;
+        card.innerHTML = escapeHtml(item.text)
+            + (item.meta ? `<span class="summary-card__meta">${escapeHtml(item.meta)}</span>` : '');
+        group.appendChild(card);
+    });
+
+    summaryCards.appendChild(group);
+}
+
+/**
+ * Convert summary data to markdown for clipboard.
+ * @param {object} data
+ * @returns {string}
+ */
+function summaryToMarkdown(data) {
+    let md = `# ${data.title || 'Meeting Summary'}\n\n`;
+    md += `${data.summary || ''}\n\n`;
+
+    if (data.key_topics?.length) {
+        md += `## Key Topics\n`;
+        data.key_topics.forEach(t => { md += `- ${t}\n`; });
+        md += '\n';
+    }
+
+    if (data.decisions?.length) {
+        md += `## Decisions\n`;
+        data.decisions.forEach(d => {
+            md += `- **${d.what}**${d.who ? ` (${d.who})` : ''}\n`;
+        });
+        md += '\n';
+    }
+
+    if (data.action_items?.length) {
+        md += `## Action Items\n`;
+        data.action_items.forEach(a => {
+            md += `- [ ] ${a.task}`;
+            if (a.owner) md += ` — @${a.owner}`;
+            if (a.deadline) md += ` (${a.deadline})`;
+            md += '\n';
+        });
+        md += '\n';
+    }
+
+    if (data.risks?.length) {
+        md += `## Risks\n`;
+        data.risks.forEach(r => {
+            const badge = { high: '🔴', medium: '🟡', low: '🟢' }[r.severity] || '⚪';
+            md += `- ${badge} ${r.description}\n`;
+        });
+        md += '\n';
+    }
+
+    if (data.next_steps?.length) {
+        md += `## Next Steps\n`;
+        data.next_steps.forEach(s => { md += `- ${s}\n`; });
+    }
+
+    return md;
+}
+
+/**
+ * Copy summary as markdown to clipboard.
+ */
+async function copySummaryAsMarkdown() {
+    if (!lastSummaryData) return;
+
+    const md = summaryToMarkdown(lastSummaryData);
+    await navigator.clipboard.writeText(md);
+
+    // Visual feedback
+    copySummaryBtn.textContent = '✅ Copied!';
+    copySummaryBtn.classList.add('summary-copy-btn--copied');
+    setTimeout(() => {
+        copySummaryBtn.textContent = '📋 Copy as Markdown';
+        copySummaryBtn.classList.remove('summary-copy-btn--copied');
+    }, 2000);
+}
+
+// Summary button events
+generateSummaryBtn.addEventListener('click', generateSummary);
+copySummaryBtn.addEventListener('click', copySummaryAsMarkdown);
+
+// ─── Connection Badge ──────────────────────
+
 /**
  * Update connection badge.
  * @param {'connected' | 'connecting' | 'disconnected'} status
@@ -225,6 +623,48 @@ saveSettingsBtn.addEventListener('click', async () => {
     statusText.textContent = 'Backend URL saved ✓';
 });
 
+// ─── Cost Tracking ─────────────────────────
+
+/**
+ * Handle cost update from backend.
+ * @param {{ total_cost_usd: number, budget_usd: number, budget_remaining_usd: number, budget_pct: number }} message
+ */
+function handleCostUpdate(message) {
+    costBar.style.display = 'block';
+
+    const cost = (message.total_cost_usd || 0).toFixed(3);
+    const remaining = (message.budget_remaining_usd || 0).toFixed(2);
+    const pct = Math.min((message.budget_pct || 0) * 100, 100);
+
+    costValue.textContent = `$${cost}`;
+    costBudget.textContent = `$${remaining} left`;
+    costFill.style.width = `${pct}%`;
+
+    // Color coding: green < 50%, yellow < 80%, red >= 80%
+    if (pct >= 80) {
+        costFill.className = 'cost-bar__fill cost-bar__fill--danger';
+        costValue.className = 'cost-bar__value cost-bar__value--danger';
+    } else if (pct >= 50) {
+        costFill.className = 'cost-bar__fill cost-bar__fill--warning';
+        costValue.className = 'cost-bar__value cost-bar__value--warning';
+    } else {
+        costFill.className = 'cost-bar__fill';
+        costValue.className = 'cost-bar__value';
+    }
+}
+
+/**
+ * Handle budget exceeded notification.
+ * @param {{ message: string }} message
+ */
+function handleBudgetExceeded(message) {
+    costFill.style.width = '100%';
+    costFill.className = 'cost-bar__fill cost-bar__fill--danger';
+    costValue.className = 'cost-bar__value cost-bar__value--danger';
+    costBudget.textContent = '⚠️ Budget exceeded';
+    statusText.textContent = '🚫 ' + (message.message || 'Budget limit reached');
+}
+
 // ─── Utilities ─────────────────────────────
 
 /**
@@ -236,4 +676,27 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+/**
+ * Convert simple markdown to HTML for AI responses.
+ * Supports: **bold**, - bullet lists, and line breaks.
+ * @param {string} text
+ * @returns {string}
+ */
+function simpleMarkdown(text) {
+    let html = escapeHtml(text);
+    // **bold**
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    // - bullet items (line by line)
+    html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
+    html = html.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>');
+    // Clean double <ul> nesting
+    html = html.replace(/<\/ul>\s*<ul>/g, '');
+    // Newlines → <br>
+    html = html.replace(/\n/g, '<br>');
+    // Clean <br> inside <ul>
+    html = html.replace(/<ul><br>/g, '<ul>');
+    html = html.replace(/<br><\/ul>/g, '</ul>');
+    return html;
 }

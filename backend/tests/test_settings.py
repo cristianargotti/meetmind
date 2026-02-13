@@ -7,6 +7,7 @@ def test_settings_defaults(monkeypatch: object) -> None:
     """Settings have correct defaults for non-sensitive fields."""
     # Arrange
     import os
+
     import pytest
 
     mp = pytest.MonkeyPatch()
@@ -31,6 +32,7 @@ def test_settings_aws_no_hardcoded_defaults(monkeypatch: object) -> None:
     """AWS credentials must come from environment, not hardcoded defaults."""
     # Arrange
     import os
+
     import pytest
 
     mp = pytest.MonkeyPatch()

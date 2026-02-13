@@ -36,10 +36,42 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       });
       return false;
 
+    case 'COPILOT_QUERY':
+      // Forward copilot question from popup → offscreen (WebSocket)
+      chrome.runtime.sendMessage({
+        type: 'OFFSCREEN_COPILOT_QUERY',
+        question: message.question,
+      }).catch(() => {
+        // Offscreen might not exist — send error back to popup
+        chrome.runtime.sendMessage({
+          type: 'COPILOT_RESPONSE',
+          answer: '⚠️ Not connected. Start capture first.',
+          error: true,
+        }).catch(() => { });
+      });
+      return false;
+
+    case 'GENERATE_SUMMARY':
+      // Forward summary request from popup → offscreen (WebSocket)
+      chrome.runtime.sendMessage({
+        type: 'OFFSCREEN_GENERATE_SUMMARY',
+      }).catch(() => {
+        chrome.runtime.sendMessage({
+          type: 'MEETING_SUMMARY',
+          error: true,
+          summary: { title: 'Error', summary: '⚠️ Not connected. Start capture first.' },
+        }).catch(() => { });
+      });
+      return false;
+
     case 'INSIGHT':
     case 'TRANSCRIPT':
     case 'SCREENING':
+    case 'COPILOT_RESPONSE':
+    case 'MEETING_SUMMARY':
     case 'CONNECTION_STATUS':
+    case 'COST_UPDATE':
+    case 'BUDGET_EXCEEDED':
       // Forward from offscreen → popup
       chrome.runtime.sendMessage(message).catch(() => {
         // Popup might be closed — ignore

@@ -23,6 +23,19 @@
         </div>
     </header>
 
+    <!-- Cost Tracker Bar -->
+    <div class="cost-bar" id="cost-bar" style="display: none;">
+        <div class="cost-bar__info">
+            <span class="cost-bar__label">💰 Session</span>
+            <span class="cost-bar__value" id="cost-value">$0.00</span>
+            <span class="cost-bar__separator">·</span>
+            <span class="cost-bar__budget" id="cost-budget">$1.00 left</span>
+        </div>
+        <div class="cost-bar__progress">
+            <div class="cost-bar__fill" id="cost-fill" style="width: 0%;"></div>
+        </div>
+    </div>
+
     <!-- Main Controls -->
     <main class="main">
         <!-- Capture Button -->
@@ -34,26 +47,87 @@
         <!-- Status -->
         <p class="status-text" id="status-text">Ready to capture tab audio</p>
 
-        <!-- Live Transcript -->
-        <section class="transcript-section" id="transcript-section" style="display: none;">
-            <h2 class="section-title">📝 Live Transcript</h2>
-            <div class="transcript-box" id="transcript-box"></div>
+        <!-- Tab Navigation -->
+        <nav class="tabs" id="tab-nav" style="display: none;">
+            <button class="tab tab--active" data-tab="transcript">📝 Transcript</button>
+            <button class="tab" data-tab="copilot">🧠 Copilot</button>
+            <button class="tab" data-tab="summary">📊 Summary</button>
+        </nav>
+
+        <!-- Tab: Transcript -->
+        <section class="tab-panel tab-panel--active" id="panel-transcript">
+            <!-- Live Transcript -->
+            <div class="transcript-section" id="transcript-section" style="display: none;">
+                <div class="transcript-box" id="transcript-box"></div>
+            </div>
+
+            <!-- Insights -->
+            <div class="insights-section" id="insights-section" style="display: none;">
+                <h2 class="section-title">
+                    ✨ AI Insights
+                    <span class="insight-count" id="insight-count">0</span>
+                </h2>
+                <div class="insights-list" id="insights-list"></div>
+            </div>
         </section>
 
-        <!-- Insights -->
-        <section class="insights-section" id="insights-section" style="display: none;">
-            <h2 class="section-title">
-                ✨ AI Insights
-                <span class="insight-count" id="insight-count">0</span>
-            </h2>
-            <div class="insights-list" id="insights-list"></div>
+        <!-- Tab: Copilot Chat -->
+        <section class="tab-panel" id="panel-copilot">
+            <div class="copilot-chat">
+                <div class="chat-messages" id="chat-messages">
+                    <div class="chat-welcome">
+                        <span class="chat-welcome__icon">🕵️</span>
+                        <p class="chat-welcome__text">
+                            Secret Copilot ready.<br>
+                            Ask me anything about the meeting.
+                        </p>
+                    </div>
+                </div>
+                <div class="chat-input-bar">
+                    <input type="text" id="chat-input" class="chat-input" placeholder="Ask your copilot..."
+                        autocomplete="off">
+                    <button id="chat-send-btn" class="chat-send-btn" title="Send">
+                        <span>↑</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab: Summary -->
+        <section class="tab-panel" id="panel-summary">
+            <div class="summary-panel">
+                <div class="summary-empty" id="summary-empty">
+                    <span class="summary-empty__icon">📊</span>
+                    <p class="summary-empty__text">
+                        Generate a meeting summary<br>
+                        after capturing transcript.
+                    </p>
+                    <button id="generate-summary-btn" class="btn btn--primary summary-generate-btn">
+                        ✨ Generate Summary
+                    </button>
+                </div>
+                <div class="summary-loading" id="summary-loading" style="display: none;">
+                    <div class="typing-indicator">
+                        <span></span><span></span><span></span>
+                    </div>
+                    <p class="summary-loading__text">Analyzing meeting...</p>
+                </div>
+                <div class="summary-content" id="summary-content" style="display: none;">
+                    <h3 class="summary-title" id="summary-title"></h3>
+                    <p class="summary-text" id="summary-text"></p>
+                    <div id="summary-cards"></div>
+                    <button id="copy-summary-btn" class="btn btn--ghost summary-copy-btn">
+                        📋 Copy as Markdown
+                    </button>
+                </div>
+            </div>
         </section>
     </main>
 
     <!-- Footer -->
     <footer class="footer">
         <button id="settings-btn" class="icon-btn" title="Settings">⚙️</button>
-        <span class="version">v0.1.0</span>
+        <span class="version">v0.3.0</span>
     </footer>
 
     <!-- Settings Modal -->

@@ -1,16 +1,11 @@
 /**
  * MeetMind Chrome Extension — Offscreen Document.
  *
- * Runs in a DOM context (required for MediaRecorder).
- * Receives MediaStream via streamId, records audio,
- * and streams to the MeetMind backend via WebSocket.
- *
- * Uses stop/start recording to ensure each webm blob
- * has a complete container header for ffmpeg conversion.
+ * Runs in a DOM context (required for audio capture).
+ * Receives MediaStream via streamId, captures raw PCM audio
+ * using AudioContext, and streams it to the MeetMind backend
+ * via WebSocket as Float32 arrays — zero encoding overhead.
  */
-
-/** @type {MediaRecorder|null} */
-let mediaRecorder = null;
 
 /** @type {WebSocket|null} */
 let ws = null;
@@ -18,11 +13,11 @@ let ws = null;
 /** @type {MediaStream|null} */
 let mediaStream = null;
 
-/** @type {number|null} */
-let recordingInterval = null;
+/** @type {AudioContext|null} */
+let audioCtx = null;
 
-/** Recording cycle duration in ms (5s for better transcription). */
-const CYCLE_DURATION_MS = 5000;
+/** @type {ScriptProcessorNode|null} */
+let processor = null;
 
 // ─── Message Handling ──────────────────────
 
@@ -39,6 +34,35 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             sendResponse({ success: true });
             return false;
 
+        case 'OFFSCREEN_COPILOT_QUERY':
+            // Send copilot query through the active WebSocket
+            if (ws?.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'copilot_query',
+                    question: message.question,
+                }));
+            } else {
+                notifyServiceWorker('COPILOT_RESPONSE', {
+                    answer: '⚠️ WebSocket not connected',
+                    error: true,
+                });
+            }
+            return false;
+
+        case 'OFFSCREEN_GENERATE_SUMMARY':
+            // Send summary request through the active WebSocket
+            if (ws?.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'generate_summary',
+                }));
+            } else {
+                notifyServiceWorker('MEETING_SUMMARY', {
+                    error: true,
+                    summary: { title: 'Error', summary: '⚠️ WebSocket not connected' },
+                });
+            }
+            return false;
+
         default:
             return false;
     }
@@ -47,7 +71,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 // ─── Audio Processing ──────────────────────
 
 /**
- * Start capturing and streaming audio.
+ * Start capturing and streaming raw PCM audio.
+ * Uses AudioContext to capture 16kHz mono Float32 PCM
+ * and send directly over WebSocket — zero encoding latency.
  * @param {string} streamId Tab capture stream ID
  * @param {string} backendUrl WebSocket URL
  */
@@ -71,66 +97,66 @@ async function startProcessing(streamId, backendUrl) {
     // Connect WebSocket
     connectWebSocket(backendUrl);
 
-    // Start the recording cycle
-    startRecordingCycle();
+    // Start raw PCM streaming via AudioContext
+    startPCMStreaming();
 }
 
 /**
- * Start a stop/start MediaRecorder cycle.
- * Each cycle produces a complete webm blob with headers.
+ * Start capturing raw PCM from the MediaStream and sending
+ * Float32 samples directly over WebSocket.
+ *
+ * AudioContext at 16kHz → ScriptProcessor (4096 samples = ~256ms)
+ * → sends raw Float32Array binary → backend appends to numpy buffer.
+ *
+ * This eliminates:
+ * - WebM encoding in browser (~50ms)
+ * - ffmpeg subprocess spawn + decode on backend (~200-500ms)
  */
-function startRecordingCycle() {
+function startPCMStreaming() {
     if (!mediaStream) return;
 
-    startNewRecording();
+    // Create AudioContext at Whisper's native sample rate
+    audioCtx = new AudioContext({ sampleRate: 16000 });
+    const source = audioCtx.createMediaStreamSource(mediaStream);
 
-    // Every CYCLE_DURATION_MS, stop recording (triggers ondataavailable)
-    // then start a new recording for the next cycle
-    recordingInterval = setInterval(() => {
-        if (mediaRecorder && mediaRecorder.state === 'recording') {
-            mediaRecorder.stop(); // triggers ondataavailable with complete webm
+    // ScriptProcessor: 4096 samples at 16kHz = ~256ms per buffer
+    processor = audioCtx.createScriptProcessor(4096, 1, 1);
+    source.connect(processor);
+    processor.connect(audioCtx.destination);
+
+    processor.onaudioprocess = (event) => {
+        if (ws?.readyState !== WebSocket.OPEN) return;
+
+        const pcmData = event.inputBuffer.getChannelData(0);
+
+        // Quick silence check (skip empty buffers)
+        let sum = 0;
+        for (let i = 0; i < pcmData.length; i += 64) {
+            sum += pcmData[i] * pcmData[i];
         }
-        // Start a new recording for the next interval
-        startNewRecording();
-    }, CYCLE_DURATION_MS);
-}
+        const rms = Math.sqrt(sum / (pcmData.length / 64));
+        if (rms < 0.001) return; // Silence — don't waste bandwidth
 
-/**
- * Create and start a new MediaRecorder instance.
- */
-function startNewRecording() {
-    if (!mediaStream || mediaStream.getTracks().every(t => t.readyState === 'ended')) {
-        return;
-    }
-
-    mediaRecorder = new MediaRecorder(mediaStream, {
-        mimeType: getSupportedMimeType(),
-    });
-
-    mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0 && ws?.readyState === WebSocket.OPEN) {
-            ws.send(event.data);
-        }
+        // Send raw Float32 PCM directly (no encoding!)
+        ws.send(pcmData.buffer.slice(0));
     };
-
-    mediaRecorder.start(); // No timeslice — entire recording until stop()
 }
 
 /**
  * Stop everything cleanly.
  */
 function stopProcessing() {
-    // Stop recording cycle
-    if (recordingInterval) {
-        clearInterval(recordingInterval);
-        recordingInterval = null;
+    // Stop audio processor
+    if (processor) {
+        processor.disconnect();
+        processor = null;
     }
 
-    // Stop recorder
-    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-        mediaRecorder.stop();
+    // Close AudioContext
+    if (audioCtx) {
+        audioCtx.close().catch(() => { });
+        audioCtx = null;
     }
-    mediaRecorder = null;
 
     // Stop all tracks
     if (mediaStream) {
@@ -197,6 +223,8 @@ function handleBackendMessage(message) {
                 notifyServiceWorker('TRANSCRIPT', {
                     text: message.text,
                     partial: message.partial || false,
+                    speaker: message.speaker || 'unknown',
+                    speaker_color: message.speaker_color || '#6B7280',
                 });
             }
             break;
@@ -219,7 +247,39 @@ function handleBackendMessage(message) {
             }
             break;
 
+        case 'copilot_response':
+            notifyServiceWorker('COPILOT_RESPONSE', {
+                answer: message.answer,
+                latency_ms: message.latency_ms,
+                error: message.error || false,
+            });
+            break;
+
+        case 'meeting_summary':
+            notifyServiceWorker('MEETING_SUMMARY', {
+                summary: message.summary,
+                latency_ms: message.latency_ms,
+                error: message.error || false,
+            });
+            break;
+
         case 'pong':
+            break;
+
+        case 'cost_update':
+            notifyServiceWorker('COST_UPDATE', {
+                total_cost_usd: message.total_cost_usd,
+                budget_usd: message.budget_usd,
+                budget_remaining_usd: message.budget_remaining_usd,
+                budget_pct: message.budget_pct,
+                total_requests: message.total_requests,
+            });
+            break;
+
+        case 'budget_exceeded':
+            notifyServiceWorker('BUDGET_EXCEEDED', {
+                message: message.message,
+            });
             break;
     }
 }
@@ -237,22 +297,4 @@ function notifyServiceWorker(type, data = {}) {
     });
 }
 
-/**
- * Get a supported audio MIME type.
- * @returns {string}
- */
-function getSupportedMimeType() {
-    const types = [
-        'audio/webm;codecs=opus',
-        'audio/webm',
-        'audio/ogg;codecs=opus',
-    ];
 
-    for (const type of types) {
-        if (MediaRecorder.isTypeSupported(type)) {
-            return type;
-        }
-    }
-
-    return ''; // Let browser pick default
-}
