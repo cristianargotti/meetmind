@@ -45,7 +45,7 @@ class StatusBar extends StatelessWidget {
                 target: status == MeetingStatus.recording ? 1 : 0,
                 onPlay: (AnimationController c) => c.repeat(reverse: true),
               )
-              .fadeOut(begin: 1, end: 0.3, duration: 800.ms),
+              .fade(begin: 1, end: 0.3, duration: 800.ms),
           const SizedBox(width: 8),
 
           Text(
@@ -83,7 +83,7 @@ class StatusBar extends StatelessWidget {
 
           // AI screening status
           if (isScreening)
-            Row(
+            const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 SizedBox(
@@ -94,7 +94,7 @@ class StatusBar extends StatelessWidget {
                     color: MeetMindTheme.accent,
                   ),
                 ),
-                const SizedBox(width: 4),
+                SizedBox(width: 4),
                 Text(
                   'AI',
                   style: TextStyle(

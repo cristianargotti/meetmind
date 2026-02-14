@@ -51,7 +51,7 @@ class _LoadingState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          SizedBox(
+          const SizedBox(
             width: 48,
             height: 48,
             child: CircularProgressIndicator(

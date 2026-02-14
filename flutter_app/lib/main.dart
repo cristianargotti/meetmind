@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:meetmind/config/app_config.dart';
 import 'package:meetmind/config/router.dart';
 import 'package:meetmind/config/theme.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await AppConfig.initialize();
   runApp(const ProviderScope(child: MeetMindApp()));
 }
 

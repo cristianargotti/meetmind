@@ -23,13 +23,13 @@ class WebSocketService {
   String? get connectionId => _connectionId;
 
   /// Connect to the backend WebSocket.
-  Future<void> connect({String host = '192.168.0.12', int port = 8000}) async {
+  Future<void> connect({required String wsUrl}) async {
     if (_status == ConnectionStatus.connected) return;
 
     _status = ConnectionStatus.connecting;
 
     try {
-      final Uri uri = Uri.parse('ws://$host:$port/ws/transcription');
+      final Uri uri = Uri.parse(wsUrl);
       _channel = WebSocketChannel.connect(uri);
 
       await _channel!.ready;

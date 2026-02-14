@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:meetmind/config/app_config.dart';
 import 'package:meetmind/models/meeting_models.dart';
 import 'package:meetmind/services/audio_service.dart';
 import 'package:meetmind/services/model_manager.dart';
@@ -98,7 +99,7 @@ class MeetingNotifier extends StateNotifier<MeetingSession?> {
         ConnectionStatus.connecting;
 
     try {
-      await ws.connect();
+      await ws.connect(wsUrl: _ref.read(appConfigProvider).wsUrl);
       _ref.read(connectionStatusProvider.notifier).state =
           ConnectionStatus.connected;
     } catch (e) {
@@ -368,14 +369,14 @@ class MeetingNotifier extends StateNotifier<MeetingSession?> {
     );
 
     // Send via WebSocket
-    _wsService.sendCopilotQuery(question);
+    _ref.read(webSocketProvider).sendCopilotQuery(question);
   }
 
   /// Request a meeting summary from the backend.
   void requestSummary() {
     if (state == null) return;
     state = state!.copyWith(isSummaryLoading: true);
-    _wsService.sendSummaryRequest();
+    _ref.read(webSocketProvider).sendSummaryRequest();
   }
 
   /// Start audio capture and send to backend via WebSocket.
