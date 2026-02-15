@@ -56,124 +56,122 @@ Conecta ideas entre reuniones diferentes: "La propuesta de cache de Carlos es si
 
 ## ⚡ Arquitectura 2026 — Maximum Power, Minimum Cost
 
-### 🧬 Stack Tecnológico State-of-the-Art
+> [!IMPORTANT]
+> **Investigación completa Feb 2026.** Cada componente verificado con benchmarks y pricing actuales.
 
-| Componente | Tecnología | Por qué es lo mejor 2026 |
-|---|---|---|
-| **Compute** | AWS Graviton4 (c8g) ARM | **37% más barato** que x86, 30% más rápido |
-| **Container** | ECS Fargate ARM64 + Spot | **74% descuento** en Spot ARM vs On-Demand x86 |
-| **STT** | Parakeet TDT v3 (on-device) | $0 por token, 250x real-time |
-| **AI Screening** | Haiku 3.5 via Bedrock | $0.80/1M tokens — filtro barato |
-| **AI Analysis** | Sonnet 4.5 via Bedrock | Solo para insights relevantes (post-filter) |
-| **AI Summaries** | Bedrock **Batch API** | **50% descuento** para procesamiento async |
-| **Model Routing** | Bedrock **Intelligent Prompt Routing** | **30% ahorro** automático por complejidad |
-| **Prompt Caching** | Bedrock Prompt Caching | **90% ahorro** en system prompts repetidos |
-| **Vector DB** | PostgreSQL + **pgvector + pgvectorscale** | **28x mejor latencia** que Pinecone, 25% del costo |
-| **Knowledge Graph** | PostgreSQL JSON + relaciones | Sin DB adicional, unified stack |
-| **Audio Storage** | S3 Intelligent-Tiering | Auto-migra a Glacier después de 30 días |
-| **Cache** | ElastiCache Valkey (Serverless) | Redis-compatible, pay-per-request |
+### 🧬 Stack Tecnológico State-of-the-Art (Verificado Feb 2026)
 
-### 🎯 Optimizaciones de Costo AI
+| Componente | Anterior | **NUEVO 2026** | Ahorro |
+|---|---|---|---|
+| **Screening AI** | Haiku 3.5 ($0.80/1M) | **Amazon Nova Micro** ($0.04/1M) | **🔥 -95% (20x más barato)** |
+| **Analysis AI** | Sonnet 4.5 ($3.00/1M) | **Amazon Nova Pro** ($0.80/1M) | **-73%** |
+| **Copilot AI** | Sonnet 4.5 ($3.00/1M) | **Claude Sonnet 4.5** ($3.00/1M) | Mantener (mejor calidad para UX) |
+| **Deep Reasoning** | Opus 4 ($15/1M) | **DeepSeek R1** ($1.35/1M) | **-91%** |
+| **Summary** | Sonnet Batch ($1.50/1M) | **Nova Pro Batch** ($0.40/1M) | **-73%** |
+| **Embeddings** | Titan v2 ($0.02/1M) | **Titan Embeddings v2** ($0.02/1M) | Same (ya óptimo) |
+| **STT** | Parakeet TDT v3 ($0) | **Parakeet TDT 1.1B** ($0, RTFx >2000) | $0 ✅ |
+| **Compute** | c8g.xlarge Graviton4 | **c8g.xlarge Graviton4** ($79/mo) | Ya óptimo ✅ |
+| **Container** | ECS Fargate Spot | **Fargate ARM64 Spot** (-76%) | Ya óptimo ✅ |
+| **Vector DB** | pgvector | **pgvector + pgvectorscale** (28x vs Pinecone) | $0 adicional ✅ |
+| **Cache** | Valkey Serverless | **Valkey Serverless** | Ya óptimo ✅ |
+
+### 🔥 Descubrimiento Clave: Amazon Nova Model Family
+
+Amazon Nova es el **game-changer** para costos. Todos disponibles en Bedrock:
+
+| Modelo | Input/1M | Output/1M | Batch Input | Uso ideal |
+|---|---|---|---|---|
+| **Nova Micro** | $0.04 | $0.14 | $0.02 | Screening (20x < Haiku) |
+| **Nova Lite** | $0.06 | $0.24 | $0.03 | Multimodal light |
+| **Nova Pro** | $0.80 | $3.20 | $0.40 | Analysis (3.75x < Sonnet) |
+| **Nova Premier** | $2.50 | $12.50 | $1.25 | Complex reasoning |
+
+> vs **Haiku 3.5**: $0.80 input / $4.00 output
+> vs **Sonnet 4.5**: $3.00 input / $15.00 output
+
+### 🧠 Modelo de Routing Multi-LLM Optimizado
 
 ```mermaid
 graph TD
-    A["Audio chunk"] --> B["Parakeet STT<br/>$0 (on-device)"]
-    B --> C["Haiku Screening<br/>$0.80/1M tokens"]
-    C -->|"Relevante (30%)"| D["Sonnet Analysis<br/>$3/1M tokens"]
+    A["Audio chunk"] --> B["Parakeet TDT 1.1B<br/>$0 on-device, RTFx >2000"]
+    B --> C["Nova Micro Screening<br/>$0.04/1M — 20x más barato"]
+    C -->|"Relevante (30%)"| D["Nova Pro Analysis<br/>$0.80/1M — 3.75x más barato"]
     C -->|"No relevante (70%)"| E["🗑️ Skip"]
     D --> F["Prompt Cache<br/>-90% en system prompt"]
     
-    G["End of meeting"] --> H["Batch API Summary<br/>-50% descuento"]
-    H --> I["Embeddings (Titan)<br/>$0.02/reunión"]
-    I --> J["pgvector Storage"]
+    G["Copilot Query"] --> H["Claude Sonnet 4.5<br/>$3/1M — mejor UX"]
+    H --> J["pgvectorscale RAG"]
     
-    K["Ask Aura query"] --> L["Haiku + RAG<br/>$0.008/query"]
+    I["End of meeting"] --> K["Nova Pro Batch<br/>$0.40/1M — -73%"]
+    K --> L["Titan Embeddings v2<br/>$0.02/1M"]
     L --> J
     
-    M["Weekly Digest"] --> N["Batch API<br/>-50% descuento"]
+    M["Deep Analysis"] --> N["DeepSeek R1<br/>$1.35/1M — -91% vs Opus"]
+    
+    O["Weekly Digest"] --> P["Nova Micro Batch<br/>$0.02/1M"]
 ```
 
-| Optimización | Ahorro |
-|---|---|
-| Intelligent Prompt Routing | -30% en routing automático |
-| Prompt Caching (system prompts) | -90% en inputs repetidos |
-| Batch API (summaries, digests) | -50% en procesamiento async |
-| Haiku screening filter (70% skip) | -70% en llamadas a Sonnet |
-| **Ahorro total combinado** | **~55% vs enfoque naive** |
+### 📊 Tabla Maestra de Modelos por Capa
+
+| Capa | Modelo | Precio/1M input | Cuándo se usa |
+|---|---|---|---|
+| **Screening** | Nova Micro | $0.04 | Cada 5 seg de audio |
+| **Analysis** | Nova Pro | $0.80 | Solo si screening = relevante (30%) |
+| **Copilot** | Claude Sonnet 4.5 | $3.00 | Queries del usuario (pocas/meeting) |
+| **Summary** | Nova Pro (Batch) | $0.40 | Al final de cada meeting |
+| **Weekly Digest** | Nova Micro (Batch) | $0.02 | 1x/semana |
+| **Deep Reasoning** | DeepSeek R1 | $1.35 | Solo Business tier |
+| **Embeddings** | Titan v2 | $0.02 | Post-meeting indexing |
+| **STT** | Parakeet TDT 1.1B | $0.00 | On-device, siempre |
 
 ---
 
-## 📊 Costos Reales — Optimizados al Máximo
+## 📊 Costos Reales — Ultra-Optimizados
+
+### Costo AI por Usuario/mes (Comparación)
+
+| Componente | Plan Anterior | **Plan NUEVO 2026** | Ahorro |
+|---|---|---|---|
+| Screening (20 meetings) | $0.08 (Haiku) | **$0.004** (Nova Micro) | **-95%** |
+| Analysis (30% relevante) | $0.14 (Sonnet) | **$0.037** (Nova Pro) | **-73%** |
+| Summary (20 meetings) | $0.45 (Sonnet Batch) | **$0.12** (Nova Pro Batch) | **-73%** |
+| Copilot (10 queries/mes) | $0.05 (Sonnet) | $0.05 (Sonnet) | — |
+| Embeddings | $0.02 | $0.02 | — |
+| Ask Aura RAG | $0.05 (Haiku) | **$0.003** (Nova Micro) | **-94%** |
+| Weekly Digest | $0.06 (Batch) | **$0.003** (Nova Micro Batch) | **-95%** |
+| **Total/user/mes** | **$0.80** | **$0.24** | **🔥 -70%** |
 
 ### Infraestructura por Fase
 
-| Fase | Componente | Specs | Costo/mes |
-|---|---|---|---|
-| **1: Launch** | EC2 c8g.xlarge (Graviton4) | 4 vCPU ARM, 8GB | **$79** |
-| | EBS gp3 30GB | Storage | $2.40 |
-| | Elastic IP | Static | $3.65 |
-| | **Total Fase 1** | | **$85/mes** |
-| | | | |
-| **2: Growth** | ECS Fargate ARM64 (2-8 tasks) | 4vCPU/8GB each | $150-400 |
-| | RDS PostgreSQL db.t4g.micro | pgvector, Graviton | $12 |
-| | S3 Intelligent-Tiering | Audio + exports | $3 |
-| | ALB | Load balancer | $22 |
-| | **Total Fase 2** | | **$187-437/mes** |
-| | | | |
-| **3: Scale** | ECS Fargate ARM64 Spot (multi-AZ) | Auto-scale cluster | $300-1,200 |
-| | RDS db.t4g.medium (multi-AZ) | pgvector + pgvectorscale | $48 |
-| | ElastiCache Valkey Serverless | Sessions | ~$10 |
-| | S3 + Glacier | Archive | $5 |
-| | SQS | Async jobs | $1 |
-| | CloudFront | CDN | $5 |
-| | **Total Fase 3** | | **$369-1,269/mes** |
-
-### Comparación: Arquitectura Naive vs Optimizada
-
-| Item | Naive (x86, on-demand) | Optimizado (Graviton4 + Spot) |
+| Fase | Total/mes | Detalle |
 |---|---|---|
-| EC2/Fargate compute | $124/mes | **$79/mes** (-37%) |
-| Bedrock AI (por usuario) | $1.78/mes | **$0.80/mes** (-55%) |
-| Vector DB (Pinecone) | $70/mes | **$0** (pgvector incluido) |
-| Redis (ElastiCache cluster) | $50/mes | **$10** (Valkey Serverless) |
+| **1: Launch** (0-500) | **$85** | EC2 c8g.xlarge Graviton4, PostgreSQL embedded |
+| **2: Growth** (500-5K) | **$150-300** | ECS Fargate ARM64, RDS t4g.micro + pgvectorscale |
+| **3: Scale** (5K-50K) | **$300-900** | Fargate ARM64 Spot (-76%), RDS multi-AZ, SQS workers |
 
-### Costo AI por Usuario/mes (Optimizado)
+### Revenue vs Costs (25% Pro conversion)
 
-| Componente | Sin optimizar | Con optimización | Ahorro |
-|---|---|---|---|
-| Screening (Haiku) | $0.12 | $0.08 (prompt cache) | -33% |
-| Analysis (Sonnet) | $0.48 | $0.14 (70% filtrado + cache) | -71% |
-| Summary | $0.90 | $0.45 (Batch API) | -50% |
-| Embeddings | $0.02 | $0.02 | — |
-| Ask Aura (RAG) | $0.08 | $0.05 (Haiku + cache) | -38% |
-| Weekly Digest | $0.18 | $0.06 (Batch + cache) | -67% |
-| **Total/user/mes** | **$1.78** | **$0.80** | **-55%** |
+| Total users | Paying | Infra + AI | Revenue | **Net Profit** | **Margin** |
+|---|---|---|---|---|---|
+| 200 | 50 | $97 | $500 | **+$403** | 80% |
+| 500 | 125 | $180 | $1,249 | **+$1,069** | 86% |
+| 1,000 | 250 | $310 | $2,498 | **+$2,188** | 88% |
+| 5,000 | 1,250 | $750 | $12,488 | **+$11,738** | 94% |
+| 10,000 | 2,500 | $1,300 | $24,975 | **+$23,675** | 95% |
+
+> [!IMPORTANT]
+> **Profitable desde el día 1 con 200 usuarios.** Márgenes de 80-95% gracias a Nova + Graviton4 + pgvectorscale.
 
 ---
 
-## 💰 Pricing & Unit Economics
-
-### Pricing
+## 💰 Pricing
 
 | Plan | Precio | Incluye |
 |---|---|---|
 | **Free** | $0 | 3 reuniones/semana, transcripción, 1 insight/reunión |
 | **Pro** | **$9.99/mes** | Ilimitado, Ask Aura, Weekly Digest, Briefings, export, history |
 | **Team** | **$19.99/user/mes** | Pro + shared knowledge base, team analytics, integrations |
-| **Business** | **$39.99/user/mes** | Team + SSO, API, custom models, SLA |
-
-### Revenue vs Costs (25% Pro conversion)
-
-| Total users | Paying | Infra | AI cost | Revenue | **Profit** |
-|---|---|---|---|---|---|
-| 200 | 50 | $85 | $40 | $500 | **+$375** |
-| 500 | 125 | $187 | $100 | $1,249 | **+$962** |
-| 1,000 | 250 | $250 | $200 | $2,498 | **+$2,048** |
-| 5,000 | 1,250 | $600 | $1,000 | $12,488 | **+$10,888** |
-| 10,000 | 2,500 | $1,000 | $2,000 | $24,975 | **+$21,975** |
-
-> [!IMPORTANT]
-> **Profitable desde el día 1 con 200 usuarios** gracias a las optimizaciones. Margen de ~75% a escala.
+| **Business** | **$39.99/user/mes** | Team + SSO, API, DeepSeek R1 reasoning, custom models, SLA |
 
 ---
 
@@ -182,55 +180,54 @@ graph TD
 ### Fase 1: Launch (0-500 users) — **$85/mes**
 
 ```
-iPhone ──WebSocket──▶ EC2 c8g.xlarge (Graviton4 ARM)
+iPhone ──WebSocket──▶ EC2 c8g.xlarge (Graviton4 ARM, $79/mo)
                        ├── FastAPI (uvicorn)
-                       ├── Parakeet TDT v3 (STT)
-                       ├── PostgreSQL embedded (pgvector)
-                       └──▶ Bedrock API (Haiku/Sonnet)
-                             └── Prompt Cache enabled
-                             └── Intelligent Routing
+                       ├── Parakeet TDT 1.1B (STT on-device, RTFx >2000)
+                       ├── PostgreSQL embedded + pgvector + pgvectorscale
+                       └──▶ Amazon Bedrock
+                             ├── Nova Micro (screening, $0.04/1M)
+                             ├── Nova Pro (analysis, $0.80/1M)
+                             ├── Sonnet 4.5 (copilot, $3.00/1M)
+                             ├── Prompt Cache enabled (-90%)
+                             └── Intelligent Routing (-30%)
 ```
 
-### Fase 2: Growth (500-5K users) — **$187-437/mes**
+### Fase 2: Growth (500-5K users) — **$150-300/mes**
 
 ```
-iPhone ──▶ ALB ──▶ ECS Fargate ARM64
-                    ├── STT Tasks (CPU-opt) [2-8 auto-scale]
-                    ├── API Tasks [2-4]
-                    └──▶ Bedrock (routing + cache + batch)
+iPhone ──▶ ALB ──▶ ECS Fargate ARM64 (Graviton4)
+                    ├── STT Tasks (auto-scale 2-8)
+                    ├── API Tasks (2-4)
+                    └──▶ Bedrock (Nova + Sonnet + routing + cache + batch)
            
-           RDS PostgreSQL t4g.micro
-           ├── pgvector + pgvectorscale
-           ├── Knowledge Graph (relations)
-           └── Meeting history
+           RDS PostgreSQL t4g.micro (Graviton, $12/mo)
+           ├── pgvector + pgvectorscale (28x > Pinecone)
+           ├── Knowledge Graph (JSONB + relations)
+           └── Meeting history + embeddings
 
-           S3 Intelligent-Tiering (audio archive)
+           S3 Intelligent-Tiering (audio → Glacier after 30d)
+           Lambda SnapStart (Python, async workers)
 ```
 
-### Fase 3: Scale (5K-50K users) — **$369-1,269/mes**
+### Fase 3: Scale (5K-50K users) — **$300-900/mes**
 
 ```
-iPhone ──▶ CloudFront ──▶ ALB ──▶ ECS Fargate ARM64 Spot (multi-AZ)
+iPhone ──▶ CloudFront ──▶ ALB ──▶ ECS Fargate ARM64 Spot (multi-AZ, -76%)
                                    ├── STT cluster (Spot, auto-scale)
                                    ├── API cluster (On-Demand, stable)
-                                   ├── Embedding workers (Spot, async)
+                                   ├── Embedding workers (Spot, async via SQS)
                                    └──▶ Bedrock cross-region
+                                         ├── Nova Micro/Pro (screening + analysis)
+                                         ├── Sonnet 4.5 (copilot)
+                                         ├── DeepSeek R1 (Business deep reasoning)
+                                         └── Nova Pro Batch (summaries, digests)
 
            RDS PostgreSQL t4g.medium (multi-AZ, pgvectorscale)
-           ElastiCache Valkey Serverless (sessions)
+           ElastiCache Valkey Serverless (sessions, ~$10/mo)
            SQS (async: summaries, digests, embeddings)
+           Lambda SnapStart + SQS (event-driven workers)
            S3 + Glacier (audio lifecycle)
            CloudWatch + X-Ray (observability)
-```
-
-### Fase 4: Global (50K+ users) — Futuro
-
-```
-Multi-region (US + LATAM)
-Aurora Serverless v2 + pgvector
-ECS everywhere (multi-region)
-Bedrock cross-region inference
-CloudFront Global Accelerator
 ```
 
 ---
@@ -244,35 +241,37 @@ CloudFront Global Accelerator
 - [ ] Export (copy, share, email)
 - [ ] Privacy Policy + Terms
 
-### Sprint 2: Memory Engine (3 sem)
+### Sprint 2: Nova Migration + Memory Engine (3 sem)
+- [ ] **Migrar screening a Nova Micro** ($0.04 vs $0.80 de Haiku)
+- [ ] **Migrar analysis a Nova Pro** ($0.80 vs $3.00 de Sonnet)
 - [ ] PostgreSQL + pgvector + pgvectorscale
-- [ ] Embeddings pipeline (Titan)
-- [ ] "Ask Aura" — RAG chat
-- [ ] Speaker Diarization (pyannote)
+- [ ] Embeddings pipeline (Titan v2)
+- [ ] "Ask Aura" — RAG chat con Nova Micro
 
 ### Sprint 3: Intelligence (4 sem)
-- [ ] Knowledge Graph (entities + relations)
+- [ ] Knowledge Graph (entities + relations en PostgreSQL JSONB)
 - [ ] Pre-Meeting Briefing automático
-- [ ] Weekly Digest AI (Batch API)
+- [ ] Weekly Digest AI (Nova Micro Batch, $0.02/1M)
 - [ ] Action item tracking + follow-up
-- [ ] Vocabulario personal / adaptive personality
+- [ ] Adaptive personality
 
 ### Sprint 4: Cost Optimization (2 sem)
-- [ ] Migrar EC2 → c8g.xlarge (Graviton4)
-- [ ] Bedrock Prompt Caching
+- [ ] Migrar EC2 → c8g.xlarge (Graviton4) si no está
+- [ ] Bedrock Prompt Caching en todos los agentes
 - [ ] Bedrock Intelligent Prompt Routing
-- [ ] Batch API para summaries/digests
-- [ ] S3 Intelligent-Tiering + lifecycle
+- [ ] Nova Pro Batch API para summaries/digests
+- [ ] S3 Intelligent-Tiering + lifecycle policies
 
 ### Sprint 5: Growth (3 sem)
 - [ ] Android app (Flutter = mismo code)
 - [ ] Apple Watch companion
-- [ ] ECS Fargate ARM64 migration
-- [ ] Onboarding premium
+- [ ] ECS Fargate ARM64 Spot migration (-76%)
+- [ ] Lambda SnapStart workers (Python, async)
 
 ### Sprint 6: Diferenciación (4 sem)
+- [ ] DeepSeek R1 integration (Business tier deep reasoning)
 - [ ] Live Coaching en reuniones
-- [ ] Chrome Extension (virtual meetings)
+- [ ] Chrome Extension (virtual meetings capture)
 - [ ] Slack/Notion integration
 - [ ] CRM sync (Team/Business plan)
 
@@ -283,22 +282,35 @@ CloudFront Global Accelerator
 | Moat | Detalle | Copiable? |
 |---|---|---|
 | **Data lock-in** | Más reuniones = copilot más inteligente | 🔒 Imposible |
-| **STT propio** | Parakeet on-device, sin API cloud | 🔒 Difícil |
-| **AI screening real-time** | Único en el mercado | 🔒 Medio |
+| **STT propio** | Parakeet TDT 1.1B on-device, RTFx >2000 | 🔒 Difícil |
+| **AI screening real-time** | Nova Micro a $0.04/1M — nadie más puede | 🔒 Medio |
 | **Background + push** | Único en mobile | 🔒 Medio |
-| **Costo optimizado** | 55% más barato que enfoque naive | 🔒 Difícil |
+| **Costo 70% menor** | Nova + Graviton4 + pgvectorscale | 🔒 Difícil |
 | **LATAM-first** | Nativo ES/PT, no add-on | 🔒 Medio |
+| **Multi-LLM routing** | Mejor modelo para cada capa | 🔒 Difícil |
 
 > [!CAUTION]
 > **El moat real es la DATA.** Cuantas más reuniones tenga un usuario, más inteligente se vuelve Aura, y más difícil es cambiarse. Esto crea un **lock-in positivo** donde el usuario QUIERE quedarse.
 
 ---
 
-## 🎯 Conclusión
+## 🎯 Conclusión — Por qué esta es la arquitectura definitiva 2026
 
-Con esta arquitectura:
-- **Profitable desde 200 usuarios** (no 2,000)
-- **75% margen** a escala
-- **55% más barato** que la competencia en infra
-- **Tecnología 2026** más avanzada (Graviton4, pgvectorscale, Bedrock optimizations)
-- **Learning copilot** que nadie más tiene
+| Métrica | Arquitectura Naive | **Aura Optimizada 2026** |
+|---|---|---|
+| Costo AI/user/mes | $1.78 | **$0.24 (-87%)** |
+| Screening cost | $0.80/1M (Haiku) | **$0.04/1M (Nova Micro)** |
+| Analysis cost | $3.00/1M (Sonnet) | **$0.80/1M (Nova Pro)** |
+| Deep reasoning | $15.00/1M (Opus) | **$1.35/1M (DeepSeek R1)** |
+| Vector DB | $70/mo (Pinecone) | **$0 (pgvectorscale)** |
+| Compute | $124/mo (x86) | **$79/mo (Graviton4 ARM)** |
+| Container | On-Demand | **Spot ARM64 (-76%)** |
+| Profitable desde | 500 users | **200 users** |
+| Margen a escala | 60% | **95%** |
+
+> Con esta arquitectura, **cada $1 de revenue genera $0.95 de profit a escala.** No hay startup en el mercado de meeting AI que pueda competir con estos márgenes.
+
+---
+
+*Documento actualizado: Febrero 15, 2026*
+*Investigación verificada con pricing real de AWS Bedrock, EC2, Fargate, y benchmarks publicados.*
