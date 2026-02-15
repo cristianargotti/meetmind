@@ -16,7 +16,10 @@ dependencies = [
     "httpx>=0.28.0",
     "structlog>=24.4.0",
     "tenacity>=9.0.0",
-    "faster-whisper>=1.1.0",
+    "openai>=2.21.0",
+    "soundfile>=0.13.0",
+    "numpy>=1.26.0",
+    "onnx-asr[cpu,hub]>=0.10.0",
 ]
 
 [dependency-groups]

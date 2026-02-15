@@ -134,16 +134,37 @@ class StreamingTranscriber:
         logger.info("streaming_transcriber_stopped")
 
     def feed_audio(self, raw_bytes: bytes) -> None:
-        """Feed raw Float32 PCM bytes from the Chrome Extension.
+        """Feed raw PCM bytes — auto-detects Int16 (iOS) or Float32 (Chrome).
 
-        The extension sends raw ArrayBuffer from Float32Array via
-        AudioContext ScriptProcessor — no encoding, just raw samples.
+        iOS Flutter sends Int16 PCM (2 bytes/sample, range -32768..32767).
+        Chrome Extension sends Float32 PCM (4 bytes/sample, range -1.0..1.0).
+        faster-whisper expects Float32 normalized to [-1.0, 1.0].
         """
         try:
-            pcm = np.frombuffer(raw_bytes, dtype=np.float32)
-            if len(pcm) > 0:
+            n = len(raw_bytes)
+            if n == 0:
+                return
+
+            # Heuristic: try Float32 first if divisible by 4
+            if n % 4 == 0:
+                pcm_f32 = np.frombuffer(raw_bytes, dtype=np.float32)
+                # Float32 audio from Chrome is always in [-1.0, 1.0]
+                max_abs = np.max(np.abs(pcm_f32)) if len(pcm_f32) > 0 else 0
+                if max_abs <= 1.5:
+                    # Confirmed Float32 from Chrome Extension
+                    with self._buffer_lock:
+                        self._audio_chunks.append(pcm_f32)
+                    return
+
+            # Int16 PCM from iOS (or Float32 that looked like garbage)
+            if n % 2 == 0:
+                pcm_i16 = np.frombuffer(raw_bytes, dtype=np.int16)
+                # Normalize Int16 → Float32 [-1.0, 1.0]
+                pcm_f32 = pcm_i16.astype(np.float32) / 32768.0
                 with self._buffer_lock:
-                    self._audio_chunks.append(pcm)
+                    self._audio_chunks.append(pcm_f32)
+                return
+
         except ValueError:
             pass  # Skip malformed buffers
 
@@ -166,7 +187,7 @@ class StreamingTranscriber:
         if len(audio) < tail_samples:
             return False
         tail = audio[-tail_samples:]
-        rms = float(np.sqrt(np.mean(tail**2)))
+        rms = float(np.sqrt(np.mean(tail.astype(np.float32) ** 2)))
         return rms < self.silence_threshold
 
     def _finalize_and_reset(self) -> None:

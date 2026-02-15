@@ -188,7 +188,7 @@ def test_connection_manager_init_agents() -> None:
 
     # Act
     with (
-        patch("meetmind.api.websocket.BedrockProvider"),
+        patch("meetmind.api.websocket.create_llm_provider"),
         patch("meetmind.api.websocket.ScreeningAgent"),
         patch("meetmind.api.websocket.AnalysisAgent"),
         patch("meetmind.api.websocket.CopilotAgent"),

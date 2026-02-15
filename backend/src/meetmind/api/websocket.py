@@ -21,6 +21,9 @@ from fastapi import WebSocket, WebSocketDisconnect
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from meetmind.providers.base import LLMProvider
+    from meetmind.providers.streaming_stt import StreamingTranscriber
+
 from meetmind.agents.analysis_agent import AnalysisAgent
 from meetmind.agents.copilot_agent import CopilotAgent
 from meetmind.agents.screening_agent import ScreeningAgent
@@ -29,8 +32,9 @@ from meetmind.api import handlers
 from meetmind.config.settings import settings
 from meetmind.core.speaker_tracker import SpeakerTracker
 from meetmind.core.transcript import TranscriptManager
-from meetmind.providers.bedrock import BedrockProvider
-from meetmind.providers.streaming_stt import StreamingTranscriber, TranscriptSegment
+from meetmind.providers.factory import create_llm_provider
+from meetmind.providers.streaming_stt import StreamingTranscriber as WhisperTranscriber
+from meetmind.providers.streaming_stt import TranscriptSegment
 from meetmind.providers.whisper_stt import transcribe_with_speaker
 from meetmind.utils.cost_tracker import CostTracker
 from meetmind.utils.response_cache import ResponseCache
@@ -50,23 +54,25 @@ class ConnectionManager:
         self._streaming_transcribers: dict[str, StreamingTranscriber] = {}
         self._response_cache: ResponseCache = ResponseCache()
         self._event_loop: asyncio.AbstractEventLoop | None = None
-        self._bedrock: BedrockProvider | None = None
+        self._provider: LLMProvider | None = None
         self._screening_agent: ScreeningAgent | None = None
         self._analysis_agent: AnalysisAgent | None = None
         self._copilot_agent: CopilotAgent | None = None
         self._summary_agent: SummaryAgent | None = None
 
     def init_agents(self) -> None:
-        """Initialize Bedrock provider and AI agents.
+        """Initialize LLM provider and AI agents.
 
         Call during FastAPI lifespan startup.
+        Uses settings.llm_provider to select bedrock or openai.
         """
-        self._bedrock = BedrockProvider()
-        self._screening_agent = ScreeningAgent(self._bedrock)
-        self._analysis_agent = AnalysisAgent(self._bedrock)
-        self._copilot_agent = CopilotAgent(self._bedrock)
-        self._summary_agent = SummaryAgent(self._bedrock)
-        logger.info("agents_initialized")
+        provider = create_llm_provider()
+        self._provider = provider
+        self._screening_agent = ScreeningAgent(provider)
+        self._analysis_agent = AnalysisAgent(provider)
+        self._copilot_agent = CopilotAgent(provider)
+        self._summary_agent = SummaryAgent(provider)
+        logger.info("agents_initialized", provider=settings.llm_provider)
 
     @property
     def agents_ready(self) -> bool:
@@ -106,11 +112,41 @@ class ConnectionManager:
 
         # Streaming STT (real-time mode)
         if settings.stt_mode == "streaming":
-            streamer = StreamingTranscriber(
-                language=settings.whisper_language,
-                on_transcript=self._make_stream_callback(connection_id),
-                min_transcribe_interval=1.0,
-            )
+            if settings.stt_engine == "moonshine":
+                from meetmind.providers.moonshine_stt import (
+                    MoonshineTranscriber,
+                )
+
+                streamer = MoonshineTranscriber(
+                    language=settings.moonshine_language,
+                    on_transcript=self._make_stream_callback(connection_id),
+                )
+            elif settings.stt_engine == "qwen":
+                from meetmind.providers.qwen_stt import (
+                    StreamingTranscriber as QwenTranscriber,
+                )
+
+                streamer = QwenTranscriber(
+                    language=settings.whisper_language,
+                    on_transcript=self._make_stream_callback(connection_id),
+                    min_transcribe_interval=0.3,
+                )
+            elif settings.stt_engine == "parakeet":
+                from meetmind.providers.parakeet_stt import (
+                    StreamingTranscriber as ParakeetTranscriber,
+                )
+
+                streamer = ParakeetTranscriber(
+                    language=settings.whisper_language,
+                    on_transcript=self._make_stream_callback(connection_id),
+                    min_transcribe_interval=0.1,
+                )
+            else:
+                streamer = WhisperTranscriber(
+                    language=settings.whisper_language,
+                    on_transcript=self._make_stream_callback(connection_id),
+                    min_transcribe_interval=0.5,
+                )
             self._streaming_transcribers[connection_id] = streamer
             streamer.start()
 

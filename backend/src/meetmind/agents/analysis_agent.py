@@ -1,4 +1,4 @@
-"""Analysis agent — Sonnet 4.5 for deep insight generation.
+"""Analysis agent — deep insight generation.
 
 Triggered when the screening agent marks a transcript segment as
 relevant. Generates structured insights: decisions, action items,
@@ -10,7 +10,7 @@ import re
 
 import structlog
 
-from meetmind.providers.bedrock import BedrockProvider
+from meetmind.providers.base import LLMProvider
 
 logger = structlog.get_logger(__name__)
 
@@ -75,11 +75,11 @@ class AnalysisAgent:
         "}}"
     )
 
-    def __init__(self, provider: BedrockProvider) -> None:
-        """Initialize with a Bedrock provider.
+    def __init__(self, provider: LLMProvider) -> None:
+        """Initialize with an LLM provider.
 
         Args:
-            provider: Bedrock LLM provider instance.
+            provider: LLM provider instance.
         """
         self._provider = provider
 

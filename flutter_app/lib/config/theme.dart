@@ -1,28 +1,52 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// MeetMind Design System — Premium dark-first theme.
+/// MeetMind Design System v2.0 — Ultra-professional dark-first theme.
 class MeetMindTheme {
   MeetMindTheme._();
 
-  // Brand colors
-  static const Color primary = Color(0xFF6C63FF);
-  static const Color primaryLight = Color(0xFF9D97FF);
-  static const Color accent = Color(0xFF00D9FF);
-  static const Color success = Color(0xFF00E676);
-  static const Color warning = Color(0xFFFFAB40);
-  static const Color error = Color(0xFFFF5252);
+  // ─── Brand Colors ───
+  static const Color primary = Color(0xFF8B5CF6);
+  static const Color primaryLight = Color(0xFFA78BFA);
+  static const Color primaryDim = Color(0x1F8B5CF6);
 
-  // Dark palette
-  static const Color darkBg = Color(0xFF0D0D1A);
-  static const Color darkSurface = Color(0xFF1A1A2E);
-  static const Color darkCard = Color(0xFF222240);
-  static const Color darkBorder = Color(0xFF2E2E4A);
+  static const Color accent = Color(0xFF06D6A0);
+  static const Color accentDim = Color(0x1A06D6A0);
 
-  // Light palette
+  static const Color copilot = Color(0xFFF97316);
+  static const Color copilotDim = Color(0x1AF97316);
+
+  static const Color success = Color(0xFF22C55E);
+  static const Color successDim = Color(0x1A22C55E);
+
+  static const Color warning = Color(0xFFEAB308);
+  static const Color warningDim = Color(0x1AEAB308);
+
+  static const Color error = Color(0xFFEF4444);
+  static const Color errorDim = Color(0x1AEF4444);
+
+  // ─── Dark Palette — refined ───
+  static const Color darkBg = Color(0xFF08090D);
+  static const Color darkSurface = Color(0xFF0F1117);
+  static const Color darkCard = Color(0xFF161922);
+  static const Color darkBorder = Color(0xFF1E2230);
+  static const Color darkBorderLight = Color(0xFF14161E);
+
+  // ─── Text Hierarchy ───
+  static const Color textPrimary = Color(0xFFF0F2F5);
+  static const Color textSecondary = Color(0xFFA0A8B4);
+  static const Color textTertiary = Color(0xFF5C6370);
+
+  // ─── Light Palette ───
   static const Color lightBg = Color(0xFFF8F9FE);
   static const Color lightSurface = Color(0xFFFFFFFF);
   static const Color lightCard = Color(0xFFF0F1F8);
+
+  // ─── Spacing ───
+  static const double radiusSm = 10;
+  static const double radiusMd = 14;
+  static const double radiusLg = 18;
+  static const double radiusPill = 100;
 
   /// Dark theme — default.
   static ThemeData get dark => ThemeData(
@@ -31,6 +55,7 @@ class MeetMindTheme {
     colorScheme: const ColorScheme.dark(
       primary: primary,
       secondary: accent,
+      tertiary: copilot,
       surface: darkSurface,
       error: error,
     ),
@@ -40,7 +65,7 @@ class MeetMindTheme {
       color: darkCard,
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(radiusMd),
         side: const BorderSide(color: darkBorder, width: 1),
       ),
     ),
@@ -49,48 +74,85 @@ class MeetMindTheme {
         backgroundColor: primary,
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(radiusSm),
+        ),
         textStyle: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 15),
+        elevation: 0,
       ),
     ),
     floatingActionButtonTheme: const FloatingActionButtonThemeData(
       backgroundColor: primary,
       foregroundColor: Colors.white,
-      elevation: 4,
+      elevation: 0,
       shape: CircleBorder(),
     ),
     appBarTheme: AppBarTheme(
       backgroundColor: darkBg,
       elevation: 0,
+      scrolledUnderElevation: 0,
       centerTitle: true,
       titleTextStyle: GoogleFonts.inter(
-        fontSize: 18,
-        fontWeight: FontWeight.w600,
+        fontSize: 17,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.3,
         color: Colors.white,
+      ),
+    ),
+    tabBarTheme: TabBarThemeData(
+      indicatorColor: primary,
+      labelColor: Colors.white,
+      unselectedLabelColor: textTertiary,
+      indicatorSize: TabBarIndicatorSize.label,
+      dividerColor: darkBorder,
+      labelStyle: GoogleFonts.inter(
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+      ),
+      unselectedLabelStyle: GoogleFonts.inter(
+        fontSize: 13,
+        fontWeight: FontWeight.w500,
       ),
     ),
     bottomNavigationBarTheme: const BottomNavigationBarThemeData(
       backgroundColor: darkSurface,
       selectedItemColor: primary,
-      unselectedItemColor: Colors.white54,
+      unselectedItemColor: textTertiary,
       type: BottomNavigationBarType.fixed,
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: darkCard,
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(radiusSm),
         borderSide: const BorderSide(color: darkBorder),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(radiusSm),
         borderSide: const BorderSide(color: darkBorder),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: primary, width: 2),
+        borderRadius: BorderRadius.circular(radiusSm),
+        borderSide: const BorderSide(color: primary, width: 1.5),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    ),
+    snackBarTheme: SnackBarThemeData(
+      backgroundColor: darkCard,
+      contentTextStyle: GoogleFonts.inter(
+        color: textPrimary,
+        fontSize: 13,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(radiusSm),
+      ),
+      behavior: SnackBarBehavior.floating,
+    ),
+    dialogTheme: DialogThemeData(
+      backgroundColor: darkSurface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(radiusMd),
+      ),
     ),
   );
 
@@ -109,7 +171,9 @@ class MeetMindTheme {
     cardTheme: CardThemeData(
       color: lightCard,
       elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(radiusMd),
+      ),
     ),
   );
 }

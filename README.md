@@ -10,9 +10,14 @@
        │
        └──► WebSocket ──► ☁️ FastAPI Backend (Python)
                                   │
-                                  ├──► Haiku 3.5 (screening, $0.05/hr)
-                                  ├──► Sonnet 4.5 (analysis, $0.50/hr)
-                                  └──► Opus 4.6 (deep think, $1.00/hr)
+                                  ├──► 🔀 Provider Factory (configurable)
+                                  │         ├──► AWS Bedrock (Haiku/Sonnet/Opus)
+                                  │         └──► OpenAI (gpt-4o-mini/gpt-4o)
+                                  │
+                                  ├──► Screening Agent (fast relevance check)
+                                  ├──► Analysis Agent (insight generation)
+                                  ├──► Copilot Agent (conversational assistant)
+                                  └──► Summary Agent (structured reports)
 
 🌐 Chrome Extension (MV3) ──► tabCapture ──► MediaRecorder (5s chunks)
                                                     │
@@ -29,8 +34,18 @@
 cd backend
 uv sync
 cp .env.example .env          # Configure environment
-uv run pytest                 # Run tests (41 tests, 84% coverage)
+uv run pytest                 # Run tests (191 tests, 85% coverage)
 uv run uvicorn meetmind.main:app --reload  # Start server
+```
+
+#### Switching LLM Provider
+```bash
+# Default: AWS Bedrock (production)
+MEETMIND_LLM_PROVIDER=bedrock
+
+# Alternative: OpenAI (dev/testing)
+MEETMIND_LLM_PROVIDER=openai
+MEETMIND_OPENAI_API_KEY=sk-...
 ```
 
 ### Flutter App
@@ -71,7 +86,7 @@ meetmind/
 ├── backend/                  # ☁️ FastAPI (Python 3.12) — Hexagonal Architecture
 │   └── src/meetmind/
 │       ├── agents/           # AI agents (Screening, Analysis)
-│       ├── providers/        # Bedrock, Whisper STT, Deepgram
+│       ├── providers/        # Bedrock, OpenAI, Whisper STT, Deepgram
 │       ├── core/             # Domain logic (Transcript)
 │       ├── api/              # HTTP + WebSocket endpoints
 │       ├── config/           # Settings (Pydantic)
@@ -93,9 +108,9 @@ meetmind/
 | STT on-device | **whisper.cpp** (ggerganov, MIT) | CoreML/Metal, 99 languages |
 | STT server | **faster-whisper** (CTranslate2) | CPU int8, local processing |
 | Backend | **FastAPI** (Python 3.12) | Hexagonal Architecture |
-| AI screening | **Claude Haiku 3.5** (Bedrock) | $0.05/hr |
-| AI analysis | **Claude Sonnet 4.5** (Bedrock) | $0.50/hr |
-| AI deep think | **Claude Opus 4.6** (Bedrock) | 1M token context |
+| AI screening | **Claude Haiku 3.5** / **gpt-4o-mini** | Configurable via `MEETMIND_LLM_PROVIDER` |
+| AI analysis | **Claude Sonnet 4.5** / **gpt-4o** | Configurable via `MEETMIND_LLM_PROVIDER` |
+| AI deep think | **Claude Opus 4** / **gpt-4o** | Configurable via `MEETMIND_LLM_PROVIDER` |
 | State mgmt | **Riverpod** | Compile-safe DI |
 | Extension | **Manifest V3** | `tabCapture` + Offscreen |
 
@@ -103,8 +118,8 @@ meetmind/
 
 | Metric | Value |
 |--------|-------|
-| Python tests | 41 passing |
-| Coverage | 84% (≥80% required) |
+| Python tests | 191 passing |
+| Coverage | 85% (≥80% required) |
 | Quality gates | 18/18 |
 | MyPy | `--strict` mode, 0 errors |
 | Ruff | 0 lint errors, 100% formatted |

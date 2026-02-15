@@ -20,15 +20,16 @@ const connBadge = document.getElementById('connection-badge');
 
 const tabNav = document.getElementById('tab-nav');
 const transcriptPanel = document.getElementById('panel-transcript');
+const insightsPanel = document.getElementById('panel-insights');
 const copilotPanel = document.getElementById('panel-copilot');
 const summaryPanel = document.getElementById('panel-summary');
 
 const transcriptSection = document.getElementById('transcript-section');
 const transcriptBox = document.getElementById('transcript-box');
 
-const insightsSection = document.getElementById('insights-section');
+const insightsEmpty = document.getElementById('insights-empty');
+const insightsFeed = document.getElementById('insights-feed');
 const insightsList = document.getElementById('insights-list');
-const insightCount = document.getElementById('insight-count');
 
 const chatMessages = document.getElementById('chat-messages');
 const chatInput = document.getElementById('chat-input');
@@ -88,6 +89,7 @@ function initTabs() {
             // Show correct panel
             const target = tab.dataset.tab;
             transcriptPanel.classList.toggle('tab-panel--active', target === 'transcript');
+            insightsPanel.classList.toggle('tab-panel--active', target === 'insights');
             copilotPanel.classList.toggle('tab-panel--active', target === 'copilot');
             summaryPanel.classList.toggle('tab-panel--active', target === 'summary');
 
@@ -254,8 +256,10 @@ function handleTranscript(message) {
  */
 function handleInsight(message) {
     insights.push(message);
-    insightsSection.style.display = 'block';
-    insightCount.textContent = insights.length;
+
+    // Show the feed, hide empty state
+    if (insightsEmpty) insightsEmpty.style.display = 'none';
+    if (insightsFeed) insightsFeed.style.display = 'block';
 
     const categoryEmoji = {
         decision: '📌',
@@ -275,6 +279,12 @@ function handleInsight(message) {
   `;
 
     insightsList.prepend(card);
+
+    // Update tab badge with count
+    const insightsTab = document.querySelector('[data-tab="insights"]');
+    if (insightsTab) {
+        insightsTab.textContent = `🔮 Insights (${insights.length})`;
+    }
 }
 
 /**

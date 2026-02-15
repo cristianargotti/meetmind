@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=400">
+    <meta name="viewport" content="width=520">
     <title>MeetMind</title>
     <link rel="stylesheet" href="popup.css">
 </head>
@@ -50,6 +50,7 @@
         <!-- Tab Navigation -->
         <nav class="tabs" id="tab-nav" style="display: none;">
             <button class="tab tab--active" data-tab="transcript">📝 Transcript</button>
+            <button class="tab" data-tab="insights">🔮 Insights</button>
             <button class="tab" data-tab="copilot">🧠 Copilot</button>
             <button class="tab" data-tab="summary">📊 Summary</button>
         </nav>
@@ -60,14 +61,21 @@
             <div class="transcript-section" id="transcript-section" style="display: none;">
                 <div class="transcript-box" id="transcript-box"></div>
             </div>
+        </section>
 
-            <!-- Insights -->
-            <div class="insights-section" id="insights-section" style="display: none;">
-                <h2 class="section-title">
-                    ✨ AI Insights
-                    <span class="insight-count" id="insight-count">0</span>
-                </h2>
-                <div class="insights-list" id="insights-list"></div>
+        <!-- Tab: Insights (Proactive AI) -->
+        <section class="tab-panel" id="panel-insights">
+            <div class="insights-panel">
+                <div class="insights-empty" id="insights-empty">
+                    <span class="insights-empty__icon">🔮</span>
+                    <p class="insights-empty__text">
+                        AI insights will appear here<br>
+                        as the conversation unfolds.
+                    </p>
+                </div>
+                <div class="insights-feed" id="insights-feed" style="display: none;">
+                    <div class="insights-list" id="insights-list"></div>
+                </div>
             </div>
         </section>
 
@@ -127,7 +135,7 @@
     <!-- Footer -->
     <footer class="footer">
         <button id="settings-btn" class="icon-btn" title="Settings">⚙️</button>
-        <span class="version">v0.3.0</span>
+        <span class="version">v0.4.0</span>
     </footer>
 
     <!-- Settings Modal -->

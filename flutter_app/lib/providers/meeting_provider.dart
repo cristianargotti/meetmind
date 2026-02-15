@@ -1,12 +1,16 @@
 import 'dart:async';
+import 'dart:typed_data';
+import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meetmind/config/app_config.dart';
 import 'package:meetmind/models/meeting_models.dart';
 import 'package:meetmind/services/audio_service.dart';
 import 'package:meetmind/services/model_manager.dart';
 import 'package:meetmind/services/permission_service.dart';
+import 'package:meetmind/services/notification_service.dart';
 import 'package:meetmind/services/websocket_service.dart';
 import 'package:meetmind/services/whisper_stt_service.dart';
 import 'package:uuid/uuid.dart';
@@ -78,7 +82,7 @@ class MeetingNotifier extends StateNotifier<MeetingSession?> {
 
   // Audio accumulation buffer for STT
   final List<int> _audioBuffer = [];
-  static const int _sttChunkSamples = 32000; // 2s at 16kHz
+  static const int _sttChunkSamples = 1600; // 100ms at 16kHz (real-time streaming)
 
   /// Start a new meeting session.
   Future<void> startMeeting({String title = 'New Meeting'}) async {
@@ -102,6 +106,8 @@ class MeetingNotifier extends StateNotifier<MeetingSession?> {
       await ws.connect(wsUrl: _ref.read(appConfigProvider).wsUrl);
       _ref.read(connectionStatusProvider.notifier).state =
           ConnectionStatus.connected;
+      // Server-side STT (Moonshine) — mark STT as ready immediately
+      _ref.read(sttStatusProvider.notifier).state = WhisperModelStatus.loaded;
     } catch (e) {
       _ref.read(connectionStatusProvider.notifier).state =
           ConnectionStatus.error;
@@ -288,6 +294,19 @@ class MeetingNotifier extends StateNotifier<MeetingSession?> {
     );
 
     state = state!.copyWith(insights: [...state!.insights, insight]);
+
+    // Show push notification if app is in background
+    final AppLifecycleState? lifecycle =
+        WidgetsBinding.instance.lifecycleState;
+    if (lifecycle == AppLifecycleState.paused ||
+        lifecycle == AppLifecycleState.inactive) {
+      NotificationService.instance.showInsightNotification(
+        title: '${insight.categoryEmoji} ${insight.title}',
+        body: insight.analysis.isNotEmpty
+            ? insight.analysis
+            : 'New insight detected in your meeting',
+      );
+    }
   }
 
   /// Handle a copilot response from the backend.
@@ -391,7 +410,7 @@ class MeetingNotifier extends StateNotifier<MeetingSession?> {
         (List<int> data) {
           _audioBuffer.addAll(data);
 
-          // When we have enough audio (~2s), send to backend
+          // Stream audio in small chunks (~100ms) for real-time STT
           if (_audioBuffer.length >= _sttChunkSamples * 2) {
             // PCM16 = 2 bytes per sample
             _processAudioChunk();
@@ -417,8 +436,8 @@ class MeetingNotifier extends StateNotifier<MeetingSession?> {
       return;
     }
 
-    // Send raw PCM bytes to server for STT
-    ws.sendAudio(List<int>.from(_audioBuffer));
+    // Send raw PCM bytes to server for STT (use Uint8List for zero-copy)
+    ws.sendAudio(Uint8List.fromList(_audioBuffer));
     _audioBuffer.clear();
   }
 

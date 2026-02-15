@@ -1,4 +1,4 @@
-"""Screening agent — Haiku 3.5 for fast relevance filtering.
+"""Screening agent — fast relevance filtering.
 
 Uses the cheapest model to answer: "Is this transcript segment
 worth analyzing?" Runs every 30 seconds on buffered text.
@@ -9,7 +9,7 @@ import re
 
 import structlog
 
-from meetmind.providers.bedrock import BedrockProvider
+from meetmind.providers.base import LLMProvider
 
 logger = structlog.get_logger(__name__)
 
@@ -56,11 +56,11 @@ class ScreeningAgent:
     a transcript segment contains actionable content.
     """
 
-    def __init__(self, provider: BedrockProvider) -> None:
-        """Initialize with a Bedrock provider.
+    def __init__(self, provider: LLMProvider) -> None:
+        """Initialize with an LLM provider.
 
         Args:
-            provider: Bedrock LLM provider instance.
+            provider: LLM provider instance.
         """
         self._provider = provider
 

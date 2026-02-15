@@ -52,41 +52,127 @@ class SttBadge extends StatelessWidget {
   }
 }
 
-/// Live partial transcript bar — shows real-time STT text.
-class PartialTranscriptBar extends StatelessWidget {
+/// Live partial transcript panel — prominently shows what's being heard.
+///
+/// Designed to be easily readable so the user can follow along
+/// in real-time while the AI listens and transcribes.
+class PartialTranscriptBar extends StatefulWidget {
   const PartialTranscriptBar({required this.text, super.key});
 
   final String text;
 
   @override
+  State<PartialTranscriptBar> createState() => _PartialTranscriptBarState();
+}
+
+class _PartialTranscriptBarState extends State<PartialTranscriptBar>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _cursorController;
+
+  @override
+  void initState() {
+    super.initState();
+    _cursorController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _cursorController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: const BoxDecoration(
-        color: MeetMindTheme.darkSurface,
-        border: Border(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            MeetMindTheme.accent.withValues(alpha: 0.08),
+            MeetMindTheme.darkSurface,
+          ],
+        ),
+        border: const Border(
           top: BorderSide(color: MeetMindTheme.darkBorder, width: 0.5),
         ),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.mic, color: MeetMindTheme.accent, size: 16)
-              .animate(onPlay: (AnimationController c) => c.repeat())
-              .fadeIn(duration: 600.ms)
-              .then()
-              .fadeOut(duration: 600.ms),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              text,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.5),
-                fontSize: 14,
-                fontStyle: FontStyle.italic,
+          // Animated waveform bars
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: SizedBox(
+              width: 24,
+              height: 24,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: List.generate(3, (int i) {
+                  return Container(width: 4, height: 24)
+                      .animate(
+                        onPlay: (AnimationController c) => c.repeat(reverse: true),
+                        delay: Duration(milliseconds: i * 150),
+                      )
+                      .custom(
+                        duration: const Duration(milliseconds: 400),
+                        curve: Curves.easeInOut,
+                        builder: (BuildContext context, double value, Widget? child) {
+                          return Container(
+                            width: 4,
+                            height: 8 + (16 * value),
+                            decoration: BoxDecoration(
+                              color: MeetMindTheme.accent.withValues(alpha: 0.8),
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          );
+                        },
+                      );
+                }),
               ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(width: 12),
+          // Live transcript text with blinking cursor
+          Expanded(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Flexible(
+                  child: Text(
+                    widget.text,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.9),
+                      fontSize: 22,
+                      height: 1.4,
+                      letterSpacing: 0.2,
+                    ),
+                    maxLines: 4,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                // Blinking cursor
+                AnimatedBuilder(
+                  animation: _cursorController,
+                  builder: (BuildContext context, Widget? child) {
+                    return Opacity(
+                      opacity: _cursorController.value,
+                      child: Container(
+                        width: 2.5,
+                        height: 24,
+                        margin: const EdgeInsets.only(left: 2, bottom: 2),
+                        color: MeetMindTheme.accent,
+                      ),
+                    );
+                  },
+                ),
+              ],
             ),
           ),
         ],

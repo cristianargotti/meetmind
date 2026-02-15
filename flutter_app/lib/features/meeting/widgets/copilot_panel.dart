@@ -90,7 +90,9 @@ class _CopilotPanelState extends State<CopilotPanel> {
         Container(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
           decoration: const BoxDecoration(
-            border: Border(top: BorderSide(color: MeetMindTheme.darkBorder)),
+            border: Border(
+              top: BorderSide(color: MeetMindTheme.darkBorder),
+            ),
           ),
           child: Row(
             children: <Widget>[
@@ -99,28 +101,49 @@ class _CopilotPanelState extends State<CopilotPanel> {
                   controller: _controller,
                   textInputAction: TextInputAction.send,
                   onSubmitted: (_) => _handleSend(),
+                  style: const TextStyle(fontSize: 14),
                   decoration: InputDecoration(
                     hintText: 'Ask Copilot anything...',
-                    hintStyle: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.4),
+                    hintStyle: const TextStyle(
+                      color: MeetMindTheme.textTertiary,
                     ),
                     isDense: true,
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 12,
                     ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(
+                        MeetMindTheme.radiusSm,
+                      ),
+                      borderSide: const BorderSide(
+                        color: MeetMindTheme.copilot,
+                        width: 1.5,
+                      ),
+                    ),
                   ),
                 ),
               ),
               const SizedBox(width: 8),
-              IconButton.filled(
-                onPressed: widget.isLoading ? null : _handleSend,
-                icon: const Icon(Icons.send_rounded, size: 20),
-                style: IconButton.styleFrom(
-                  backgroundColor: MeetMindTheme.primary,
-                  disabledBackgroundColor: MeetMindTheme.primary.withValues(
-                    alpha: 0.3,
+              Container(
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [MeetMindTheme.copilot, Color(0xFFEA580C)],
                   ),
+                  borderRadius: BorderRadius.circular(MeetMindTheme.radiusSm),
+                  boxShadow: [
+                    BoxShadow(
+                      color: MeetMindTheme.copilot.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: IconButton(
+                  onPressed: widget.isLoading ? null : _handleSend,
+                  icon: const Icon(Icons.send_rounded, size: 20),
+                  color: Colors.white,
+                  disabledColor: Colors.white38,
                 ),
               ),
             ],
@@ -139,26 +162,41 @@ class _EmptyCopilotState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Icon(
-            Icons.smart_toy_outlined,
-            size: 64,
-            color: MeetMindTheme.accent.withValues(alpha: 0.5),
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                colors: [
+                  MeetMindTheme.copilot.withValues(alpha: 0.2),
+                  MeetMindTheme.copilot.withValues(alpha: 0.05),
+                ],
+              ),
+            ),
+            child: const Icon(
+              Icons.smart_toy_outlined,
+              size: 36,
+              color: MeetMindTheme.copilot,
+            ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           Text(
             'MeetMind Copilot',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(color: Colors.white70),
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: MeetMindTheme.textPrimary,
+              fontWeight: FontWeight.w700,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
             'Ask questions about your meeting in real-time.\n'
             'Copilot has the full transcript as context.',
             textAlign: TextAlign.center,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: Colors.white38),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: MeetMindTheme.textTertiary,
+              height: 1.6,
+            ),
           ),
         ],
       ).animate().fadeIn(duration: 500.ms),
@@ -166,7 +204,7 @@ class _EmptyCopilotState extends StatelessWidget {
   }
 }
 
-/// Individual chat bubble.
+/// Individual chat bubble with premium design.
 class _ChatBubble extends StatelessWidget {
   const _ChatBubble({required this.message});
 
@@ -184,51 +222,91 @@ class _ChatBubble extends StatelessWidget {
           maxWidth: MediaQuery.of(context).size.width * 0.78,
         ),
         margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
+          gradient: isUser
+              ? const LinearGradient(
+                  colors: [MeetMindTheme.primary, Color(0xFF7C3AED)],
+                )
+              : null,
           color: isUser
-              ? MeetMindTheme.primary.withValues(alpha: 0.2)
+              ? null
               : isError
-              ? MeetMindTheme.error.withValues(alpha: 0.15)
-              : MeetMindTheme.darkCard,
-          borderRadius: BorderRadius.circular(16).copyWith(
+                  ? MeetMindTheme.errorDim
+                  : MeetMindTheme.darkCard,
+          borderRadius: BorderRadius.circular(MeetMindTheme.radiusMd).copyWith(
             bottomRight: isUser ? const Radius.circular(4) : null,
             bottomLeft: !isUser ? const Radius.circular(4) : null,
           ),
-          border: Border.all(
-            color: isUser
-                ? MeetMindTheme.primary.withValues(alpha: 0.3)
-                : isError
-                ? MeetMindTheme.error.withValues(alpha: 0.3)
-                : MeetMindTheme.darkBorder,
-          ),
+          border: isUser
+              ? null
+              : Border.all(
+                  color: isError
+                      ? MeetMindTheme.error.withValues(alpha: 0.2)
+                      : MeetMindTheme.darkBorder,
+                ),
+          boxShadow: isUser
+              ? [
+                  BoxShadow(
+                    color: MeetMindTheme.primary.withValues(alpha: 0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
+            if (!isUser && !isError)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.smart_toy_outlined,
+                      size: 12,
+                      color: MeetMindTheme.copilot,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'COPILOT',
+                      style: TextStyle(
+                        color: MeetMindTheme.copilot.withValues(alpha: 0.8),
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.8,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             Text(
               message.text,
               style: TextStyle(
-                color: isError ? MeetMindTheme.error : Colors.white,
+                color: isError
+                    ? MeetMindTheme.error
+                    : MeetMindTheme.textPrimary,
                 fontSize: 14,
-                height: 1.4,
+                height: 1.5,
               ),
             ),
             if (!isUser && message.latencyMs != null) ...<Widget>[
-              const SizedBox(height: 6),
+              const SizedBox(height: 8),
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
                   Icon(
                     Icons.timer_outlined,
                     size: 12,
-                    color: Colors.white.withValues(alpha: 0.4),
+                    color: MeetMindTheme.textTertiary.withValues(alpha: 0.6),
                   ),
                   const SizedBox(width: 4),
                   Text(
                     '${message.latencyMs}ms',
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.4),
+                      color: MeetMindTheme.textTertiary.withValues(alpha: 0.6),
                       fontSize: 11,
                     ),
                   ),
@@ -237,16 +315,16 @@ class _ChatBubble extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 6,
-                        vertical: 1,
+                        vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: MeetMindTheme.accent.withValues(alpha: 0.15),
+                        color: MeetMindTheme.accentDim,
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
                         message.modelTier!,
                         style: TextStyle(
-                          color: MeetMindTheme.accent.withValues(alpha: 0.7),
+                          color: MeetMindTheme.accent.withValues(alpha: 0.8),
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
                         ),
@@ -281,7 +359,7 @@ class _TypingIndicator extends StatelessWidget {
         decoration: BoxDecoration(
           color: MeetMindTheme.darkCard,
           borderRadius: BorderRadius.circular(
-            16,
+            MeetMindTheme.radiusMd,
           ).copyWith(bottomLeft: const Radius.circular(4)),
           border: Border.all(color: MeetMindTheme.darkBorder),
         ),
@@ -293,7 +371,7 @@ class _TypingIndicator extends StatelessWidget {
                     width: 8,
                     height: 8,
                     decoration: BoxDecoration(
-                      color: MeetMindTheme.accent.withValues(alpha: 0.6),
+                      color: MeetMindTheme.copilot.withValues(alpha: 0.6),
                       shape: BoxShape.circle,
                     ),
                   )

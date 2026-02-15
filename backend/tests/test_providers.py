@@ -14,4 +14,9 @@ def test_llm_provider_is_protocol() -> None:
     """LLMProvider is a properly defined Protocol."""
     # Assert — should have required methods
     assert hasattr(LLMProvider, "invoke")
-    assert hasattr(LLMProvider, "invoke_streaming")
+    assert hasattr(LLMProvider, "invoke_screening")
+    assert hasattr(LLMProvider, "invoke_analysis")
+    assert hasattr(LLMProvider, "invoke_copilot")
+    assert hasattr(LLMProvider, "invoke_summary")
+    assert hasattr(LLMProvider, "invoke_deep")
+    assert hasattr(LLMProvider, "usage_stats")

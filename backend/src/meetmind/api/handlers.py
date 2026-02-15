@@ -28,7 +28,6 @@ logger = structlog.get_logger(__name__)
 SendJsonFn = Callable[[str, dict[str, object]], Awaitable[None]]
 
 
-
 async def _send_json(
     send_fn: SendJsonFn,
     connection_id: str,
@@ -129,10 +128,11 @@ async def run_screening_pipeline(
         await send_budget_exceeded(send_fn, connection_id)
         return
 
-    # Record screening cost
+    # Record screening cost (provider-agnostic)
     if tracker:
+        s_model = settings.openai_screening_model if settings.llm_provider == "openai" else settings.bedrock_screening_model
         tracker.record(
-            settings.bedrock_screening_model,
+            s_model,
             input_tokens=screening_result.input_tokens,
             output_tokens=screening_result.output_tokens,
         )
@@ -159,10 +159,11 @@ async def run_screening_pipeline(
             return
 
         if insight:
-            # Record analysis cost
+            # Record analysis cost (provider-agnostic)
             if tracker:
+                a_model = settings.openai_analysis_model if settings.llm_provider == "openai" else settings.bedrock_analysis_model
                 tracker.record(
-                    settings.bedrock_analysis_model,
+                    a_model,
                     input_tokens=insight.input_tokens,
                     output_tokens=insight.output_tokens,
                 )
@@ -204,7 +205,7 @@ async def run_copilot(
             connection_id,
             {
                 "type": "copilot_response",
-                "answer": "⚠️ Copilot not initialized (no AWS credentials)",
+                "answer": "⚠️ Copilot not initialized (check LLM provider credentials)",
                 "error": True,
             },
         )
@@ -215,13 +216,12 @@ async def run_copilot(
         transcript_context,
     )
 
-    # Record copilot cost
+    # Record copilot cost (provider-agnostic)
     if tracker:
-        model_id = (
-            settings.bedrock_screening_model
-            if response.model_tier == "haiku"
-            else settings.bedrock_analysis_model
-        )
+        if settings.llm_provider == "openai":
+            model_id = settings.openai_copilot_model
+        else:
+            model_id = settings.bedrock_copilot_model
         tracker.record(
             model_id,
             input_tokens=response.input_tokens,
@@ -277,10 +277,11 @@ async def run_summary(
 
     result = await summary_agent.summarize(full_transcript)
 
-    # Record summary cost
+    # Record summary cost (provider-agnostic)
     if tracker:
+        sum_model = settings.openai_analysis_model if settings.llm_provider == "openai" else settings.bedrock_analysis_model
         tracker.record(
-            settings.bedrock_analysis_model,
+            sum_model,
             input_tokens=result.input_tokens,
             output_tokens=result.output_tokens,
         )

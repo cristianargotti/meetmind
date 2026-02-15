@@ -31,7 +31,7 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final MeetingSession? meeting = ref.read(meetingProvider);
@@ -132,7 +132,12 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
                   },
                 ),
 
-                // Tab 2: Copilot
+                // Tab 2: Insights (proactive AI suggestions)
+                InsightsTab(
+                  insights: meeting?.insights ?? const [],
+                ),
+
+                // Tab 3: Copilot
                 CopilotPanel(
                   messages: meeting?.copilotMessages ?? const [],
                   isLoading: meeting?.isCopilotLoading ?? false,
@@ -143,7 +148,7 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
                   },
                 ),
 
-                // Tab 3: Summary
+                // Tab 4: Summary
                 SummaryPanel(
                   summary: meeting?.meetingSummary,
                   isLoading: meeting?.isSummaryLoading ?? false,
@@ -214,13 +219,11 @@ class _MeetingTabBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return TabBar(
       controller: controller,
-      indicatorColor: MeetMindTheme.primary,
       indicatorWeight: 3,
-      labelColor: Colors.white,
-      unselectedLabelColor: Colors.white54,
-      labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+      labelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
       tabs: const <Tab>[
         Tab(icon: Icon(Icons.subtitles_outlined, size: 18), text: 'Transcript'),
+        Tab(icon: Icon(Icons.auto_awesome, size: 18), text: 'Insights'),
         Tab(icon: Icon(Icons.smart_toy_outlined, size: 18), text: 'Copilot'),
         Tab(icon: Icon(Icons.summarize_outlined, size: 18), text: 'Summary'),
       ],
@@ -248,8 +251,6 @@ class _TranscriptTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: <Widget>[
-        if (meeting != null && meeting!.insights.isNotEmpty)
-          InsightsPanel(insights: meeting!.insights),
         Expanded(
           child: meeting == null || meeting!.segments.isEmpty
               ? const EmptyTranscriptState()

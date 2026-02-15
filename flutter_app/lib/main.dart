@@ -3,10 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meetmind/config/app_config.dart';
 import 'package:meetmind/config/router.dart';
 import 'package:meetmind/config/theme.dart';
+import 'package:meetmind/services/notification_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await AppConfig.initialize();
+  await NotificationService.instance.initialize();
   runApp(const ProviderScope(child: MeetMindApp()));
 }
 

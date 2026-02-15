@@ -138,7 +138,7 @@ class TranscriptList extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView.builder(
       controller: scrollController,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       itemCount: segments.length,
       itemBuilder: (BuildContext context, int index) {
         return TranscriptBubble(segment: segments[index])
@@ -174,8 +174,8 @@ class TranscriptBubble extends StatelessWidget {
         _speakerColors[segment.speaker] ?? const Color(0xFF6B7280);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: MeetMindTheme.darkCard,
         borderRadius: BorderRadius.circular(12),
@@ -192,19 +192,19 @@ class TranscriptBubble extends StatelessWidget {
           Row(
             children: [
               Container(
-                width: 8,
-                height: 8,
+                width: 10,
+                height: 10,
                 decoration: BoxDecoration(
                   color: speakerColor,
                   shape: BoxShape.circle,
                 ),
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: 8),
               Text(
                 segment.speaker,
                 style: TextStyle(
                   color: speakerColor,
-                  fontSize: 12,
+                  fontSize: 15,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -214,21 +214,22 @@ class TranscriptBubble extends StatelessWidget {
                 ':${segment.timestamp.minute.toString().padLeft(2, '0')}'
                 ':${segment.timestamp.second.toString().padLeft(2, '0')}',
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.3),
-                  fontSize: 11,
+                  color: Colors.white.withValues(alpha: 0.4),
+                  fontSize: 13,
                   fontFamily: 'monospace',
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 6),
-          // Transcript text
+          const SizedBox(height: 8),
+          // Transcript text — large for distance reading
           Text(
             segment.text,
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 14,
-              height: 1.4,
+              fontSize: 20,
+              height: 1.45,
+              letterSpacing: 0.2,
             ),
           ),
         ],

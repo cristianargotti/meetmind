@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING
 import structlog
 
 if TYPE_CHECKING:
-    from meetmind.providers.bedrock import BedrockProvider
+    from meetmind.providers.base import LLMProvider
 
 logger = structlog.get_logger(__name__)
 
@@ -117,11 +117,11 @@ def classify_query_complexity(question: str) -> str:
 class CopilotAgent:
     """Secret meeting copilot — answers user questions with transcript context."""
 
-    def __init__(self, provider: BedrockProvider) -> None:
+    def __init__(self, provider: LLMProvider) -> None:
         """Initialize copilot agent.
 
         Args:
-            provider: Bedrock provider for LLM calls.
+            provider: LLM provider for AI calls.
         """
         self._provider = provider
 

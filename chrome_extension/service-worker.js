@@ -13,6 +13,68 @@ let isCapturing = false;
 /** @type {number|null} Tab ID currently being captured. */
 let capturedTabId = null;
 
+/** @type {number|null} Panel window ID for reuse. */
+let panelWindowId = null;
+
+/** @type {number|null} The tab the user was on when they clicked the icon. */
+let sourceTabId = null;
+
+// ─── Panel Window (movable + resizable) ────
+
+chrome.action.onClicked.addListener(async (tab) => {
+  // Remember which tab the user wants to capture
+  sourceTabId = tab.id ?? null;
+
+  // If panel already exists, focus it
+  if (panelWindowId !== null) {
+    try {
+      const existing = await chrome.windows.get(panelWindowId);
+      if (existing) {
+        await chrome.windows.update(panelWindowId, { focused: true });
+        return;
+      }
+    } catch (e) {
+      panelWindowId = null;
+    }
+  }
+
+  // Also check storage in case SW restarted and lost in-memory value
+  const stored = await chrome.storage.local.get('panelWindowId');
+  if (stored.panelWindowId) {
+    try {
+      const existing = await chrome.windows.get(stored.panelWindowId);
+      if (existing) {
+        panelWindowId = stored.panelWindowId;
+        await chrome.windows.update(panelWindowId, { focused: true });
+        return;
+      }
+    } catch (e) {
+      // Window no longer exists
+    }
+  }
+
+  const panelUrl = chrome.runtime.getURL('popup/popup.html');
+  const panel = await chrome.windows.create({
+    url: panelUrl,
+    type: 'popup',
+    width: 520,
+    height: 650,
+    top: 80,
+    left: 900,
+  });
+
+  panelWindowId = panel.id ?? null;
+  await chrome.storage.local.set({ panelWindowId });
+});
+
+// Clean up reference when panel is closed
+chrome.windows.onRemoved.addListener((windowId) => {
+  if (windowId === panelWindowId) {
+    panelWindowId = null;
+    chrome.storage.local.remove('panelWindowId');
+  }
+});
+
 // ─── Message Handling ──────────────────────
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -33,6 +95,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       sendResponse({
         isCapturing,
         capturedTabId,
+        sourceTabId,
       });
       return false;
 
@@ -96,19 +159,30 @@ async function handleStartCapture(backendUrl) {
   }
 
   try {
-    // Get the active tab
-    const [tab] = await chrome.tabs.query({
-      active: true,
-      currentWindow: true,
-    });
+    // Use the stored source tab (from icon click) instead of querying
+    let targetTabId = sourceTabId;
 
-    if (!tab?.id) {
-      return { success: false, error: 'No active tab found' };
+    if (!targetTabId) {
+      // Fallback: find the last focused normal window's active tab
+      const windows = await chrome.windows.getAll({ windowTypes: ['normal'] });
+      for (const win of windows) {
+        if (win.focused) {
+          const tabs = await chrome.tabs.query({ active: true, windowId: win.id });
+          if (tabs[0]?.id) {
+            targetTabId = tabs[0].id;
+            break;
+          }
+        }
+      }
+    }
+
+    if (!targetTabId) {
+      return { success: false, error: 'No source tab found. Click the MeetMind icon while on the tab you want to capture.' };
     }
 
     // Get a MediaStream from the tab
     const streamId = await chrome.tabCapture.getMediaStreamId({
-      targetTabId: tab.id,
+      targetTabId: targetTabId,
     });
 
     // Create offscreen document if needed
@@ -122,10 +196,10 @@ async function handleStartCapture(backendUrl) {
     });
 
     isCapturing = true;
-    capturedTabId = tab.id;
+    capturedTabId = targetTabId;
 
     // Store state
-    await chrome.storage.local.set({ isCapturing: true, capturedTabId: tab.id });
+    await chrome.storage.local.set({ isCapturing: true, capturedTabId: targetTabId });
 
     return { success: true };
   } catch (error) {
@@ -170,19 +244,38 @@ async function handleStopCapture() {
  * MV3 allows only one offscreen document at a time.
  */
 async function ensureOffscreenDocument() {
-  const contexts = await chrome.runtime.getContexts({
-    contextTypes: ['OFFSCREEN_DOCUMENT'],
-  });
+  // Check if one already exists
+  try {
+    const contexts = await chrome.runtime.getContexts({
+      contextTypes: ['OFFSCREEN_DOCUMENT'],
+    });
 
-  if (contexts.length > 0) {
-    return; // Already exists
+    if (contexts.length > 0) {
+      return; // Already exists
+    }
+  } catch (e) {
+    // getContexts might fail — try to close stale doc first
+    try {
+      await chrome.offscreen.closeDocument();
+    } catch {
+      // No document to close
+    }
   }
 
-  await chrome.offscreen.createDocument({
-    url: 'offscreen/offscreen.html',
-    reasons: ['USER_MEDIA'],
-    justification: 'MeetMind needs to process tab audio via MediaRecorder',
-  });
+  try {
+    await chrome.offscreen.createDocument({
+      url: 'offscreen/offscreen.html',
+      reasons: ['USER_MEDIA'],
+      justification: 'MeetMind needs to process tab audio via MediaRecorder',
+    });
+  } catch (e) {
+    if (e.message?.includes('single offscreen document')) {
+      // Already exists — race condition, safe to ignore
+      console.warn('[MeetMind SW] Offscreen document already exists, reusing.');
+    } else {
+      throw e;
+    }
+  }
 }
 
 // ─── Lifecycle ─────────────────────────────

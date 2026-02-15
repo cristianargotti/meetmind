@@ -1,0 +1,39 @@
+services:
+  caddy:
+    image: caddy:2-alpine
+    container_name: meetmind-caddy
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+  backend:
+    image: ${ECR_REPO:-meetmind-backend}:${TAG:-latest}
+    container_name: meetmind-backend
+    env_file: .env.production
+    environment:
+      - MEETMIND_OPENAI_API_KEY=${MEETMIND_OPENAI_API_KEY}
+      - MEETMIND_HUGGINGFACE_TOKEN=${MEETMIND_HUGGINGFACE_TOKEN:-}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  caddy_data:
+  caddy_config:
