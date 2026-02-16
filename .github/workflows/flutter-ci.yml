@@ -21,6 +21,8 @@ jobs:
     name: Flutter Quality Gate
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: write
     defaults:
       run:
         working-directory: flutter_app
@@ -28,6 +30,8 @@ jobs:
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref }}
 
       - name: 📱 Setup Flutter
         uses: subosito/flutter-action@v2
@@ -45,12 +49,17 @@ jobs:
       - name: 🎨 Format check
         run: |
           dart format lib/ test/
-          if ! git diff --exit-code --quiet; then
-            echo "❌ Formatting differences found. Run 'dart format lib/ test/' with Flutter 3.41.x"
-            git diff --stat
-            exit 1
+          if git diff --quiet; then
+            echo "✅ All files formatted correctly"
+          else
+            echo "⚠️ Auto-formatting files to match Dart 3.41.x..."
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add -A
+            git commit -m "style(flutter): auto-format to Dart 3.41.x [skip ci]"
+            git push
+            echo "✅ Auto-formatted and committed"
           fi
-          echo "✅ All files formatted correctly"
 
       - name: 🧪 Tests
         run: flutter test
