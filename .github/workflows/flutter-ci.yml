@@ -6,6 +6,7 @@
 name: 📱 Flutter CI
 
 on:
+  workflow_dispatch:
   pull_request:
     paths:
       - "flutter_app/**"
@@ -31,7 +32,7 @@ jobs:
       - name: 📱 Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.27.x"
+          flutter-version: "3.41.x"
           channel: stable
           cache: true
 
