@@ -1,10 +1,10 @@
 {
 	# Global options
-	email cris@meetmind.ai
+	email crisreyesgotty.37@gmail.com
 }
 
-# MeetMind Backend — HTTP reverse proxy (IP-based access)
-:80 {
+# MeetMind Backend — HTTPS reverse proxy with auto Let's Encrypt
+api.aurameet.live {
 	# Reverse proxy to FastAPI backend
 	reverse_proxy backend:8000 {
 		# WebSocket support (automatic in Caddy, but explicit for clarity)
@@ -22,6 +22,7 @@
 		X-Content-Type-Options nosniff
 		X-Frame-Options DENY
 		Referrer-Policy strict-origin-when-cross-origin
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
 		-Server
 	}
 
@@ -30,4 +31,10 @@
 		output stdout
 		format json
 	}
+}
+
+# HTTP fallback — redirect IP-based access to domain
+:80 {
+	respond /health "OK" 200
+	redir * https://api.aurameet.live{uri} permanent
 }
