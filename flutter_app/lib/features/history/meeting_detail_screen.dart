@@ -210,36 +210,36 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen>
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
             child: Row(
               children: [
-                Icon(Icons.calendar_today_rounded,
+                const Icon(Icons.calendar_today_rounded,
                     size: 13, color: MeetMindTheme.textTertiary),
                 const SizedBox(width: 6),
                 Text(
                   dateStr,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 12,
                     color: MeetMindTheme.textTertiary,
                   ),
                 ),
                 const SizedBox(width: 16),
-                Icon(Icons.timer_outlined,
+                const Icon(Icons.timer_outlined,
                     size: 13, color: MeetMindTheme.textTertiary),
                 const SizedBox(width: 4),
                 Text(
                   durationSecs > 0
                       ? '${duration.inMinutes}m ${duration.inSeconds % 60}s'
                       : '< 1m',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 12,
                     color: MeetMindTheme.textTertiary,
                   ),
                 ),
                 const SizedBox(width: 16),
-                Icon(Icons.segment_rounded,
+                const Icon(Icons.segment_rounded,
                     size: 13, color: MeetMindTheme.textTertiary),
                 const SizedBox(width: 4),
                 Text(
                   '${segments.length} segments',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 12,
                     color: MeetMindTheme.textTertiary,
                   ),
@@ -395,7 +395,7 @@ class _SummaryTab extends StatelessWidget {
 
           // Overview
           if (summary['overview'] != null) ...[
-            _SectionHeader(title: 'Overview'),
+            const _SectionHeader(title: 'Overview'),
             const SizedBox(height: 8),
             Text(
               summary['overview'] as String,
@@ -418,7 +418,7 @@ class _SummaryTab extends StatelessWidget {
 
           // Action Items (from dedicated table)
           if (actionItems.isNotEmpty) ...[
-            _SectionHeader(title: 'Action Items'),
+            const _SectionHeader(title: 'Action Items'),
             const SizedBox(height: 8),
             ...actionItems.map<Widget>((item) {
               if (item is Map<String, dynamic>) {

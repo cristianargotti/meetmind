@@ -49,9 +49,12 @@ select = ["E", "W", "F", "I", "N", "UP", "S", "B", "A", "C4", "SIM", "TCH", "RUF
 
 [tool.coverage.run]
 omit = [
-    "src/meetmind/services/whisper_stt_service.py",
-    "src/meetmind/services/parakeet_stt_service.py",
-    "src/meetmind/services/qwen_stt_service.py",
+    "src/meetmind/providers/whisper_stt_service.py",
+    "src/meetmind/providers/parakeet_stt_service.py",
+    "src/meetmind/providers/qwen_stt_service.py",
+    "src/meetmind/providers/qwen_stt.py",
+    "src/meetmind/providers/parakeet_stt.py",
+    "src/meetmind/providers/whisper_stt.py",
     "src/meetmind/models/*",
 ]
 
