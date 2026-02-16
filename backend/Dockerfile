@@ -43,8 +43,8 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # IMPORTANT: Must match the Python version in builder (3.12-bookworm-slim)
 FROM python:3.12-slim-bookworm AS runner
 
-# Install curl for health checks and system audio libs
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Install curl for health checks and system audio libs (and upgrade OS packages for security)
+RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
     ca-certificates \
     curl \
     libsndfile1 \
