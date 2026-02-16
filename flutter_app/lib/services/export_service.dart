@@ -20,7 +20,7 @@ class ExportService {
 
     // Header
     buffer.writeln('# $title');
-    if (date.isNotEmpty) {
+    if (date is String && date.isNotEmpty) {
       try {
         final dt = DateTime.parse(date);
         buffer.writeln('📅 ${DateFormat('MMMM d, yyyy · h:mm a').format(dt)}');
@@ -28,8 +28,8 @@ class ExportService {
         buffer.writeln('📅 $date');
       }
     }
-    if (duration > 0) {
-      final mins = (duration as int) ~/ 60;
+    if (duration is int && duration > 0) {
+      final mins = duration ~/ 60;
       buffer.writeln('⏱️ ${mins}min');
     }
     buffer.writeln();
@@ -99,12 +99,7 @@ class ExportService {
   /// Share meeting via native share sheet.
   Future<void> shareMeeting(Map<String, dynamic> meeting, {bool fullExport = true}) async {
     final text = formatMeetingText(meeting, fullExport: fullExport);
-    final title = meeting['title'] ?? 'Meeting Notes';
-    await SharePlus.instance.share(
-      ShareParams(
-        text: text,
-        title: title,
-      ),
-    );
+    // ignore: deprecated_member_use
+    await Share.share(text);
   }
 }

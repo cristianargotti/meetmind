@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 
 import 'package:meetmind/services/subscription_service.dart';
 
@@ -22,7 +23,7 @@ class SubscriptionNotifier extends StateNotifier<SubscriptionState> {
   }
 
   /// Purchase a package.
-  Future<bool> purchase(dynamic package) async {
+  Future<bool> purchase(Package package) async {
     return SubscriptionService.instance.purchasePackage(package);
   }
 

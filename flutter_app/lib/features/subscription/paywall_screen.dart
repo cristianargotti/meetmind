@@ -6,6 +6,7 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:meetmind/config/theme.dart';
 import 'package:meetmind/providers/subscription_provider.dart';
 import 'package:meetmind/services/subscription_service.dart';
+// ignore_for_file: prefer_const_constructors
 
 /// Premium paywall — glassmorphism design with plan comparison.
 class PaywallScreen extends ConsumerStatefulWidget {
@@ -270,7 +271,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   }
 
   Widget _buildFeatureComparison() {
-    final features = [
+    const features = [
       _FeatureRow('Meetings per week', '3', 'Unlimited', Icons.mic),
       _FeatureRow('Meeting history', '7 days', 'Forever', Icons.history),
       _FeatureRow('Insights per meeting', '1', 'All', Icons.lightbulb_outline),
@@ -378,10 +379,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
 }
 
 class _FeatureRow {
+  const _FeatureRow(this.name, this.free, this.pro, this.icon);
+
   final String name;
   final String free;
   final String pro;
   final IconData icon;
-
-  const _FeatureRow(this.name, this.free, this.pro, this.icon);
 }

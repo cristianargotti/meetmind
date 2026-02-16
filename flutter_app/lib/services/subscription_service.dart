@@ -53,12 +53,6 @@ class FreeTierLimits {
 
 /// Subscription state.
 class SubscriptionState {
-  final SubscriptionTier tier;
-  final bool isActive;
-  final DateTime? expirationDate;
-  final int meetingsThisWeek;
-  final String? managementUrl;
-
   const SubscriptionState({
     this.tier = SubscriptionTier.free,
     this.isActive = false,
@@ -66,6 +60,12 @@ class SubscriptionState {
     this.meetingsThisWeek = 0,
     this.managementUrl,
   });
+
+  final SubscriptionTier tier;
+  final bool isActive;
+  final DateTime? expirationDate;
+  final int meetingsThisWeek;
+  final String? managementUrl;
 
   bool get isPro => tier != SubscriptionTier.free && isActive;
 
