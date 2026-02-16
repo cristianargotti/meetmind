@@ -55,6 +55,7 @@ omit = [
     "src/meetmind/providers/qwen_stt.py",
     "src/meetmind/providers/parakeet_stt.py",
     "src/meetmind/providers/whisper_stt.py",
+    "src/meetmind/providers/moonshine_stt.py",
     "src/meetmind/models/*",
 ]
 
