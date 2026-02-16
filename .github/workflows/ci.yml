@@ -41,9 +41,10 @@ jobs:
         with:
           enable-cache: true
           cache-dependency-glob: "backend/uv.lock"
+          python-version: "3.12"
 
       - name: 📦 Install dependencies
-        run: uv sync --frozen
+        run: uv sync --frozen --python 3.12
 
       - name: 🔒 Secret scan (gitleaks)
         uses: gitleaks/gitleaks-action@v2

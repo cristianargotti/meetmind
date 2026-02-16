@@ -19,7 +19,7 @@ concurrency:
 jobs:
   quality:
     name: Flutter Quality Gate
-    runs-on: [self-hosted, linux, meetmind]
+    runs-on: ubuntu-latest
     timeout-minutes: 15
     defaults:
       run:
