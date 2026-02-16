@@ -31,6 +31,7 @@ def authed_client(client: TestClient, auth_headers: dict[str, str]) -> TestClien
     client.headers.update(auth_headers)
     return client
 
+
 # ─── Health ──────────────────────────────────────────────────────
 
 
