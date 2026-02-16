@@ -3,11 +3,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:purchases_flutter/purchases_flutter.dart';
-
 import 'package:meetmind/config/theme.dart';
 import 'package:meetmind/providers/subscription_provider.dart';
 import 'package:meetmind/services/subscription_service.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 
 /// Premium paywall — glassmorphism design with plan comparison.
 class PaywallScreen extends ConsumerStatefulWidget {

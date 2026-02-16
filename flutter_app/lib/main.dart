@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:meetmind/config/app_config.dart';
 import 'package:meetmind/config/router.dart';
 import 'package:meetmind/config/theme.dart';

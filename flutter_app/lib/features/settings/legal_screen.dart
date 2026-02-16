@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
-
 import 'package:meetmind/config/theme.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// Legal documents screen — Privacy Policy & Terms of Service.
 class LegalScreen extends StatelessWidget {

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
 import 'package:meetmind/config/theme.dart';
 import 'package:meetmind/features/subscription/widgets/free_limit_banner.dart';
 import 'package:meetmind/l10n/generated/app_localizations.dart';

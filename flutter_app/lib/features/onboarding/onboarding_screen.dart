@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
-
 import 'package:meetmind/config/theme.dart';
 import 'package:meetmind/l10n/generated/app_localizations.dart';
 import 'package:meetmind/services/permission_service.dart';
@@ -51,7 +50,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Future<void> _requestMicPermission() async {
-    await PermissionService().requestMicPermission();
+    await const PermissionService().requestMicPermission();
     _nextPage();
   }
 

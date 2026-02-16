@@ -1,9 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:purchases_flutter/purchases_flutter.dart';
-
 import 'package:meetmind/services/subscription_service.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 
 /// Notifier that bridges SubscriptionService stream → Riverpod state.
 class SubscriptionNotifier extends StateNotifier<SubscriptionState> {
