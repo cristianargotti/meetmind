@@ -27,13 +27,26 @@ class HomeScreen extends ConsumerWidget {
             children: [
               const SizedBox(height: 32),
 
-              // Header
-              Text(
-                l10n.homeTitle,
-                style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                ),
+              // Header with logo
+              Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.asset(
+                      'assets/images/app_logo.png',
+                      width: 40,
+                      height: 40,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    l10n.homeTitle,
+                    style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
               ).animate().fadeIn(duration: 400.ms).slideX(begin: -0.1),
 
               const SizedBox(height: 4),
@@ -61,40 +74,48 @@ class HomeScreen extends ConsumerWidget {
 
               const SizedBox(height: 24),
 
-              // Stats Row
-              Row(
-                children:
-                    [
-                          Expanded(
-                            child: _StatCard(
-                              icon: Icons.mic,
-                              label: l10n.homeToday,
-                              value: '0',
-                              color: MeetMindTheme.accent,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _StatCard(
-                              icon: Icons.insights,
-                              label: l10n.homeInsights,
-                              value: '0',
-                              color: MeetMindTheme.success,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _StatCard(
-                              icon: Icons.task_alt,
-                              label: l10n.homeActions,
-                              value: '0',
-                              color: MeetMindTheme.warning,
-                            ),
-                          ),
-                        ]
-                        .animate(interval: 100.ms)
-                        .fadeIn(delay: 300.ms)
-                        .slideY(begin: 0.1),
+              // Stats Row — derive from current session
+              Builder(
+                builder: (context) {
+                  final isActive = meeting != null && meeting.status.name == 'recording';
+                  final todayCount = isActive ? '1' : '0';
+                  final insightCount = meeting?.insights.length.toString() ?? '0';
+                  final actionCount = '0'; // TODO: connect to action items provider
+                  return Row(
+                    children:
+                        [
+                              Expanded(
+                                child: _StatCard(
+                                  icon: Icons.mic,
+                                  label: l10n.homeToday,
+                                  value: todayCount,
+                                  color: MeetMindTheme.accent,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _StatCard(
+                                  icon: Icons.insights,
+                                  label: l10n.homeInsights,
+                                  value: insightCount,
+                                  color: MeetMindTheme.success,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _StatCard(
+                                  icon: Icons.task_alt,
+                                  label: l10n.homeActions,
+                                  value: actionCount,
+                                  color: MeetMindTheme.warning,
+                                ),
+                              ),
+                            ]
+                            .animate(interval: 100.ms)
+                            .fadeIn(delay: 300.ms)
+                            .slideY(begin: 0.1),
+                  );
+                },
               ),
 
               const SizedBox(height: 32),
@@ -116,10 +137,14 @@ class HomeScreen extends ConsumerWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        Icons.headset_mic_rounded,
-                        size: 64,
-                        color: MeetMindTheme.primary.withValues(alpha: 0.3),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Image.asset(
+                          'assets/images/app_logo.png',
+                          width: 64,
+                          height: 64,
+                          opacity: const AlwaysStoppedAnimation(0.4),
+                        ),
                       ),
                       const SizedBox(height: 16),
                       Text(

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:meetmind/config/app_config.dart';
 import 'package:meetmind/config/theme.dart';
 import 'package:meetmind/l10n/generated/app_localizations.dart';
 import 'package:meetmind/providers/preferences_provider.dart';
@@ -9,88 +8,11 @@ import 'package:meetmind/providers/subscription_provider.dart';
 import 'package:meetmind/services/user_preferences.dart';
 
 /// Settings screen — app configuration.
-class SettingsScreen extends ConsumerStatefulWidget {
+class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
   @override
-  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
-}
-
-class _SettingsScreenState extends ConsumerState<SettingsScreen> {
-  late final TextEditingController _hostController;
-  late final TextEditingController _portController;
-  String _protocol = 'ws';
-  bool _hasChanges = false;
-
-  @override
-  void initState() {
-    super.initState();
-    final AppConfig config = ref.read(appConfigProvider);
-    _hostController = TextEditingController(text: config.host);
-    _portController = TextEditingController(text: config.port.toString());
-    _protocol = config.protocol;
-  }
-
-  @override
-  void dispose() {
-    _hostController.dispose();
-    _portController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _saveConfig() async {
-    final AppConfig config = ref.read(appConfigProvider);
-    await config.setHost(_hostController.text);
-    final int? port = int.tryParse(_portController.text);
-    if (port != null) {
-      await config.setPort(port);
-    }
-    await config.setProtocol(_protocol);
-
-    setState(() => _hasChanges = false);
-
-    if (mounted) {
-      final l10n = AppLocalizations.of(context)!;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.settingsBackendUpdated(config.displayUrl)),
-          backgroundColor: MeetMindTheme.success,
-          duration: const Duration(seconds: 2),
-        ),
-      );
-    }
-  }
-
-  Future<void> _resetDefaults() async {
-    final AppConfig config = ref.read(appConfigProvider);
-    await config.resetToDefaults();
-
-    setState(() {
-      _hostController.text = AppConfig.defaultHost;
-      _portController.text = AppConfig.defaultPort.toString();
-      _protocol = AppConfig.defaultProtocol;
-      _hasChanges = false;
-    });
-
-    if (mounted) {
-      final l10n = AppLocalizations.of(context)!;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.settingsResetDone),
-          duration: const Duration(seconds: 2),
-        ),
-      );
-    }
-  }
-
-  void _markDirty() {
-    if (!_hasChanges) {
-      setState(() => _hasChanges = true);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final prefs = ref.watch(preferencesProvider);
     final prefsNotifier = ref.read(preferencesProvider.notifier);
@@ -98,14 +20,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.settingsTitle),
-        actions: [
-          if (_hasChanges)
-            TextButton.icon(
-              onPressed: _saveConfig,
-              icon: const Icon(Icons.save, size: 18),
-              label: Text(l10n.settingsSave),
-            ),
-        ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -282,181 +196,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   title: Text(l10n.settingsHapticFeedback),
                   value: prefs.hapticFeedback,
                   onChanged: prefsNotifier.setHapticFeedback,
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 24),
-
-          // ─── Connection ─────────────────────────
-          _SectionHeader(title: l10n.settingsBackendConnection),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Protocol toggle
-                  Row(
-                    children: [
-                      Text(
-                        l10n.settingsProtocol,
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 13,
-                        ),
-                      ),
-                      const Spacer(),
-                      SegmentedButton<String>(
-                        segments: const [
-                          ButtonSegment<String>(value: 'ws', label: Text('WS')),
-                          ButtonSegment<String>(
-                            value: 'wss',
-                            label: Text('WSS'),
-                          ),
-                        ],
-                        selected: {_protocol},
-                        onSelectionChanged: (Set<String> value) {
-                          setState(() => _protocol = value.first);
-                          _markDirty();
-                        },
-                        style: const ButtonStyle(
-                          visualDensity: VisualDensity.compact,
-                          textStyle: WidgetStatePropertyAll(
-                            TextStyle(fontSize: 12),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Host
-                  TextField(
-                    controller: _hostController,
-                    onChanged: (_) => _markDirty(),
-                    decoration: InputDecoration(
-                      labelText: l10n.settingsHost,
-                      hintText: l10n.settingsHostHint,
-                      prefixIcon: const Icon(Icons.dns_outlined, size: 20),
-                      isDense: true,
-                    ),
-                    keyboardType: TextInputType.url,
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Port
-                  TextField(
-                    controller: _portController,
-                    onChanged: (_) => _markDirty(),
-                    decoration: InputDecoration(
-                      labelText: l10n.settingsPort,
-                      hintText: l10n.settingsPortHint,
-                      prefixIcon: const Icon(Icons.numbers_outlined, size: 20),
-                      isDense: true,
-                    ),
-                    keyboardType: TextInputType.number,
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Preview URL
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      color: MeetMindTheme.accent.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: MeetMindTheme.accent.withValues(alpha: 0.2),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.link,
-                          size: 14,
-                          color: MeetMindTheme.accent,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            '$_protocol://${_hostController.text}:'
-                            '${_portController.text}/ws/transcription',
-                            style: const TextStyle(
-                              color: MeetMindTheme.accent,
-                              fontSize: 12,
-                              fontFamily: 'monospace',
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // Reset button
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton.icon(
-                      onPressed: _resetDefaults,
-                      icon: const Icon(Icons.restore, size: 16),
-                      label: Text(l10n.settingsResetDefaults),
-                      style: TextButton.styleFrom(
-                        foregroundColor: Colors.white38,
-                        textStyle: const TextStyle(fontSize: 12),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 24),
-
-          // ─── AI Models ──────────────────────────
-          _SectionHeader(title: l10n.settingsAiModels),
-          Card(
-            child: Column(
-              children: [
-                ListTile(
-                  leading: const Icon(
-                    Icons.speed,
-                    color: MeetMindTheme.success,
-                  ),
-                  title: Text(l10n.settingsScreening),
-                  subtitle: const Text('Claude Haiku 3.5'),
-                ),
-                const Divider(
-                  height: 1,
-                  indent: 56,
-                  color: MeetMindTheme.darkBorder,
-                ),
-                ListTile(
-                  leading: const Icon(
-                    Icons.analytics,
-                    color: MeetMindTheme.accent,
-                  ),
-                  title: Text(l10n.settingsAnalysis),
-                  subtitle: const Text('Claude Sonnet 4.5'),
-                ),
-                const Divider(
-                  height: 1,
-                  indent: 56,
-                  color: MeetMindTheme.darkBorder,
-                ),
-                ListTile(
-                  leading: const Icon(
-                    Icons.psychology,
-                    color: MeetMindTheme.primary,
-                  ),
-                  title: Text(l10n.settingsDeepThink),
-                  subtitle: const Text('Claude Opus 4'),
                 ),
               ],
             ),

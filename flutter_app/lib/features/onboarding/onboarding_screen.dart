@@ -167,7 +167,7 @@ class _WelcomePage extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.all(28),
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
@@ -177,10 +177,13 @@ class _WelcomePage extends StatelessWidget {
               ),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
-              Icons.headset_mic_rounded,
-              size: 64,
-              color: MeetMindTheme.primary,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(32),
+              child: Image.asset(
+                'assets/images/app_logo.png',
+                width: 80,
+                height: 80,
+              ),
             ),
           ).animate().scale(duration: 600.ms, curve: Curves.elasticOut),
           const SizedBox(height: 40),

@@ -9,7 +9,6 @@ import 'package:meetmind/features/meeting/meeting_screen.dart';
 import 'package:meetmind/features/onboarding/onboarding_screen.dart';
 import 'package:meetmind/features/settings/legal_screen.dart';
 import 'package:meetmind/features/settings/settings_screen.dart';
-import 'package:meetmind/features/setup/model_download_screen.dart';
 import 'package:meetmind/features/subscription/paywall_screen.dart';
 
 /// App router configuration using GoRouter.
@@ -41,11 +40,6 @@ final GoRouter appRouter = GoRouter(
       path: '/settings',
       name: 'settings',
       builder: (context, state) => const SettingsScreen(),
-    ),
-    GoRoute(
-      path: '/model-setup',
-      name: 'model-setup',
-      builder: (context, state) => const ModelDownloadScreen(),
     ),
     GoRoute(
       path: '/paywall',

@@ -24,14 +24,15 @@ class Settings(BaseSettings):
     bedrock_deep_model: str = "us.anthropic.claude-opus-4-20250514-v1:0"
 
     # LLM Provider selection ("bedrock" or "openai")
-    llm_provider: str = "bedrock"
+    llm_provider: str = "openai"
 
-    # OpenAI (loaded from .env — never hardcoded)
-    openai_api_key: str = ""
-    openai_screening_model: str = "gpt-4o-mini"
-    openai_analysis_model: str = "gpt-4o"
-    openai_copilot_model: str = "gpt-4o"
-    openai_deep_model: str = "gpt-4o"
+    # OpenAI-compatible API (default: Groq free tier)
+    openai_api_key: str = ""  # Groq key from console.groq.com
+    openai_base_url: str = "https://api.groq.com/openai/v1"
+    openai_screening_model: str = "llama-3.1-8b-instant"
+    openai_analysis_model: str = "llama-3.3-70b-versatile"
+    openai_copilot_model: str = "llama-3.3-70b-versatile"
+    openai_deep_model: str = "llama-3.3-70b-versatile"
 
     # Deepgram (cloud STT fallback)
     deepgram_api_key: str = ""
@@ -44,6 +45,15 @@ class Settings(BaseSettings):
     enable_transcript_compression: bool = True
     enable_response_cache: bool = True
     enable_smart_routing: bool = True
+
+    # Auth (zero-cost: Google + Apple OAuth)
+    jwt_secret_key: str = ""  # Auto-generated if empty; set in .env for production
+    jwt_access_minutes: int = 15
+    jwt_refresh_days: int = 30
+    google_client_id: str = ""  # From Google Cloud Console
+    apple_team_id: str = ""
+    apple_bundle_id: str = ""  # e.g. com.aurameet.app
+    apple_service_id: str = ""  # For web Sign in with Apple
 
     # STT Engine selection ("parakeet", "moonshine", "whisper", or "qwen")
     stt_engine: str = "parakeet"
