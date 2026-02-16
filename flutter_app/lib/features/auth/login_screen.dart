@@ -144,19 +144,6 @@ class LoginScreen extends ConsumerWidget {
                   ),
                 ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.1),
 
-              const SizedBox(height: 24),
-
-              // Skip / Continue without account
-              TextButton(
-                onPressed: () async {
-                  await ref.read(authProvider.notifier).skipLogin();
-                  if (context.mounted) context.go('/');
-                },
-                child: Text(
-                  l10n.loginSkip,
-                  style: const TextStyle(color: Colors.white38, fontSize: 14),
-                ),
-              ).animate().fadeIn(delay: 600.ms),
 
               // Loading indicator
               if (authState.isLoading)
@@ -203,7 +190,10 @@ class LoginScreen extends ConsumerWidget {
   /// Google Sign-In flow.
   Future<void> _handleGoogleSignIn(BuildContext context, WidgetRef ref) async {
     try {
-      final googleSignIn = GoogleSignIn(scopes: ['email', 'profile']);
+      final googleSignIn = GoogleSignIn(
+        scopes: ['email', 'profile'],
+        serverClientId: '190972367615-4ft721hggursqog484ftlibtthkeeskm.apps.googleusercontent.com',
+      );
       final account = await googleSignIn.signIn();
 
       if (account == null) return; // User cancelled

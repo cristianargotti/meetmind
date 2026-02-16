@@ -35,8 +35,8 @@ GoRouter buildRouter(WidgetRef ref) {
       // If still loading auth state, don't redirect yet
       if (authState.isLoading) return null;
 
-      // Not authenticated and not guest → send to login
-      if (!authState.isAuthenticated && !authState.isGuest) return '/login';
+      // Not authenticated → send to login
+      if (!authState.isAuthenticated) return '/login';
 
       return null; // Allow navigation
     },
