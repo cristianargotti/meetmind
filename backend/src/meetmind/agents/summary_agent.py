@@ -23,26 +23,29 @@ if TYPE_CHECKING:
 logger = structlog.get_logger(__name__)
 
 SUMMARY_SYSTEM_PROMPT = """\
+IMPORTANT: You MUST write ALL text values in {language}.
+Every string in the JSON must be in {language}.
+
 You are an expert meeting summarizer. Analyze the full meeting transcript
 and produce a structured JSON summary.
 
 ## Output Format (strict JSON)
 
-{
+{{
   "title": "Meeting title (inferred from context)",
   "key_topics": ["topic1", "topic2", ...],
   "decisions": [
-    {"what": "Description of the decision", "who": "Person(s) involved"}
+    {{"what": "Description of the decision", "who": "Person(s) involved"}}
   ],
   "action_items": [
-    {"task": "What needs to be done", "owner": "Person responsible", "deadline": "If mentioned"}
+    {{"task": "What needs to be done", "owner": "Person responsible", "deadline": "If mentioned"}}
   ],
   "risks": [
-    {"description": "Risk identified", "severity": "high|medium|low"}
+    {{"description": "Risk identified", "severity": "high|medium|low"}}
   ],
   "next_steps": ["Next step 1", "Next step 2"],
   "summary": "2-3 sentence executive summary of the entire meeting"
-}
+}}
 
 ## Rules
 - Extract ONLY what was explicitly said — never invent information
@@ -50,6 +53,7 @@ and produce a structured JSON summary.
 - If no deadline was mentioned, use "Not specified"
 - Keep descriptions concise (1-2 lines each)
 - Respond with ONLY the JSON object, no extra text
+- ALL text must be in {language}
 """
 
 
@@ -95,11 +99,13 @@ class SummaryAgent:
     async def summarize(
         self,
         full_transcript: str,
+        language: str = "español",
     ) -> MeetingSummary:
         """Generate a structured meeting summary.
 
         Args:
             full_transcript: Complete meeting transcript.
+            language: Language for the response (e.g. 'español', 'english').
 
         Returns:
             MeetingSummary with structured data.
@@ -110,11 +116,15 @@ class SummaryAgent:
                 summary="No transcript content was captured.",
             )
 
+        # Format system prompt with language
+        system = SUMMARY_SYSTEM_PROMPT.format(language=language)
+
         prompt = (
+            f"{system}\n\n"
             f"## Full Meeting Transcript\n\n"
             f"{full_transcript}\n\n"
             f"---\n\n"
-            f"Generate the structured JSON summary now."
+            f"Generate the structured JSON summary now. Remember: ALL text in {language}."
         )
 
         start = time.monotonic()

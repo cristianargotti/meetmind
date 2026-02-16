@@ -14,6 +14,30 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  postgres:
+    image: pgvector/pgvector:pg17
+    container_name: meetmind-postgres
+    environment:
+      POSTGRES_DB: meetmind
+      POSTGRES_USER: meetmind
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-meetmind_secure_2026}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U meetmind -d meetmind"]
+      interval: 10s
+      timeout: 5s
+      start_period: 10s
+      retries: 5
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   backend:
     image: ${ECR_REPO:-meetmind-backend}:${TAG:-latest}
     container_name: meetmind-backend
@@ -21,6 +45,10 @@ services:
     environment:
       - MEETMIND_OPENAI_API_KEY=${MEETMIND_OPENAI_API_KEY}
       - MEETMIND_HUGGINGFACE_TOKEN=${MEETMIND_HUGGINGFACE_TOKEN:-}
+      - MEETMIND_DATABASE_URL=postgresql://meetmind:${POSTGRES_PASSWORD:-meetmind_secure_2026}@postgres:5432/meetmind
+    depends_on:
+      postgres:
+        condition: service_healthy
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:8000/health"]
@@ -37,3 +65,4 @@ services:
 volumes:
   caddy_data:
   caddy_config:
+  pgdata:

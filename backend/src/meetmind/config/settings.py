@@ -10,6 +10,9 @@ class Settings(BaseSettings):
     environment: str = "dev"
     debug: bool = False
 
+    # Database (PostgreSQL + pgvector)
+    database_url: str = "postgresql://meetmind:meetmind@localhost:5432/meetmind"
+
     # AWS (loaded from .env — never hardcoded)
     aws_profile: str = ""
     aws_region: str = ""

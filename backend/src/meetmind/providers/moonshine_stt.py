@@ -26,7 +26,6 @@ import structlog
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-from meetmind.config.settings import settings
 
 logger = structlog.get_logger(__name__)
 
@@ -49,7 +48,7 @@ def _get_model_for(language: str) -> tuple[str, Any]:
     if effective_lang not in _model_cache:
         with _model_lock:
             if effective_lang not in _model_cache:
-                from moonshine_voice import get_model_for_language
+                from moonshine_voice import get_model_for_language  # type: ignore[import-not-found]
 
                 logger.info(
                     "moonshine_downloading_model",
@@ -110,7 +109,7 @@ class MoonshineTranscriber:
         if self._running:
             return
 
-        from moonshine_voice.transcriber import (
+        from moonshine_voice.transcriber import (  # type: ignore[import-not-found]
             Transcriber,
             TranscriptEventListener,
         )
@@ -127,27 +126,21 @@ class MoonshineTranscriber:
         # Bridge Moonshine events → our callback system
         outer = self
 
-        class _Listener(TranscriptEventListener):
+        class _Listener(TranscriptEventListener):  # type: ignore[misc]
             def on_line_started(self, event: Any) -> None:
                 text = getattr(getattr(event, "line", None), "text", "")
                 if text and text.strip() and outer.on_transcript:
-                    outer.on_transcript(
-                        TranscriptSegment(text=text.strip(), is_partial=True)
-                    )
+                    outer.on_transcript(TranscriptSegment(text=text.strip(), is_partial=True))
 
             def on_line_text_changed(self, event: Any) -> None:
                 text = getattr(getattr(event, "line", None), "text", "")
                 if text and text.strip() and outer.on_transcript:
-                    outer.on_transcript(
-                        TranscriptSegment(text=text.strip(), is_partial=True)
-                    )
+                    outer.on_transcript(TranscriptSegment(text=text.strip(), is_partial=True))
 
             def on_line_completed(self, event: Any) -> None:
                 text = getattr(getattr(event, "line", None), "text", "")
                 if text and text.strip() and outer.on_transcript:
-                    outer.on_transcript(
-                        TranscriptSegment(text=text.strip(), is_partial=False)
-                    )
+                    outer.on_transcript(TranscriptSegment(text=text.strip(), is_partial=False))
 
         self._transcriber.add_listener(_Listener())
         self._transcriber.start()
@@ -185,7 +178,7 @@ class MoonshineTranscriber:
 
         try:
             # Fast path for small Int16 chunks from iOS (99% of calls)
-            # 1600 samples × 2 bytes = 3200 bytes (100ms at 16kHz)
+            # 1600 samples x 2 bytes = 3200 bytes (100ms at 16kHz)
             if n <= 6400 and n % 2 == 0:
                 sample_count = n // 2
                 # Check if it could be float32 (divisible by 4 and small values)
@@ -195,9 +188,7 @@ class MoonshineTranscriber:
                     if -1.5 <= first_f32 <= 1.5:
                         # Float32 from Chrome — unpack directly to list
                         f32_count = n // 4
-                        samples = list(
-                            struct.unpack(f"<{f32_count}f", raw_bytes)
-                        )
+                        samples = list(struct.unpack(f"<{f32_count}f", raw_bytes))
                         self._transcriber.add_audio(samples, self.SAMPLE_RATE)
                         return
 

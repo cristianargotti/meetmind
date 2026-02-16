@@ -12,8 +12,9 @@ Handles WebSocket connections for:
 
 import asyncio
 import json
+import time
 import uuid
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import structlog
 from fastapi import WebSocket, WebSocketDisconnect
@@ -22,7 +23,6 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
     from meetmind.providers.base import LLMProvider
-    from meetmind.providers.streaming_stt import StreamingTranscriber
 
 from meetmind.agents.analysis_agent import AnalysisAgent
 from meetmind.agents.copilot_agent import CopilotAgent
@@ -30,11 +30,11 @@ from meetmind.agents.screening_agent import ScreeningAgent
 from meetmind.agents.summary_agent import SummaryAgent
 from meetmind.api import handlers
 from meetmind.config.settings import settings
+from meetmind.core import storage
 from meetmind.core.speaker_tracker import SpeakerTracker
 from meetmind.core.transcript import TranscriptManager
 from meetmind.providers.factory import create_llm_provider
 from meetmind.providers.streaming_stt import StreamingTranscriber as WhisperTranscriber
-from meetmind.providers.streaming_stt import TranscriptSegment
 from meetmind.providers.whisper_stt import transcribe_with_speaker
 from meetmind.utils.cost_tracker import CostTracker
 from meetmind.utils.response_cache import ResponseCache
@@ -50,8 +50,10 @@ class ConnectionManager:
         self._active: dict[str, WebSocket] = {}
         self._transcripts: dict[str, TranscriptManager] = {}
         self._cost_trackers: dict[str, CostTracker] = {}
+        self._languages: dict[str, str] = {}
         self._speaker_trackers: dict[str, SpeakerTracker] = {}
-        self._streaming_transcribers: dict[str, StreamingTranscriber] = {}
+        self._streaming_transcribers: dict[str, Any] = {}
+        self._start_times: dict[str, float] = {}
         self._response_cache: ResponseCache = ResponseCache()
         self._event_loop: asyncio.AbstractEventLoop | None = None
         self._provider: LLMProvider | None = None
@@ -101,6 +103,34 @@ class ConnectionManager:
         )
         transcript.set_meeting_id(connection_id)
         self._transcripts[connection_id] = transcript
+        self._start_times[connection_id] = time.monotonic()
+
+        # Persist meeting in DB (non-blocking, graceful fallback)
+        language_code = settings.moonshine_language
+        try:
+            await storage.create_meeting(
+                meeting_id=connection_id,
+                language=language_code,
+            )
+        except Exception as e:
+            logger.warning("db_create_meeting_failed", error=str(e))
+
+        # Resolve language code to natural name for AI prompts
+        lang_map = {
+            "es": "español",
+            "en": "english",
+            "pt": "português",
+            "fr": "français",
+            "de": "deutsch",
+            "it": "italiano",
+            "ja": "日本語",
+            "ko": "한국어",
+            "zh": "中文",
+        }
+        self._languages[connection_id] = lang_map.get(
+            language_code,
+            language_code,
+        )
 
         # Per-connection cost tracking
         self._cost_trackers[connection_id] = CostTracker(
@@ -112,6 +142,7 @@ class ConnectionManager:
 
         # Streaming STT (real-time mode)
         if settings.stt_mode == "streaming":
+            streamer: Any = None
             if settings.stt_engine == "moonshine":
                 from meetmind.providers.moonshine_stt import (
                     MoonshineTranscriber,
@@ -158,15 +189,60 @@ class ConnectionManager:
         )
         return connection_id
 
-    def disconnect(self, connection_id: str) -> None:
-        """Remove a disconnected WebSocket.
+    async def disconnect(self, connection_id: str) -> None:
+        """Remove a disconnected WebSocket and persist meeting data.
+
+        Saves transcript segments and meeting metadata to PostgreSQL
+        before cleaning up connection state.
 
         Args:
             connection_id: ID of the connection to remove.
         """
+        # Persist meeting data before cleanup
+        transcript = self._transcripts.get(connection_id)
+        tracker = self._cost_trackers.get(connection_id)
+        start_time = self._start_times.pop(connection_id, None)
+
+        if transcript and transcript.segment_count > 0:
+            try:
+                # Save all transcript segments
+                segments = transcript.get_segments()
+                await storage.save_segments(connection_id, segments)
+
+                # Calculate duration
+                duration_secs = None
+                if start_time:
+                    duration_secs = int(time.monotonic() - start_time)
+
+                # Calculate total cost
+                cost_usd = None
+                if tracker:
+                    cost_usd = tracker.total_cost_usd
+
+                # End meeting in DB
+                await storage.end_meeting(
+                    connection_id,
+                    duration_secs=duration_secs,
+                    cost_usd=cost_usd,
+                )
+                logger.info(
+                    "meeting_persisted",
+                    meeting_id=connection_id,
+                    segments=len(segments),
+                    duration_secs=duration_secs,
+                )
+            except Exception as e:
+                logger.error(
+                    "meeting_persist_failed",
+                    meeting_id=connection_id,
+                    error=str(e),
+                )
+
+        # Cleanup connection state
         self._active.pop(connection_id, None)
         self._transcripts.pop(connection_id, None)
         self._cost_trackers.pop(connection_id, None)
+        self._languages.pop(connection_id, None)
         self._speaker_trackers.pop(connection_id, None)
 
         # Stop streaming transcriber
@@ -182,14 +258,14 @@ class ConnectionManager:
     def _make_stream_callback(
         self,
         connection_id: str,
-    ) -> "Callable[[TranscriptSegment], None]":
+    ) -> "Callable[[Any], None]":
         """Create a callback for streaming transcriber → WebSocket.
 
         The callback runs in the transcriber's background thread,
         so it uses run_coroutine_threadsafe to bridge to async.
         """
 
-        def callback(segment: TranscriptSegment) -> None:
+        def callback(segment: Any) -> None:
             if self._event_loop is None:
                 return
 
@@ -272,6 +348,7 @@ class ConnectionManager:
             screening_agent=self._screening_agent,
             analysis_agent=self._analysis_agent,
             tracker=self._cost_trackers.get(connection_id),
+            language=self._languages.get(connection_id, "español"),
         )
 
     async def run_copilot(
@@ -302,6 +379,7 @@ class ConnectionManager:
             full_transcript=full_transcript,
             summary_agent=self._summary_agent,
             tracker=self._cost_trackers.get(connection_id),
+            language=self._languages.get(connection_id, "español"),
         )
 
     @property
@@ -484,7 +562,7 @@ async def websocket_transcription(websocket: WebSocket) -> None:
                 break
 
     except WebSocketDisconnect:
-        manager.disconnect(connection_id)
+        await manager.disconnect(connection_id)
     except json.JSONDecodeError as e:
         logger.error("ws_invalid_json", connection_id=connection_id, error=str(e))
-        manager.disconnect(connection_id)
+        await manager.disconnect(connection_id)

@@ -3,9 +3,8 @@
 	email cris@meetmind.ai
 }
 
-# MeetMind Backend — auto-HTTPS + WebSocket proxy
-# Domain will be replaced via sed in deploy script
-meetmind.example.com {
+# MeetMind Backend — HTTP reverse proxy (IP-based access)
+:80 {
 	# Reverse proxy to FastAPI backend
 	reverse_proxy backend:8000 {
 		# WebSocket support (automatic in Caddy, but explicit for clarity)

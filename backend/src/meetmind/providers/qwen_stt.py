@@ -254,7 +254,7 @@ class StreamingTranscriber:
         self.max_segment_seconds = max_segment_seconds
 
         # PCM audio buffer (Float32, 16kHz mono)
-        self._audio_chunks: list[np.ndarray] = []
+        self._audio_chunks: list[np.ndarray[Any, Any]] = []
         self._buffer_lock = threading.Lock()
 
         # Transcription state
@@ -340,7 +340,7 @@ class StreamingTranscriber:
     # Private methods
     # ------------------------------------------------------------------
 
-    def _get_buffer_audio(self) -> np.ndarray | None:
+    def _get_buffer_audio(self) -> np.ndarray[Any, Any] | None:
         """Get all buffered audio as a single contiguous array.
 
         Returns:
@@ -349,7 +349,7 @@ class StreamingTranscriber:
         with self._buffer_lock:
             if not self._audio_chunks:
                 return None
-            audio = np.concatenate(self._audio_chunks)
+            audio: np.ndarray[Any, Any] = np.concatenate(self._audio_chunks)
         return audio
 
     def _reset_buffer(self) -> None:
@@ -357,7 +357,7 @@ class StreamingTranscriber:
         with self._buffer_lock:
             self._audio_chunks.clear()
 
-    def _detect_silence(self, audio: np.ndarray) -> bool:
+    def _detect_silence(self, audio: np.ndarray[Any, Any]) -> bool:
         """Check if the tail of the audio buffer is silence.
 
         Args:

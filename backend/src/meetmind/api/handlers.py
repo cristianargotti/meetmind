@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING
 import structlog
 
 from meetmind.config.settings import settings
+from meetmind.core import storage
 from meetmind.utils.cost_tracker import BudgetExceededError
 
 if TYPE_CHECKING:
@@ -95,6 +96,7 @@ async def run_screening_pipeline(
     screening_agent: ScreeningAgent | None,
     analysis_agent: AnalysisAgent | None,
     tracker: CostTracker | None,
+    language: str = "español",
 ) -> None:
     """Run the AI screening + analysis pipeline as a background task.
 
@@ -106,6 +108,7 @@ async def run_screening_pipeline(
         screening_agent: The screening agent instance.
         analysis_agent: The analysis agent instance.
         tracker: Cost tracker for this session.
+        language: Language for AI responses (e.g. 'español', 'english').
     """
     if not screening_agent or not analysis_agent:
         await _send_json(
@@ -130,7 +133,11 @@ async def run_screening_pipeline(
 
     # Record screening cost (provider-agnostic)
     if tracker:
-        s_model = settings.openai_screening_model if settings.llm_provider == "openai" else settings.bedrock_screening_model
+        s_model = (
+            settings.openai_screening_model
+            if settings.llm_provider == "openai"
+            else settings.bedrock_screening_model
+        )
         tracker.record(
             s_model,
             input_tokens=screening_result.input_tokens,
@@ -153,6 +160,7 @@ async def run_screening_pipeline(
                 segment=screening_text,
                 context=full_context,
                 screening_reason=screening_result.reason,
+                language=language,
             )
         except BudgetExceededError:
             await send_budget_exceeded(send_fn, connection_id)
@@ -161,7 +169,11 @@ async def run_screening_pipeline(
         if insight:
             # Record analysis cost (provider-agnostic)
             if tracker:
-                a_model = settings.openai_analysis_model if settings.llm_provider == "openai" else settings.bedrock_analysis_model
+                a_model = (
+                    settings.openai_analysis_model
+                    if settings.llm_provider == "openai"
+                    else settings.bedrock_analysis_model
+                )
                 tracker.record(
                     a_model,
                     input_tokens=insight.input_tokens,
@@ -176,6 +188,12 @@ async def run_screening_pipeline(
                     "insight": insight.to_dict(),
                 },
             )
+
+            # Persist insight to DB (graceful fallback)
+            try:
+                await storage.save_insight(connection_id, insight.to_dict())
+            except Exception as e:
+                logger.warning("insight_persist_failed", error=str(e))
 
     # Broadcast updated cost stats
     await send_cost_update(send_fn, connection_id, tracker)
@@ -250,6 +268,7 @@ async def run_summary(
     full_transcript: str,
     summary_agent: SummaryAgent | None,
     tracker: CostTracker | None,
+    language: str = "español",
 ) -> None:
     """Generate a post-meeting summary.
 
@@ -259,6 +278,7 @@ async def run_summary(
         full_transcript: Complete meeting transcript.
         summary_agent: The summary agent instance.
         tracker: Cost tracker for this session.
+        language: Language for AI responses (e.g. 'español', 'english').
     """
     if not summary_agent:
         await _send_json(
@@ -275,11 +295,15 @@ async def run_summary(
         )
         return
 
-    result = await summary_agent.summarize(full_transcript)
+    result = await summary_agent.summarize(full_transcript, language=language)
 
     # Record summary cost (provider-agnostic)
     if tracker:
-        sum_model = settings.openai_analysis_model if settings.llm_provider == "openai" else settings.bedrock_analysis_model
+        sum_model = (
+            settings.openai_analysis_model
+            if settings.llm_provider == "openai"
+            else settings.bedrock_analysis_model
+        )
         tracker.record(
             sum_model,
             input_tokens=result.input_tokens,
@@ -296,6 +320,12 @@ async def run_summary(
             "error": result.title == "Summary Error",
         },
     )
+
+    # Persist summary to DB (graceful fallback)
+    try:
+        await storage.save_summary(connection_id, result.to_dict())
+    except Exception as e:
+        logger.warning("summary_persist_failed", error=str(e))
 
     # Broadcast updated cost stats
     await send_cost_update(send_fn, connection_id, tracker)

@@ -1,6 +1,7 @@
 import 'package:go_router/go_router.dart';
 
 import 'package:meetmind/features/history/history_screen.dart';
+import 'package:meetmind/features/history/meeting_detail_screen.dart';
 import 'package:meetmind/features/home/home_screen.dart';
 import 'package:meetmind/features/meeting/meeting_screen.dart';
 import 'package:meetmind/features/settings/settings_screen.dart';
@@ -24,6 +25,13 @@ final GoRouter appRouter = GoRouter(
       path: '/history',
       name: 'history',
       builder: (context, state) => const HistoryScreen(),
+    ),
+    GoRoute(
+      path: '/meeting/:id',
+      name: 'meeting-detail',
+      builder: (context, state) => MeetingDetailScreen(
+        meetingId: state.pathParameters['id']!,
+      ),
     ),
     GoRoute(
       path: '/settings',

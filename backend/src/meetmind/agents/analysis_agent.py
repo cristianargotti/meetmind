@@ -62,6 +62,8 @@ class AnalysisAgent:
     """
 
     ANALYSIS_PROMPT = (
+        "IMPORTANT: Respond entirely in {language}. "
+        "All text values in the JSON must be in {language}.\n\n"
         "Analyze this meeting transcript segment and provide a structured insight.\n\n"
         "Context: {context}\n\n"
         "Relevant segment: {segment}\n\n"
@@ -88,6 +90,7 @@ class AnalysisAgent:
         segment: str,
         context: str,
         screening_reason: str,
+        language: str = "español",
     ) -> AnalysisInsight | None:
         """Analyze a relevant transcript segment and generate an insight.
 
@@ -95,6 +98,7 @@ class AnalysisAgent:
             segment: The relevant transcript text.
             context: Full meeting transcript for context.
             screening_reason: Why screening flagged this as relevant.
+            language: Language for the response (e.g. 'español', 'english').
 
         Returns:
             AnalysisInsight or None on failure.
@@ -103,6 +107,7 @@ class AnalysisAgent:
             context=context[:4000],  # Limit context to ~1000 tokens
             segment=segment,
             reason=screening_reason,
+            language=language,
         )
 
         try:

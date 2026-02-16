@@ -89,12 +89,49 @@ jobs:
             fi
           fi
 
-      - name: 📤 Upload IPA
+      - name: 📤 Upload IPA (artifact backup)
         uses: actions/upload-artifact@v4
         with:
           name: meetmind-ios-${{ github.ref_name }}
           path: flutter_app/build/ios/ipa/*.ipa
           retention-days: 90
+
+      - name: 🚀 Upload to TestFlight
+        env:
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+        run: |
+          # Write API key to temp file
+          KEY_FILE=$(mktemp)
+          echo "$APP_STORE_CONNECT_PRIVATE_KEY" > "$KEY_FILE"
+
+          IPA_PATH=$(find build/ios/ipa -name "*.ipa" | head -1)
+          if [ -z "$IPA_PATH" ]; then
+            echo "❌ No IPA found!"
+            rm -f "$KEY_FILE"
+            exit 1
+          fi
+
+          echo "📦 Validating IPA..."
+          xcrun altool --validate-app \
+            --file "$IPA_PATH" \
+            --type ios \
+            --apiKey "$APP_STORE_CONNECT_KEY_ID" \
+            --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID" \
+            --private-key "$KEY_FILE"
+
+          echo "🚀 Uploading to TestFlight..."
+          xcrun altool --upload-app \
+            --file "$IPA_PATH" \
+            --type ios \
+            --apiKey "$APP_STORE_CONNECT_KEY_ID" \
+            --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID" \
+            --private-key "$KEY_FILE"
+
+          # Cleanup
+          rm -f "$KEY_FILE"
+          echo "✅ IPA uploaded to TestFlight!"
 
   notify:
     name: 🔔 Release Notification
@@ -112,5 +149,5 @@ jobs:
           curl -s -X POST "$SLACK_WEBHOOK_URL" \
             -H "Content-Type: application/json" \
             -d "{
-              \"text\": \"📦 *MeetMind Release ${{ github.ref_name }}*\n• Android: $ANDROID\n• iOS: $IOS\n• <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Download Artifacts>\"
+              \"text\": \"📦 *MeetMind Release ${{ github.ref_name }}*\n• Android: $ANDROID\n• iOS + TestFlight: $IOS\n• <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Pipeline>\"
             }"

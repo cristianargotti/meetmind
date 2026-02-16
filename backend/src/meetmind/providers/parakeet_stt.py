@@ -16,7 +16,6 @@ Parakeet TDT v3 via onnx-asr advantages:
 
 from __future__ import annotations
 
-import struct
 import threading
 import time
 from dataclasses import dataclass, field
@@ -43,7 +42,7 @@ def _get_model() -> Any:
     if _model is None:
         with _model_lock:
             if _model is None:
-                import onnx_asr  # type: ignore[import-untyped]
+                import onnx_asr  # type: ignore[import-untyped,unused-ignore]
 
                 model_name = getattr(settings, "parakeet_model", "nemo-parakeet-tdt-0.6b-v3")
                 quantization = getattr(settings, "parakeet_quantization", "int8")
@@ -108,7 +107,7 @@ class StreamingTranscriber:
         self.max_segment_seconds = max_segment_seconds
 
         # PCM audio buffer (Float32, 16kHz mono)
-        self._audio_chunks: list[np.ndarray] = []
+        self._audio_chunks: list[np.ndarray[Any, Any]] = []
         self._buffer_lock = threading.Lock()
 
         # Transcription state
@@ -169,7 +168,7 @@ class StreamingTranscriber:
         try:
             # Default: treat as Int16 (iOS sends Int16 PCM at 16kHz)
             # Only use Float32 if ALL samples are in normalized range
-            pcm: np.ndarray
+            pcm: np.ndarray[Any, Any]
 
             if n % 4 == 0:
                 # Could be Float32 — check if values are normalized
@@ -194,12 +193,12 @@ class StreamingTranscriber:
         except Exception as e:
             logger.warning("parakeet_feed_error", error=str(e))
 
-    def _get_buffer_audio(self) -> np.ndarray | None:
+    def _get_buffer_audio(self) -> np.ndarray[Any, Any] | None:
         """Get all buffered audio as a single contiguous array."""
         with self._buffer_lock:
             if not self._audio_chunks:
                 return None
-            audio = np.concatenate(self._audio_chunks)
+            audio: np.ndarray[Any, Any] = np.concatenate(self._audio_chunks)
         return audio
 
     def _reset_buffer(self) -> None:
@@ -207,7 +206,7 @@ class StreamingTranscriber:
         with self._buffer_lock:
             self._audio_chunks.clear()
 
-    def _detect_silence(self, audio: np.ndarray) -> bool:
+    def _detect_silence(self, audio: np.ndarray[Any, Any]) -> bool:
         """Check if the tail of the audio is silence."""
         tail_samples = int(self.silence_duration * self.SAMPLE_RATE)
         if len(audio) < tail_samples:
@@ -287,7 +286,7 @@ class StreamingTranscriber:
 
             time.sleep(0.03)  # ~33Hz check rate
 
-    def _transcribe_buffer(self) -> None:
+    def _transcribe_buffer(self, *, finalize: bool = False) -> None:
         """Run Parakeet TDT on the current PCM buffer via onnx-asr.
 
         onnx-asr accepts numpy float32 arrays directly — no temp files.
@@ -321,4 +320,3 @@ class StreamingTranscriber:
 
         except Exception as e:
             logger.error("parakeet_transcribe_error", error=str(e))
-

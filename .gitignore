@@ -61,3 +61,6 @@ credentials.json
 .terraform/
 terraform.tfstate*
 .terraform.lock.hcl
+
+# Apple API Keys
+*.p8
