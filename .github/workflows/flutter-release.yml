@@ -30,7 +30,6 @@ jobs:
         with:
           flutter-version: "3.41.x"
           channel: stable
-          cache: true
 
       - name: 📦 Get dependencies
         run: flutter pub get
@@ -161,33 +160,6 @@ jobs:
           name: meetmind-ios-${{ github.ref_name }}
           path: flutter_app/build/ios/ipa/*.ipa
           retention-days: 90
-
-      - name: 🚀 Upload to TestFlight
-        env:
-          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
-        run: |
-          IPA_PATH=$(find build/ios/ipa -name "*.ipa" | head -1)
-          if [ -z "$IPA_PATH" ]; then
-            echo "❌ No IPA found!"
-            exit 1
-          fi
-
-          echo "📦 Validating IPA..."
-          xcrun altool --validate-app \
-            --file "$IPA_PATH" \
-            --type ios \
-            --apiKey "$APP_STORE_CONNECT_KEY_ID" \
-            --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID"
-
-          echo "🚀 Uploading to TestFlight..."
-          xcrun altool --upload-app \
-            --file "$IPA_PATH" \
-            --type ios \
-            --apiKey "$APP_STORE_CONNECT_KEY_ID" \
-            --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID"
-
-          echo "✅ IPA uploaded to TestFlight!"
 
       - name: 🧹 Cleanup
         if: always()
