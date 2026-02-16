@@ -15,7 +15,7 @@ on:
 jobs:
   android:
     name: 🤖 Android APK
-    runs-on: [self-hosted, linux, meetmind]
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     defaults:
       run:
@@ -25,16 +25,18 @@ jobs:
       - name: 📥 Checkout
         uses: actions/checkout@v4
 
-      - name: 🧹 Clear stale Flutter cache
-        run: |
-          rm -rf "$RUNNER_TOOL_CACHE/flutter" 2>/dev/null || true
-          echo "✅ Cleared old Flutter cache"
+      - name: ☕ Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
 
       - name: 📱 Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: "3.41.x"
           channel: stable
+          cache: true
 
       - name: 📦 Get dependencies
         run: flutter pub get
