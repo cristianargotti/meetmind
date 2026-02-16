@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:meetmind/l10n/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:meetmind/config/theme.dart';
+import 'package:meetmind/l10n/generated/app_localizations.dart';
 import 'package:meetmind/providers/subscription_provider.dart';
 
 /// Ask Aura — RAG-powered chat with meeting history.
@@ -148,7 +148,7 @@ class _AskAuraScreenState extends ConsumerState<AskAuraScreen> {
           Container(
             padding: const EdgeInsets.fromLTRB(16, 8, 8, 16),
             decoration: BoxDecoration(
-              color: MeetMindTheme.cardDark,
+              color: MeetMindTheme.darkCard,
               border: Border(
                 top: BorderSide(
                   color: MeetMindTheme.darkBorder.withValues(alpha: 0.5),
@@ -255,7 +255,7 @@ class _EmptyState extends ConsumerWidget {
                   vertical: 14,
                 ),
                 decoration: BoxDecoration(
-                  color: MeetMindTheme.cardDark,
+                  color: MeetMindTheme.darkCard,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: MeetMindTheme.darkBorder.withValues(alpha: 0.5),
@@ -314,7 +314,7 @@ class _ChatBubble extends StatelessWidget {
         decoration: BoxDecoration(
           color: message.isUser
               ? MeetMindTheme.primary
-              : MeetMindTheme.cardDark,
+              : MeetMindTheme.darkCard,
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(16),
             topRight: const Radius.circular(16),

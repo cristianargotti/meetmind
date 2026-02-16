@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:meetmind/l10n/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:meetmind/config/app_config.dart';
 import 'package:meetmind/config/theme.dart';
+import 'package:meetmind/l10n/generated/app_localizations.dart';
 import 'package:meetmind/providers/preferences_provider.dart';
 import 'package:meetmind/providers/subscription_provider.dart';
 import 'package:meetmind/services/user_preferences.dart';
@@ -126,7 +126,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   trailing: DropdownButton<AppLocale>(
                     value: prefs.locale,
                     underline: const SizedBox.shrink(),
-                    dropdownColor: MeetMindTheme.cardDark,
+                    dropdownColor: MeetMindTheme.darkCard,
                     items: AppLocale.values.map((locale) {
                       return DropdownMenuItem(
                         value: locale,
@@ -158,7 +158,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   trailing: DropdownButton<TranscriptionLanguage>(
                     value: prefs.transcriptionLanguage,
                     underline: const SizedBox.shrink(),
-                    dropdownColor: MeetMindTheme.cardDark,
+                    dropdownColor: MeetMindTheme.darkCard,
                     items: TranscriptionLanguage.values.map((lang) {
                       return DropdownMenuItem(
                         value: lang,
@@ -272,9 +272,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                   title: Text(l10n.settingsNotificationsEnabled),
                   value: prefs.notificationsEnabled,
-                  onChanged: (value) {
-                    prefsNotifier.setNotificationsEnabled(value);
-                  },
+                  onChanged: (value) =>
+                      prefsNotifier.setNotificationsEnabled(value),
                 ),
                 const Divider(
                   height: 1,
@@ -288,9 +287,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                   title: Text(l10n.settingsHapticFeedback),
                   value: prefs.hapticFeedback,
-                  onChanged: (value) {
-                    prefsNotifier.setHapticFeedback(value);
-                  },
+                  onChanged: (value) =>
+                      prefsNotifier.setHapticFeedback(value),
                 ),
               ],
             ),

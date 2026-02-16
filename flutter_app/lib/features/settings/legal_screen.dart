@@ -5,7 +5,7 @@ import 'package:meetmind/config/theme.dart';
 
 /// Legal documents screen — Privacy Policy & Terms of Service.
 class LegalScreen extends StatelessWidget {
-  const LegalScreen({super.key, required this.type});
+  const LegalScreen({required this.type, super.key});
 
   /// 'privacy' or 'terms'
   final String type;

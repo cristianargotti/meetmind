@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:meetmind/l10n/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:meetmind/config/theme.dart';
+import 'package:meetmind/l10n/generated/app_localizations.dart';
 import 'package:meetmind/services/permission_service.dart';
 import 'package:meetmind/services/user_preferences.dart';
 
@@ -51,7 +51,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Future<void> _requestMicPermission() async {
-    await PermissionService.requestMicrophone();
+    await PermissionService().requestMicPermission();
     _nextPage();
   }
 
@@ -265,7 +265,7 @@ class _LanguagePage extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: isSelected
                         ? MeetMindTheme.primary.withValues(alpha: 0.15)
-                        : MeetMindTheme.cardDark,
+                        : MeetMindTheme.darkCard,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: isSelected

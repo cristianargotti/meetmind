@@ -53,8 +53,8 @@ class ProBadge extends ConsumerWidget {
 /// Shows the child if Pro, otherwise shows a locked overlay that taps to paywall.
 class ProGate extends ConsumerWidget {
   const ProGate({
-    super.key,
     required this.child,
+    super.key,
   });
 
   final Widget child;
