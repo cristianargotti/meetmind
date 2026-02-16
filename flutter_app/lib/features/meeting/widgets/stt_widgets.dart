@@ -115,7 +115,7 @@ class _PartialTranscriptBarState extends State<PartialTranscriptBar>
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: List.generate(3, (int i) {
-                  return SizedBox(width: 4, height: 24)
+                  return const SizedBox(width: 4, height: 24)
                       .animate(
                         onPlay: (AnimationController c) => c.repeat(reverse: true),
                         delay: Duration(milliseconds: i * 150),

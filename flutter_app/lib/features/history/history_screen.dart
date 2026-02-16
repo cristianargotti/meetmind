@@ -142,7 +142,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 hintStyle: TextStyle(
                   color: MeetMindTheme.textTertiary.withValues(alpha: 0.5),
                 ),
-                prefixIcon: Icon(
+                prefixIcon: const Icon(
                   Icons.search_rounded,
                   color: MeetMindTheme.textTertiary,
                 ),
@@ -397,7 +397,7 @@ class _MeetingCard extends StatelessWidget {
               // Date + time
               Row(
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.calendar_today_rounded,
                     size: 13,
                     color: MeetMindTheme.textTertiary,
@@ -405,7 +405,7 @@ class _MeetingCard extends StatelessWidget {
                   const SizedBox(width: 6),
                   Text(
                     '$dateStr  •  $timeStr',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 12,
                       color: MeetMindTheme.textTertiary,
                     ),
@@ -439,7 +439,7 @@ class _MeetingCard extends StatelessWidget {
                   if (costUsd > 0)
                     Text(
                       '\$${costUsd.toStringAsFixed(3)}',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w500,
                         color: MeetMindTheme.textTertiary,
@@ -476,7 +476,7 @@ class _StatChip extends StatelessWidget {
         const SizedBox(width: 4),
         Text(
           value,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w500,
             color: MeetMindTheme.textSecondary,
