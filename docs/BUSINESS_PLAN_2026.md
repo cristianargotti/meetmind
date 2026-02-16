@@ -1,202 +1,120 @@
-# 💼 Aura Meet — Business Plan 2026
+## 📊 Costos Reales & Unit Economics (Updated Feb 2026)
 
-## 📊 Costos Reales Actuales
-
-### Infraestructura Fija
+### Infraestructura Fija (Optimizada)
 
 | Recurso | Specs | Costo/mes |
 |---|---|---|
-| EC2 c6i.xlarge | 4 vCPU, 8GB RAM | $124 |
+| EC2 t3.small | 2 vCPU, 2GB RAM (x86) | $15.00 |
 | EBS gp3 30GB | Storage | $2.40 |
 | Elastic IP | Static IP | $3.65 |
-| ECR | Container registry | ~$1 |
-| **Total infra** | | **~$131/mes** |
+| ECR | Container registry | ~$1.00 |
+| **Total infra** | | **~$22.05/mes** |
 
-### Costo AI por Usuario (Bedrock)
+> [!IMPORTANT]
+> **Cambio clave:** Migramos de Graviton ($79) a t3.small ($15) usando **Docker + Caddy + vLLM remote**. La base de datos corre en el mismo EC2 (PostgreSQL embedded).
 
-Estimando **1 reunión de 30 min/día** por usuario:
+### Costo AI por Usuario (Zero-Cost Strategy)
 
-| Componente | Modelo | Tokens/reunión | Costo/reunión |
+Usando **Groq Free Tier** (Llama 3.3 70B, DeepSeek R1) via OpenAI-compatible API:
+
+| Componente | Modelo | Provider | Costo/reunión |
 |---|---|---|---|
-| Screening (×10) | Haiku 3.5 | ~5K in + 500 out | $0.006 |
-| Analysis (×3) | Sonnet 4.5 | ~3K in + 1K out | $0.024 |
-| Copilot (×2) | Sonnet 4.5 | ~2K in + 500 out | $0.014 |
-| Summary (×1) | Sonnet 4.5 | ~5K in + 2K out | $0.045 |
-| **Total/reunión** | | | **$0.089** |
-| **Total/mes** (20 reuniones) | | | **$1.78/user** |
+| Screening | Llama 3.3 70B | Groq | **$0** (Free Tier) |
+| Analysis | Llama 3.3 70B | Groq | **$0** (Free Tier) |
+| Copilot | Llama 3.3 70B | Groq | **$0** (Free Tier) |
+| Summary | Llama 3.3 70B | Groq | **$0** (Free Tier) |
+| **Total/reunión** | | | **$0.00** |
 
-### Costo STT (Parakeet)
+> **Límite Free Tier:** 6,000 requests/día (~300 reuniones/día).
+> **Plan B (Escalado):** Groq Paid ($0.05/1M tokens) o Together AI ($0.20/1M).
+> **Costo estimado a escala:** **$0.03/user/mes** (vs $1.78 con Bedrock).
 
-| Item | Detalle | Costo |
-|---|---|---|
-| Parakeet TDT v3 | Corre en EC2, sin API | **$0** adicional por token |
-| CPU por sesión | ~25% de 1 vCPU | Incluido en EC2 |
-| **Capacidad actual** | c6i.xlarge = ~4 sesiones simultáneas | — |
-
-### Unit Economics
+### Unit Economics Rentables
 
 | Métrica | Valor |
 |---|---|
-| Costo fijo/mes | $131 |
-| Costo variable/usuario/mes | $1.78 (AI) |
-| Costo total con 50 usuarios | $131 + $89 = **$220/mes** |
-| Costo total con 200 usuarios | $131×3 + $356 = **$749/mes** |
+| Costo fijo/mes | $22.05 |
+| Costo variable/usuario/mes | $0.00 (hasta 1,000 users) |
+| **Break-even point** | **2 usuarios pagando Pro** ($14.99 × 2 = $29.98) |
+| Margen con 100 users | Revenue $1,050 - Cost $22 = **98% Margen** |
 
 ---
 
 ## 💰 Pricing Strategy
 
-### Propuesta: Freemium + Premium
+### Propuesta: Freemium + Premium + Business
 
 | Plan | Precio | Incluye | Target |
 |---|---|---|---|
-| **Free** | $0 | 3 reuniones/semana, transcripción only, sin AI insights | Adopción, prueba |
-| **Pro** | **$7.99/mes** | Ilimitado, AI insights, background recording, notificaciones, historial, export | Profesionales |
-| **Team** | **$14.99/user/mes** | Todo Pro + shared workspace, analytics, integrations, priority support | Equipos |
+| **Free** | $0 | 3 reuniones/semana, transcripción, 1 insight/reunión | Adopción |
+| **Pro** | **$14.99/mes** | Ilimitado, Ask Aura, Weekly Digest, Background rec, Push | Profesionales |
+| **Team** | **$19.99/user** | Todo Pro + shared workspace, team analytics | Equipos pequeños |
+| **Business** | **$39.99/user** | Todo Team + SSO, API, DeepSeek R1 reasoning | Empresas |
 
-> [!IMPORTANT]
-> **$7.99/mes** es estratégico: más barato que Otter ($8.33), Fireflies ($10), y Granola ($14), pero con features que ellos no tienen (background recording, push notifications, AI screening real-time).
+> [!TIP]
+> **Pricing validado en código:** `subscription_service.dart` ya implementa estos tiers.
 
-### Revenue Projections
+### Revenue Projections (99% Margen)
 
-| Usuarios activos | Free (70%) | Pro (25%) | Team (5%) | Revenue/mes | Profit/mes |
-|---|---|---|---|---|---|
-| 100 | 70 | 25 | 5 | $275 | +$99 |
-| 500 | 350 | 125 | 25 | $1,373 | +$764 |
-| 1,000 | 700 | 250 | 50 | $2,748 | +$1,396 |
-| 5,000 | 3,500 | 1,250 | 250 | $13,748 | +$8,700 |
-| 10,000 | 7,000 | 2,500 | 500 | $27,495 | +$19,495 |
+| Usuarios activos | Paid Conversion (5%) | Revenue/mes | Costos (Infra) | Profit/mes |
+|---|---|---|---|---|
+| 100 | 5 (Pro) | $75 | $22 | **+$53** |
+| 1,000 | 50 (Pro) | $750 | $22 | **+$728** |
+| 5,000 | 250 (Pro) | $3,748 | $50 (scale infra) | **+$3,698** |
+| 10,000 | 500 (Pro) | $7,495 | $100 | **+$7,395** |
 
 ---
 
 ## 🏗️ Scaling Strategy
 
-### Fase 1: Actual (0-100 users)
+### Fase 1: Zero-Cost Launch (0-1,000 users)
+- **Infra:** 1 EC2 t3.small ($15/mo)
+- **AI:** Groq Free Tier ($0)
+- **STT:** Parakeet/Moonshine on-device ($0)
+- **DB:** PostgreSQL local en EC2
 
-```
-  iPhone → WebSocket → EC2 c6i.xlarge
-                        ├── Parakeet STT
-                        ├── FastAPI
-                        └── Bedrock API
-```
-
-- **1 EC2 c6i.xlarge** = ~4 sesiones STT simultáneas
-- Suficiente para ~100 usuarios (no todos hablan al mismo tiempo)
-- **Costo: $131/mes**
-
-### Fase 2: Growth (100-1,000 users)
-
-```
-  iPhone → ALB → ECS Fargate (auto-scale)
-                  ├── Task: API + STT (CPU-optimized)
-                  └── Bedrock API
-```
-
-- Migrar a **ECS Fargate** con auto-scaling
-- Cada task: 4 vCPU, 8GB = ~$0.18/hora = ~4 sesiones concurrent
-- Auto-scale: 2-10 tasks según demanda
-- **Costo estimado: $300-800/mes**
-
-### Fase 3: Scale (1,000-10,000 users)
-
-```
-  iPhone → CloudFront → ALB → ECS Fargate (multi-AZ)
-                                ├── STT tasks (CPU-optimized)
-                                ├── API tasks (lightweight)
-                                └── Bedrock (cross-region)
-           RDS PostgreSQL ← meeting history
-           S3 ← audio archives
-           ElastiCache ← session cache
-```
-
-- **Separar STT y API** en tasks diferentes
-- **RDS** para meeting history + search
-- **S3** para audio backup
-- **Multi-AZ** para alta disponibilidad
-- **Costo estimado: $1,500-3,000/mes**
+### Fase 2: Growth (1,000-5,000 users)
+- **Infra:** Upgrade a c6i.large ($60/mo) o Hetzner AX102 ($99/mo)
+- **AI:** Groq Developer Plan (Pay-as-you-go)
+- **DB:** Separar RDS si es necesario (o mantener en NVMe dedicado)
 
 ---
 
-## 🗺️ Feature Roadmap por Prioridad de Monetización
+## 🗺️ Feature Roadmap & Status Real
 
-### Sprint 1: Monetización Base (2-3 semanas)
+### ✅ Ya Implementado (Codebase Audit Feb 2026)
+- **Backend:** FastAPI, Hexagonal Arch, Provider Factory (Bedrock/OpenAI), 4 STT engines.
+- **Flutter:** RevenueCat subscription workflow, Free tier limits, Background service.
+- **Features:** History, Export (PDF/JSON), Ask Aura (chat), Weekly Digest skeleton.
+- **Infra:** Caddy reverse proxy, Docker Compose.
 
-| Feature | Impacto Revenue | Esfuerzo |
-|---|---|---|
-| **RevenueCat** — In-app subscription | 🔥🔥🔥 CRÍTICO | 3 días |
-| **Paywall** — Free vs Pro | 🔥🔥🔥 | 2 días |
-| **Meeting History** — guardar/buscar | 🔥🔥🔥 | 5 días |
-| **Export** — copiar, compartir, email | 🔥🔥 | 2 días |
-
-### Sprint 2: Retención (2-3 semanas)
-
-| Feature | Impacto Revenue | Esfuerzo |
-|---|---|---|
-| **Speaker Diarization** (pyannote) | 🔥🔥🔥 | 5 días |
-| **"Ask Aura"** — chat sobre meetings | 🔥🔥🔥 | 5 días |
-| **Onboarding** — tutorial primer uso | 🔥🔥 | 2 días |
-| **Meeting Templates** — standup, 1:1, brainstorm | 🔥 | 2 días |
-
-### Sprint 3: Crecimiento (3-4 semanas)
-
-| Feature | Impacto Revenue | Esfuerzo |
-|---|---|---|
-| **Android app** (Flutter = mismo code) | 🔥🔥🔥 | 5 días |
-| **Apple Watch** companion | 🔥🔥🔥 | 7 días |
-| **Slack/Notion integration** | 🔥🔥 | 3 días |
-| **Chrome Extension** (virtual meetings) | 🔥🔥 | 5 días |
-
-### Sprint 4: Diferenciación (4 semanas)
-
-| Feature | Impacto Revenue | Esfuerzo |
-|---|---|---|
-| **Live Coaching** — sugerencias en real-time | 🔥🔥🔥 | 10 días |
-| **Multi-language auto-detect** | 🔥🔥 | 3 días |
-| **Weekly Digest** — resumen semanal AI | 🔥🔥 | 3 días |
-| **CRM sync** (HubSpot) — plan Team | 🔥 | 5 días |
-
----
-
-## 🛡️ Competitive Moat
-
-Lo que nos hace **imposibles de copiar rápido**:
-
-| Moat | Detalle |
-|---|---|
-| **STT propio** | Parakeet on-device, sin dependencia de APIs cloud |
-| **AI screening real-time** | Nadie más detecta ideas mientras hablas |
-| **Background + push** | Única app que graba en background y notifica |
-| **LATAM-first** | Optimizado para ES/PT desde día 1, no como add-on |
-| **Precio agresivo** | $7.99 vs competencia $10-35 |
+### 🗓️ Próximos Pasos (Go-to-Market Auto)
+1. **Configurar Groq:** Cambiar `OPENAI_BASE_URL` a `https://api.groq.com/openai/v1`.
+2. **Launch Automation:** Landing page (Carrd), Buffer (Social), Brevo (Email).
+3. **App Store Deploy:** Screenshots, metadata, submit.
 
 ---
 
 ## 📋 Requisitos para Lanzamiento Paid
 
-| # | Requisito | Estado | Prioridad |
+| # | Requisito | Estado Real | Acción inmediata |
 |---|---|---|---|
-| 1 | RevenueCat + subscriptions iOS | ❌ Falta | 🔴 |
-| 2 | Meeting history persistente | ❌ Falta | 🔴 |
-| 3 | Export (copy/share/email) | ❌ Falta | 🔴 |
-| 4 | Paywall UI (Free vs Pro) | ❌ Falta | 🔴 |
-| 5 | Speaker diarization | ❌ Falta | 🟡 |
-| 6 | App Store listing + screenshots | ❌ Falta | 🟡 |
-| 7 | Privacy policy + Terms | ❌ Falta | 🟡 |
-| 8 | Onboarding flow | ❌ Falta | 🟡 |
-| 9 | App icon correcto | ⚠️ Warning | 🟢 |
-| 10 | Android build | ❌ Falta | 🟢 |
+| 1 | RevenueCat integration | ✅ Listo | Configurar productos en dashboard |
+| 2 | Meeting history | ✅ Listo | - |
+| 3 | Export options | ✅ Listo | - |
+| 4 | Paywall UI | ✅ Listo | Testear flow |
+| 5 | Speaker diarization | ✅ Listo | Verificar pyannote token |
+| 6 | AI Provider Switch | ⚠️ Bedrock | **Cambiar a Groq (.env)** |
+| 7 | App Store metadata | ❌ Falta | Crear en App Store Connect |
 
 ---
 
-## 🎯 Milestones
+## 🎯 Milestones 2026
 
-| Milestone | Fecha Target | Métrica |
+| Milestone | Fecha | Meta Financiera |
 |---|---|---|
-| **v1 Alpha** (ahora) | Feb 2026 | ✅ Transcripción + AI insights working |
-| **v2 Beta** — paid ready | Mar 2026 | RevenueCat + history + export + paywall |
-| **v3 Launch** — App Store | Abr 2026 | Speaker ID + Ask Aura + listing |
-| **100 users** | May 2026 | $275/mes revenue |
-| **500 users** | Jul 2026 | $1,373/mes revenue |
-| **Android launch** | Ago 2026 | 2× market reach |
-| **1,000 users** | Oct 2026 | $2,748/mes → profitable |
-| **Apple Watch** | Nov 2026 | Killer differentiator |
+| **Zero-Cost Launch** | Mar 2026 | **$0 burn rate** |
+| **First 10 Customers** | Abr 2026 | **$150 MRR** (Profitable) |
+| **1,000 Active Users** | Jun 2026 | **$750 MRR** |
+| **5,000 Active Users** | Sep 2026 | **$3,750 MRR** |
+| **Seed Round / Exit** | Dic 2026 | Valuation $3M+ |

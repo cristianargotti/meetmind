@@ -1,19 +1,66 @@
-"""MeetMind FastAPI application entry point."""
+"""Aura Meet FastAPI application entry point."""
 
-from collections.abc import AsyncGenerator
+from __future__ import annotations
+
+import uuid
 from contextlib import asynccontextmanager
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import structlog
-from fastapi import FastAPI, HTTPException, WebSocket
+from fastapi import Depends, FastAPI, HTTPException, WebSocket
+from pydantic import BaseModel
 from starlette.middleware.cors import CORSMiddleware
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator
 
 from meetmind.api.websocket import manager, websocket_transcription
 from meetmind.config.logging import setup_logging
 from meetmind.config.settings import settings
 from meetmind.core import storage
+from meetmind.core.auth import (
+    create_access_token,
+    create_refresh_token,
+    decode_token,
+    get_current_user,
+    verify_apple_token,
+    verify_google_token,
+)
 
 logger = structlog.get_logger(__name__)
+
+
+# ─── Request / Response Models ───────────────────────────────────
+
+
+class AuthLoginRequest(BaseModel):
+    """OAuth login request — exchange provider id_token for our JWT."""
+
+    provider: str  # "google" | "apple"
+    id_token: str
+    name: str | None = None  # Apple sends name only on first login
+
+
+class AuthTokenResponse(BaseModel):
+    """JWT token pair response."""
+
+    access_token: str
+    refresh_token: str
+    token_type: str = "bearer"  # noqa: S105
+    user: dict[str, Any]
+
+
+# Module-level dependency to satisfy B008 (no function calls in defaults)
+_auth_dep = Depends(get_current_user)
+
+
+class RefreshRequest(BaseModel):
+    """Token refresh request."""
+
+    refresh_token: str
+
+
+# ─── Lifespan ────────────────────────────────────────────────────
 
 
 @asynccontextmanager
@@ -42,9 +89,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
 
 app = FastAPI(
-    title="MeetMind API",
+    title="Aura Meet API",
     description="AI-powered meeting assistant backend",
-    version="0.2.0",
+    version="0.5.0",
     debug=settings.debug,
     lifespan=lifespan,
 )
@@ -52,13 +99,13 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # TODO: lock to specific origins in production
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
-# ─── Health ───────────────────────────────────────────────────────
+# ─── Health ──────────────────────────────────────────────────────
 
 
 @app.get("/health")
@@ -67,33 +114,164 @@ async def health_check() -> dict[str, str]:
     return {"status": "healthy", "environment": settings.environment}
 
 
-# ─── Meetings REST API ───────────────────────────────────────────
+# ─── Auth ────────────────────────────────────────────────────────
+
+
+@app.post("/api/auth/login")
+async def auth_login(body: AuthLoginRequest) -> AuthTokenResponse:
+    """Exchange a Google/Apple id_token for our JWT tokens.
+
+    Args:
+        body: Provider name and id_token from OAuth flow.
+
+    Returns:
+        Access + refresh tokens and user profile.
+    """
+    if body.provider == "google":
+        provider_user = await verify_google_token(body.id_token)
+    elif body.provider == "apple":
+        provider_user = await verify_apple_token(body.id_token)
+    else:
+        raise HTTPException(status_code=400, detail="Unsupported provider")
+
+    # Check if user already exists
+    existing = await storage.get_user_by_provider(
+        provider=body.provider,
+        provider_id=provider_user["sub"],
+    )
+
+    user_id = existing["id"] if existing else str(uuid.uuid4())
+    user_name = body.name or provider_user.get("name", "")
+
+    user = await storage.upsert_user(
+        user_id=user_id,
+        email=provider_user["email"],
+        name=user_name or None,
+        avatar_url=provider_user.get("picture") or None,
+        provider=body.provider,
+        provider_id=provider_user["sub"],
+    )
+
+    logger.info(
+        "auth_login_success",
+        user_id=user_id,
+        provider=body.provider,
+        is_new=existing is None,
+    )
+
+    return AuthTokenResponse(
+        access_token=create_access_token(user_id, user["email"]),
+        refresh_token=create_refresh_token(user_id),
+        user={
+            "id": user["id"],
+            "email": user["email"],
+            "name": user.get("name", ""),
+            "avatar_url": user.get("avatar_url", ""),
+        },
+    )
+
+
+@app.post("/api/auth/refresh")
+async def auth_refresh(body: RefreshRequest) -> dict[str, str]:
+    """Get a new access token using a refresh token.
+
+    Args:
+        body: Refresh token.
+
+    Returns:
+        New access token.
+    """
+    payload = decode_token(body.refresh_token)
+    if payload.get("type") != "refresh":
+        raise HTTPException(status_code=401, detail="Invalid refresh token")
+
+    user = await storage.get_user(payload["sub"])
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+
+    return {
+        "access_token": create_access_token(user["id"], user["email"]),
+        "token_type": "bearer",
+    }
+
+
+@app.get("/api/auth/me")
+async def auth_me(
+    current_user: dict[str, Any] = _auth_dep,
+) -> dict[str, Any]:
+    """Get the current authenticated user profile.
+
+    Returns:
+        User profile data.
+    """
+    user = await storage.get_user(current_user["user_id"])
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {
+        "id": user["id"],
+        "email": user["email"],
+        "name": user.get("name", ""),
+        "avatar_url": user.get("avatar_url", ""),
+        "provider": user["provider"],
+        "created_at": str(user["created_at"]),
+    }
+
+
+@app.delete("/api/auth/account")
+async def auth_delete_account(
+    current_user: dict[str, Any] = _auth_dep,
+) -> dict[str, str]:
+    """Delete the current user account and ALL associated data.
+
+    Apple App Store requirement: users must be able to delete their account.
+    Cascading delete removes all meetings, transcripts, insights, summaries.
+
+    Returns:
+        Confirmation message.
+    """
+    deleted = await storage.delete_user_account(current_user["user_id"])
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Account not found")
+    return {"status": "deleted", "message": "Account and all data permanently removed"}
+
+
+# ─── Meetings REST API (Protected) ──────────────────────────────
 
 
 @app.get("/api/meetings")
 async def list_meetings(
     limit: int = 50,
     offset: int = 0,
+    current_user: dict[str, Any] = _auth_dep,
 ) -> dict[str, Any]:
-    """List all meetings, most recent first.
+    """List meetings for the authenticated user, most recent first.
 
     Args:
         limit: Maximum number of meetings to return.
         offset: Pagination offset.
+        current_user: Injected by auth dependency.
 
     Returns:
         Dict with meetings list and pagination info.
     """
-    meetings = await storage.list_meetings(limit=limit, offset=offset)
+    meetings = await storage.list_meetings(
+        limit=limit,
+        offset=offset,
+        user_id=current_user["user_id"],
+    )
     return {"meetings": meetings, "limit": limit, "offset": offset}
 
 
 @app.get("/api/meetings/{meeting_id}")
-async def get_meeting(meeting_id: str) -> dict[str, Any]:
+async def get_meeting(
+    meeting_id: str,
+    current_user: dict[str, Any] = _auth_dep,
+) -> dict[str, Any]:
     """Get a single meeting with transcript, insights, and summary.
 
     Args:
         meeting_id: The unique meeting identifier.
+        current_user: Injected by auth dependency.
 
     Returns:
         Complete meeting data.
@@ -108,11 +286,15 @@ async def get_meeting(meeting_id: str) -> dict[str, Any]:
 
 
 @app.delete("/api/meetings/{meeting_id}")
-async def delete_meeting(meeting_id: str) -> dict[str, str]:
+async def delete_meeting(
+    meeting_id: str,
+    current_user: dict[str, Any] = _auth_dep,
+) -> dict[str, str]:
     """Delete a meeting and all related data.
 
     Args:
         meeting_id: The unique meeting identifier.
+        current_user: Injected by auth dependency.
 
     Returns:
         Confirmation message.
@@ -130,11 +312,15 @@ async def delete_meeting(meeting_id: str) -> dict[str, str]:
 
 
 @app.get("/api/action-items")
-async def get_pending_actions(limit: int = 50) -> dict[str, Any]:
+async def get_pending_actions(
+    limit: int = 50,
+    current_user: dict[str, Any] = _auth_dep,
+) -> dict[str, Any]:
     """Get all pending action items across meetings.
 
     Args:
         limit: Maximum number of items to return.
+        current_user: Injected by auth dependency.
 
     Returns:
         List of pending action items.
@@ -147,12 +333,14 @@ async def get_pending_actions(limit: int = 50) -> dict[str, Any]:
 async def update_action_item(
     item_id: int,
     status: str = "done",
+    current_user: dict[str, Any] = _auth_dep,
 ) -> dict[str, Any]:
     """Update an action item's status.
 
     Args:
         item_id: The action item ID.
         status: New status ('pending' or 'done').
+        current_user: Injected by auth dependency.
 
     Returns:
         Updated status.
@@ -163,12 +351,14 @@ async def update_action_item(
     return {"id": item_id, "status": status}
 
 
-# ─── Dashboard Stats ─────────────────────────────────────────────
+# ─── Dashboard Stats ────────────────────────────────────────────
 
 
 @app.get("/api/stats")
-async def get_stats() -> dict[str, Any]:
-    """Get dashboard statistics.
+async def get_stats(
+    current_user: dict[str, Any] = _auth_dep,
+) -> dict[str, Any]:
+    """Get dashboard statistics for the authenticated user.
 
     Returns:
         Aggregated stats for the home dashboard.

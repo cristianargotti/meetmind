@@ -130,10 +130,14 @@ jobs:
       - name: 🚀 Deploy
         run: |
           echo "🚀 Pulling latest image and restarting..."
-          docker pull "${{ needs.build-scan-push.outputs.image-uri }}"
-          # If docker-compose.prod.yml exists, use it
-          if [ -f docker-compose.prod.yml ]; then
-            docker compose -f docker-compose.prod.yml up -d --force-recreate backend
-          else
-            echo "⚠️ No docker-compose.prod.yml — manual deploy needed"
-          fi
+          FULL_URI="${{ needs.build-scan-push.outputs.image-uri }}"
+          docker pull "$FULL_URI"
+          cd backend
+          # Split "registry/name:tag" into ECR_REPO and TAG for docker-compose
+          export ECR_REPO="${FULL_URI%:*}"
+          export TAG="${FULL_URI##*:}"
+          echo "ECR_REPO=$ECR_REPO TAG=$TAG"
+          docker compose -f docker-compose.prod.yml up -d --force-recreate backend caddy
+          echo "✅ Containers restarted — waiting for health check..."
+          sleep 15
+          curl -sf http://localhost:8000/health && echo "✅ Backend healthy" || echo "⚠️ Health check pending"

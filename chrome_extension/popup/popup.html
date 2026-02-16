@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=520">
-    <title>MeetMind</title>
+    <title>Aura Meet</title>
     <link rel="stylesheet" href="popup.css">
 </head>
 
@@ -13,12 +13,13 @@
     <header class="header">
         <div class="header-left">
             <span class="logo">🧠</span>
-            <h1 class="title">MeetMind</h1>
+            <h1 class="title" data-i18n="appTitle">Aura Meet</h1>
         </div>
         <div class="header-right">
+            <button id="dashboard-btn" class="icon-btn" title="Open Dashboard">↗️</button>
             <span id="connection-badge" class="badge badge--disconnected">
                 <span class="badge-dot"></span>
-                <span class="badge-text">Offline</span>
+                <span class="badge-text" data-i18n="connOffline">Offline</span>
             </span>
         </div>
     </header>
@@ -26,7 +27,7 @@
     <!-- Cost Tracker Bar -->
     <div class="cost-bar" id="cost-bar" style="display: none;">
         <div class="cost-bar__info">
-            <span class="cost-bar__label">💰 Session</span>
+            <span class="cost-bar__label" data-i18n="costSession">💰 Session</span>
             <span class="cost-bar__value" id="cost-value">$0.00</span>
             <span class="cost-bar__separator">·</span>
             <span class="cost-bar__budget" id="cost-budget">$1.00 left</span>
@@ -41,36 +42,35 @@
         <!-- Capture Button -->
         <button id="capture-btn" class="capture-btn">
             <span class="capture-btn__icon" id="capture-icon">🎙️</span>
-            <span class="capture-btn__label" id="capture-label">Start Capture</span>
+            <span class="capture-btn__label" id="capture-label" data-i18n="captureStart">Start Capture</span>
         </button>
 
         <!-- Status -->
-        <p class="status-text" id="status-text">Ready to capture tab audio</p>
+        <p class="status-text" id="status-text" data-i18n="captureReady">Ready to capture tab audio</p>
 
         <!-- Tab Navigation -->
         <nav class="tabs" id="tab-nav" style="display: none;">
-            <button class="tab tab--active" data-tab="transcript">📝 Transcript</button>
-            <button class="tab" data-tab="insights">🔮 Insights</button>
-            <button class="tab" data-tab="copilot">🧠 Copilot</button>
-            <button class="tab" data-tab="summary">📊 Summary</button>
+            <button class="tab tab--active" data-tab="transcript" data-i18n="tabTranscript">📝 Transcript</button>
+            <button class="tab" data-tab="insights" data-i18n="tabInsights">🔮 Insights</button>
+            <button class="tab" data-tab="copilot" data-i18n="tabAura">🧠 Aura</button>
+            <button class="tab" data-tab="summary" data-i18n="tabSummary">📊 Summary</button>
         </nav>
 
         <!-- Tab: Transcript -->
         <section class="tab-panel tab-panel--active" id="panel-transcript">
-            <!-- Live Transcript -->
             <div class="transcript-section" id="transcript-section" style="display: none;">
                 <div class="transcript-box" id="transcript-box"></div>
             </div>
         </section>
 
-        <!-- Tab: Insights (Proactive AI) -->
+        <!-- Tab: Insights -->
         <section class="tab-panel" id="panel-insights">
             <div class="insights-panel">
                 <div class="insights-empty" id="insights-empty">
                     <span class="insights-empty__icon">🔮</span>
                     <p class="insights-empty__text">
-                        AI insights will appear here<br>
-                        as the conversation unfolds.
+                        <span data-i18n="insightsEmpty">Aura is listening...</span><br>
+                        <span data-i18n="insightsEmptyHint">Insights will appear here.</span>
                     </p>
                 </div>
                 <div class="insights-feed" id="insights-feed" style="display: none;">
@@ -84,16 +84,16 @@
             <div class="copilot-chat">
                 <div class="chat-messages" id="chat-messages">
                     <div class="chat-welcome">
-                        <span class="chat-welcome__icon">🕵️</span>
+                        <span class="chat-welcome__icon">🧠</span>
                         <p class="chat-welcome__text">
-                            Secret Copilot ready.<br>
-                            Ask me anything about the meeting.
+                            <span data-i18n="copilotWelcome">Hi, I'm Aura.</span><br>
+                            <span data-i18n="copilotWelcomeHint">Ask me anything about this meeting.</span>
                         </p>
                     </div>
                 </div>
                 <div class="chat-input-bar">
-                    <input type="text" id="chat-input" class="chat-input" placeholder="Ask your copilot..."
-                        autocomplete="off">
+                    <input type="text" id="chat-input" class="chat-input" data-i18n-placeholder="copilotPlaceholder"
+                        placeholder="Ask Aura..." autocomplete="off">
                     <button id="chat-send-btn" class="chat-send-btn" title="Send">
                         <span>↑</span>
                     </button>
@@ -107,10 +107,11 @@
                 <div class="summary-empty" id="summary-empty">
                     <span class="summary-empty__icon">📊</span>
                     <p class="summary-empty__text">
-                        Generate a meeting summary<br>
-                        after capturing transcript.
+                        <span data-i18n="summaryEmpty">Generate a meeting summary</span><br>
+                        <span data-i18n="summaryEmptyHint">after capturing transcript.</span>
                     </p>
-                    <button id="generate-summary-btn" class="btn btn--primary summary-generate-btn">
+                    <button id="generate-summary-btn" class="btn btn--primary summary-generate-btn"
+                        data-i18n="summaryGenerate">
                         ✨ Generate Summary
                     </button>
                 </div>
@@ -118,13 +119,13 @@
                     <div class="typing-indicator">
                         <span></span><span></span><span></span>
                     </div>
-                    <p class="summary-loading__text">Analyzing meeting...</p>
+                    <p class="summary-loading__text" data-i18n="summaryAnalyzing">Analyzing meeting...</p>
                 </div>
                 <div class="summary-content" id="summary-content" style="display: none;">
                     <h3 class="summary-title" id="summary-title"></h3>
                     <p class="summary-text" id="summary-text"></p>
                     <div id="summary-cards"></div>
-                    <button id="copy-summary-btn" class="btn btn--ghost summary-copy-btn">
+                    <button id="copy-summary-btn" class="btn btn--ghost summary-copy-btn" data-i18n="summaryCopy">
                         📋 Copy as Markdown
                     </button>
                 </div>
@@ -135,25 +136,56 @@
     <!-- Footer -->
     <footer class="footer">
         <button id="settings-btn" class="icon-btn" title="Settings">⚙️</button>
-        <span class="version">v0.4.0</span>
+        <span class="version" data-i18n="footerVersion">v0.4.0</span>
     </footer>
 
     <!-- Settings Modal -->
     <div class="modal" id="settings-modal" style="display: none;">
         <div class="modal-content">
-            <h2>Settings</h2>
+            <h2 data-i18n="settingsTitle">Settings</h2>
+
+            <!-- Language -->
             <label class="form-label">
-                Backend URL
+                <span data-i18n="settingsLanguage">Language</span>
+                <select id="ui-language" class="form-input">
+                    <option value="en">🇺🇸 English</option>
+                    <option value="es">🇪🇸 Español</option>
+                    <option value="pt">🇧🇷 Português</option>
+                </select>
+            </label>
+
+            <!-- Transcription Language -->
+            <label class="form-label">
+                <span data-i18n="settingsTranscriptionLang">Transcription Language</span>
+                <select id="transcription-language" class="form-input">
+                    <option value="auto">🌐 Auto-detect</option>
+                    <option value="en">🇺🇸 English</option>
+                    <option value="es">🇪🇸 Español</option>
+                    <option value="pt">🇧🇷 Português</option>
+                    <option value="fr">🇫🇷 Français</option>
+                    <option value="de">🇩🇪 Deutsch</option>
+                    <option value="it">🇮🇹 Italiano</option>
+                    <option value="ja">🇯🇵 日本語</option>
+                    <option value="ko">🇰🇷 한국어</option>
+                    <option value="zh">🇨🇳 中文</option>
+                </select>
+            </label>
+
+            <!-- Backend URL -->
+            <label class="form-label">
+                <span data-i18n="settingsBackendUrl">Backend URL</span>
                 <input type="text" id="backend-url" class="form-input" placeholder="ws://localhost:8000/ws"
                     value="ws://localhost:8000/ws">
             </label>
+
             <div class="modal-actions">
-                <button id="save-settings-btn" class="btn btn--primary">Save</button>
-                <button id="close-settings-btn" class="btn btn--ghost">Cancel</button>
+                <button id="save-settings-btn" class="btn btn--primary" data-i18n="settingsSave">Save</button>
+                <button id="close-settings-btn" class="btn btn--ghost" data-i18n="settingsCancel">Cancel</button>
             </div>
         </div>
     </div>
 
+    <script src="i18n.js"></script>
     <script src="popup.js"></script>
 </body>
 

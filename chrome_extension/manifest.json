@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "MeetMind — AI Meeting Assistant",
-  "description": "Capture tab audio from Google Meet, Zoom, and Teams. Get real-time AI insights powered by MeetMind.",
-  "version": "0.1.0",
+  "name": "Aura Meet — AI Meeting Assistant",
+  "description": "Capture tab audio from Google Meet, Zoom, and Teams. Get real-time AI insights powered by Aura.",
+  "version": "0.5.0",
   "icons": {
     "16": "icons/icon-16.png",
     "48": "icons/icon-48.png",
@@ -13,7 +13,7 @@
       "16": "icons/icon-16.png",
       "48": "icons/icon-48.png"
     },
-    "default_title": "MeetMind"
+    "default_title": "Aura Meet"
   },
   "background": {
     "service_worker": "service-worker.js",
@@ -23,10 +23,13 @@
     "tabCapture",
     "offscreen",
     "storage",
-    "activeTab"
+    "activeTab",
+    "identity"
   ],
   "host_permissions": [
     "ws://localhost:8000/*",
-    "wss://localhost:8000/*"
+    "wss://localhost:8000/*",
+    "http://localhost:8000/*",
+    "https://*.aurameet.io/*"
   ]
 }

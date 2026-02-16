@@ -38,14 +38,20 @@ uv run pytest                 # Run tests (191 tests, 85% coverage)
 uv run uvicorn meetmind.main:app --reload  # Start server
 ```
 
-#### Switching LLM Provider
-```bash
-# Default: AWS Bedrock (production)
-MEETMIND_LLM_PROVIDER=bedrock
+#### Choosing Your AI Provider (Zero Cost Strategy)
+The backend supports the `LLMProvider` protocol, allowing you to use AWS Bedrock or **any OpenAI-compatible API** (Groq, Together, DeepSeek).
 
-# Alternative: OpenAI (dev/testing)
+```bash
+# Option A: Groq (Recommended for $0 Cost)
 MEETMIND_LLM_PROVIDER=openai
-MEETMIND_OPENAI_API_KEY=sk-...
+MEETMIND_OPENAI_API_KEY=gsk_...
+MEETMIND_OPENAI_BASE_URL=https://api.groq.com/openai/v1
+MEETMIND_OPENAI_SCREENING_MODEL=llama-3.3-70b-versatile
+MEETMIND_OPENAI_ANALYSIS_MODEL=llama-3.3-70b-versatile
+
+# Option B: AWS Bedrock (Production/Enterprise)
+MEETMIND_LLM_PROVIDER=bedrock
+MEETMIND_AWS_REGION=us-east-1
 ```
 
 ### Flutter App
@@ -77,17 +83,17 @@ meetmind/
 ├── flutter_app/              # 📱 Flutter (Dart) — Mobile + Web
 │   ├── lib/
 │   │   ├── config/           # Theme, Router
-│   │   ├── features/         # Screens (Home, Meeting, History, Settings)
+│   │   ├── features/         # Features (Home, Meeting, History, Settings, Ask Aura)
 │   │   ├── models/           # Domain models (Freezed-style)
 │   │   ├── providers/        # Riverpod state management
-│   │   ├── services/         # WebSocket, Audio, Permissions
+│   │   ├── services/         # WebSocket, RevenueCat, Export, Audio
 │   │   └── native/           # dart:ffi whisper.cpp bridge
 │   └── native/               # C++ plugin (whisper.cpp + CMake)
 ├── backend/                  # ☁️ FastAPI (Python 3.12) — Hexagonal Architecture
 │   └── src/meetmind/
-│       ├── agents/           # AI agents (Screening, Analysis)
-│       ├── providers/        # Bedrock, OpenAI, Whisper STT, Deepgram
-│       ├── core/             # Domain logic (Transcript)
+│       ├── agents/           # AI agents (Screening, Analysis, Copilot)
+│       ├── providers/        # Factory: Bedrock, OpenAI-compatible, 4 STT engines
+│       ├── core/             # Domain logic (Transcript, Storage)
 │       ├── api/              # HTTP + WebSocket endpoints
 │       ├── config/           # Settings (Pydantic)
 │       └── security/         # Input validation
@@ -95,9 +101,9 @@ meetmind/
 │   ├── popup/                # Control panel UI (dark theme)
 │   ├── offscreen/            # Audio recording (MediaRecorder)
 │   └── service-worker.js     # Tab capture + message routing
-├── infra/                    # 🏗️ Terraform (IAM for Bedrock)
+├── infra/                    # 🏗️ Terraform (EC2 t3.small, Caddy, Docker)
 ├── scripts/                  # 🔧 quality-check.sh (18 gates)
-└── docs/                     # 📚 Documentation
+└── docs/                     # 📚 Documentation (Business Plan, Vision, GTM)
 ```
 
 ## Tech Stack
@@ -105,12 +111,11 @@ meetmind/
 | Component | Technology | Rationale |
 |-----------|------------|-----------|
 | Mobile/Web | **Flutter** (Dart) via FVM 3.38.3 | AOT native, `dart:ffi` → C++ |
-| STT on-device | **whisper.cpp** (ggerganov, MIT) | CoreML/Metal, 99 languages |
-| STT server | **faster-whisper** (CTranslate2) | CPU int8, local processing |
+| STT on-device | **whisper.cpp** / **Moonshine** | CoreML/Metal, 99 languages |
+| STT server | **Parakeet TDT 0.6B** / **Qwen3-ASR** | CPU int8, local processing (4 engines) |
 | Backend | **FastAPI** (Python 3.12) | Hexagonal Architecture |
-| AI screening | **Claude Haiku 3.5** / **gpt-4o-mini** | Configurable via `MEETMIND_LLM_PROVIDER` |
-| AI analysis | **Claude Sonnet 4.5** / **gpt-4o** | Configurable via `MEETMIND_LLM_PROVIDER` |
-| AI deep think | **Claude Opus 4** / **gpt-4o** | Configurable via `MEETMIND_LLM_PROVIDER` |
+| AI Providers | **Groq** / **Bedrock** / **OpenAI** | Switchable via `LLMProvider` factory |
+| Database | **PostgreSQL** + **pgvector** | Relational + Semantic Search (RAG) |
 | State mgmt | **Riverpod** | Compile-safe DI |
 | Extension | **Manifest V3** | `tabCapture` + Offscreen |
 

@@ -41,7 +41,7 @@ class MeetMindApp extends ConsumerWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: AppLocalizations.supportedLocales,
-      routerConfig: appRouter,
+      routerConfig: buildRouter(ref),
     );
   }
 }

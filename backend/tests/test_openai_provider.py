@@ -45,7 +45,9 @@ def test_openai_provider_init_with_key(
 
     provider = OpenAIProvider()
 
-    mock_client_cls.assert_called_once_with(api_key="sk-test-key")
+    mock_client_cls.assert_called_once()
+    call_kwargs = mock_client_cls.call_args[1]
+    assert call_kwargs["api_key"] == "sk-test-key"
     assert provider._total_requests == 0
 
 

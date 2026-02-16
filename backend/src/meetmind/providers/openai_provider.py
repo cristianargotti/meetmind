@@ -25,7 +25,14 @@ class OpenAIProvider:
         """Initialize OpenAI async client."""
         if not settings.openai_api_key:
             raise ValueError("MEETMIND_OPENAI_API_KEY is required when llm_provider=openai")
-        self._client = AsyncOpenAI(api_key=settings.openai_api_key)
+
+        # Support for OpenAI-compatible providers (Groq, Together, etc.)
+        base_url = settings.openai_base_url if settings.openai_base_url else None
+
+        self._client = AsyncOpenAI(
+            api_key=settings.openai_api_key,
+            base_url=base_url,
+        )
         self._total_input_tokens: int = 0
         self._total_output_tokens: int = 0
         self._total_requests: int = 0

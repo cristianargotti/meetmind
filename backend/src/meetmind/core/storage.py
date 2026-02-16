@@ -70,8 +70,20 @@ async def _create_schema(conn: asyncpg.Connection) -> None:
     await conn.execute("""
         CREATE EXTENSION IF NOT EXISTS vector;
 
+        CREATE TABLE IF NOT EXISTS users (
+            id              TEXT PRIMARY KEY,
+            email           TEXT UNIQUE NOT NULL,
+            name            TEXT,
+            avatar_url      TEXT,
+            provider        TEXT NOT NULL,
+            provider_id     TEXT UNIQUE NOT NULL,
+            created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            last_login      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+
         CREATE TABLE IF NOT EXISTS meetings (
             id              TEXT PRIMARY KEY,
+            user_id         TEXT REFERENCES users(id) ON DELETE CASCADE,
             title           TEXT NOT NULL DEFAULT 'Untitled Meeting',
             language        TEXT NOT NULL DEFAULT 'es',
             status          TEXT NOT NULL DEFAULT 'active',
@@ -149,26 +161,41 @@ async def _create_schema(conn: asyncpg.Connection) -> None:
 
         CREATE INDEX IF NOT EXISTS idx_action_items_meeting
             ON action_items(meeting_id, status);
+
+        CREATE INDEX IF NOT EXISTS idx_meetings_user
+            ON meetings(user_id, started_at DESC);
+
+        -- Migration: add user_id to existing meetings if not present
+        DO $$ BEGIN
+            ALTER TABLE meetings ADD COLUMN IF NOT EXISTS
+                user_id TEXT REFERENCES users(id) ON DELETE CASCADE;
+        EXCEPTION WHEN duplicate_column THEN NULL;
+        END $$;
     """)
 
 
 # ─── Meetings CRUD ───────────────────────────────────────────────
 
 
-async def create_meeting(meeting_id: str, language: str = "es") -> dict[str, Any]:
+async def create_meeting(
+    meeting_id: str,
+    language: str = "es",
+    user_id: str | None = None,
+) -> dict[str, Any]:
     """Create a new meeting session."""
     pool = await get_pool()
     async with pool.acquire() as conn:
         row = await conn.fetchrow(
             """
-            INSERT INTO meetings (id, language, status)
-            VALUES ($1, $2, 'active')
+            INSERT INTO meetings (id, language, status, user_id)
+            VALUES ($1, $2, 'active', $3)
             RETURNING *
             """,
             meeting_id,
             language,
+            user_id,
         )
-    logger.info("meeting_created", meeting_id=meeting_id)
+    logger.info("meeting_created", meeting_id=meeting_id, user_id=user_id)
     return dict(row) if row else {}
 
 
@@ -220,21 +247,37 @@ async def end_meeting(
 async def list_meetings(
     limit: int = 50,
     offset: int = 0,
+    user_id: str | None = None,
 ) -> list[dict[str, Any]]:
-    """List meetings ordered by most recent."""
+    """List meetings ordered by most recent, optionally filtered by user."""
     pool = await get_pool()
     async with pool.acquire() as conn:
-        rows = await conn.fetch(
-            """
-            SELECT id, title, language, status, started_at, ended_at,
-                   duration_secs, total_segments, total_insights, cost_usd
-            FROM meetings
-            ORDER BY started_at DESC
-            LIMIT $1 OFFSET $2
-            """,
-            limit,
-            offset,
-        )
+        if user_id:
+            rows = await conn.fetch(
+                """
+                SELECT id, title, language, status, started_at, ended_at,
+                       duration_secs, total_segments, total_insights, cost_usd
+                FROM meetings
+                WHERE user_id = $3
+                ORDER BY started_at DESC
+                LIMIT $1 OFFSET $2
+                """,
+                limit,
+                offset,
+                user_id,
+            )
+        else:
+            rows = await conn.fetch(
+                """
+                SELECT id, title, language, status, started_at, ended_at,
+                       duration_secs, total_segments, total_insights, cost_usd
+                FROM meetings
+                ORDER BY started_at DESC
+                LIMIT $1 OFFSET $2
+                """,
+                limit,
+                offset,
+            )
     return [dict(r) for r in rows]
 
 
@@ -519,3 +562,80 @@ async def get_stats() -> dict[str, Any]:
         "meetings_today": meetings_today or 0,
         "meetings_this_week": meetings_this_week or 0,
     }
+
+
+# ─── Users CRUD ──────────────────────────────────────────────────
+
+
+async def upsert_user(
+    *,
+    user_id: str,
+    email: str,
+    name: str | None = None,
+    avatar_url: str | None = None,
+    provider: str,
+    provider_id: str,
+) -> dict[str, Any]:
+    """Create or update a user on login (upsert by provider_id)."""
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            """
+            INSERT INTO users (id, email, name, avatar_url, provider, provider_id)
+            VALUES ($1, $2, $3, $4, $5, $6)
+            ON CONFLICT (provider_id) DO UPDATE SET
+                email = EXCLUDED.email,
+                name = COALESCE(EXCLUDED.name, users.name),
+                avatar_url = COALESCE(EXCLUDED.avatar_url, users.avatar_url),
+                last_login = NOW()
+            RETURNING *
+            """,
+            user_id,
+            email,
+            name,
+            avatar_url,
+            provider,
+            provider_id,
+        )
+    logger.info("user_upserted", user_id=user_id, provider=provider)
+    return dict(row) if row else {}
+
+
+async def get_user(user_id: str) -> dict[str, Any] | None:
+    """Get a user by ID."""
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            "SELECT * FROM users WHERE id = $1",
+            user_id,
+        )
+    return dict(row) if row else None
+
+
+async def get_user_by_provider(provider: str, provider_id: str) -> dict[str, Any] | None:
+    """Get a user by OAuth provider ID."""
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            "SELECT * FROM users WHERE provider = $1 AND provider_id = $2",
+            provider,
+            provider_id,
+        )
+    return dict(row) if row else None
+
+
+async def delete_user_account(user_id: str) -> bool:
+    """Delete a user and ALL their data — Apple App Store compliance.
+
+    Cascading delete removes: meetings → segments, insights, summaries, action_items.
+    """
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        result = await conn.execute(
+            "DELETE FROM users WHERE id = $1",
+            user_id,
+        )
+    deleted: bool = result == "DELETE 1"
+    if deleted:
+        logger.info("user_account_deleted", user_id=user_id)
+    return deleted

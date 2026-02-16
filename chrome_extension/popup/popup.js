@@ -1,13 +1,14 @@
 /**
- * MeetMind Chrome Extension — Popup Logic.
+ * Aura Meet Chrome Extension — Popup Logic.
  *
  * Handles:
  *   - Start/stop capture via service worker
  *   - Live transcript and insight display
- *   - Tab navigation (Transcript ↔ Copilot ↔ Summary)
- *   - Secret Copilot chat with AI
+ *   - Tab navigation (Transcript ↔ Aura ↔ Summary)
+ *   - Aura copilot chat with AI
  *   - Post-meeting summary generation
- *   - Settings (backend URL)
+ *   - Settings (backend URL, language, transcription language)
+ *   - i18n (EN/ES/PT) via i18n.js
  */
 
 // ─── DOM Elements ──────────────────────────
@@ -34,10 +35,13 @@ const insightsList = document.getElementById('insights-list');
 const chatMessages = document.getElementById('chat-messages');
 const chatInput = document.getElementById('chat-input');
 const chatSendBtn = document.getElementById('chat-send-btn');
+const dashboardBtn = document.getElementById('dashboard-btn');
 
 const settingsBtn = document.getElementById('settings-btn');
 const settingsModal = document.getElementById('settings-modal');
 const backendUrlInput = document.getElementById('backend-url');
+const uiLanguageSelect = document.getElementById('ui-language');
+const transcriptionLanguageSelect = document.getElementById('transcription-language');
 const saveSettingsBtn = document.getElementById('save-settings-btn');
 const closeSettingsBtn = document.getElementById('close-settings-btn');
 
@@ -58,12 +62,19 @@ let lastSummaryData = null;
 // ─── Init ──────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // Initialize i18n (auto-detect or load persisted locale)
+    await initI18n();
+
     // Load saved settings
     const stored = await chrome.storage.local.get(['backendUrl', 'isCapturing']);
     if (stored.backendUrl) {
         backendUrl = stored.backendUrl;
         backendUrlInput.value = backendUrl;
     }
+
+    // Sync language selectors with persisted values
+    if (uiLanguageSelect) uiLanguageSelect.value = getLocale();
+    if (transcriptionLanguageSelect) transcriptionLanguageSelect.value = getTranscriptionLanguage();
 
     // Check current capture status
     chrome.runtime.sendMessage({ type: 'GET_STATUS' }, (response) => {
@@ -75,6 +86,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Set up tab navigation
     initTabs();
 });
+
+// ─── Dashboard Navigation ──────────────────
+
+if (dashboardBtn) {
+    dashboardBtn.addEventListener('click', () => {
+        // Open the Aura Web Dashboard
+        // TODO: Make this URL configurable in settings or derive from backendUrl
+        chrome.tabs.create({ url: 'http://localhost:8000' });
+    });
+}
 
 // ─── Tab Navigation ────────────────────────
 
@@ -111,22 +132,22 @@ captureBtn.addEventListener('click', async () => {
         const result = await chrome.runtime.sendMessage({ type: 'STOP_CAPTURE' });
         if (result?.success) {
             setCapturingState(false);
-            statusText.textContent = 'Capture stopped';
+            statusText.textContent = t('captureStopped');
         } else {
-            statusText.textContent = 'Error stopping: ' + (result?.error || 'Unknown');
+            statusText.textContent = t('captureError') + ': ' + (result?.error || 'Unknown');
         }
     } else {
         // Start
-        statusText.textContent = 'Starting capture...';
+        statusText.textContent = t('captureStarting');
         const result = await chrome.runtime.sendMessage({
             type: 'START_CAPTURE',
             backendUrl,
         });
         if (result?.success) {
             setCapturingState(true);
-            statusText.textContent = 'Capturing tab audio';
+            statusText.textContent = t('captureActive');
         } else {
-            statusText.textContent = 'Error: ' + (result?.error || 'Unknown');
+            statusText.textContent = t('captureError') + ': ' + (result?.error || 'Unknown');
         }
     }
 
@@ -143,13 +164,13 @@ function setCapturingState(capturing) {
     if (capturing) {
         captureBtn.classList.add('capture-btn--recording');
         captureIcon.textContent = '⏹️';
-        captureLabel.textContent = 'Stop Capture';
+        captureLabel.textContent = t('captureStop');
         transcriptSection.style.display = 'flex';
         tabNav.style.display = 'flex';
     } else {
         captureBtn.classList.remove('capture-btn--recording');
         captureIcon.textContent = '🎙️';
-        captureLabel.textContent = 'Start Capture';
+        captureLabel.textContent = t('captureStart');
     }
 }
 
@@ -293,9 +314,9 @@ function handleInsight(message) {
  */
 function handleScreening(message) {
     if (message.relevant) {
-        statusText.textContent = '🟢 AI detected relevant content';
+        statusText.textContent = t('screeningRelevant');
     } else {
-        statusText.textContent = '💤 Waiting for relevant discussion...';
+        statusText.textContent = t('screeningWaiting');
     }
 }
 
@@ -359,12 +380,12 @@ function addChatBubble(text, sender) {
 
     if (sender === 'ai') {
         bubble.innerHTML = `
-      <span class="chat-bubble__label">🕵️ Copilot</span>
+      <span class="chat-bubble__label">${t('copilotLabel')}</span>
       <div class="chat-bubble__content">${simpleMarkdown(text)}</div>
     `;
     } else if (sender === 'error') {
         bubble.innerHTML = `
-      <span class="chat-bubble__label">⚠️ Error</span>
+      <span class="chat-bubble__label">${t('copilotError')}</span>
       <div class="chat-bubble__content">${escapeHtml(text)}</div>
     `;
     } else {
@@ -586,10 +607,10 @@ async function copySummaryAsMarkdown() {
     await navigator.clipboard.writeText(md);
 
     // Visual feedback
-    copySummaryBtn.textContent = '✅ Copied!';
+    copySummaryBtn.textContent = t('summaryCopied');
     copySummaryBtn.classList.add('summary-copy-btn--copied');
     setTimeout(() => {
-        copySummaryBtn.textContent = '📋 Copy as Markdown';
+        copySummaryBtn.textContent = t('summaryCopy');
         copySummaryBtn.classList.remove('summary-copy-btn--copied');
     }, 2000);
 }
@@ -608,11 +629,11 @@ function updateConnectionBadge(status) {
     connBadge.className = `badge badge--${status}`;
     const text = connBadge.querySelector('.badge-text');
     const labels = {
-        connected: 'Live',
-        connecting: 'Connecting',
-        disconnected: 'Offline',
+        connected: t('connLive'),
+        connecting: t('connConnecting'),
+        disconnected: t('connOffline'),
     };
-    text.textContent = labels[status] || 'Offline';
+    text.textContent = labels[status] || t('connOffline');
 }
 
 // ─── Settings ──────────────────────────────
@@ -629,8 +650,17 @@ closeSettingsBtn.addEventListener('click', () => {
 saveSettingsBtn.addEventListener('click', async () => {
     backendUrl = backendUrlInput.value.trim() || 'ws://localhost:8000/ws';
     await chrome.storage.local.set({ backendUrl });
+
+    // Save language selections
+    if (uiLanguageSelect) {
+        await setLocale(uiLanguageSelect.value);
+    }
+    if (transcriptionLanguageSelect) {
+        await setTranscriptionLanguage(transcriptionLanguageSelect.value);
+    }
+
     settingsModal.style.display = 'none';
-    statusText.textContent = 'Backend URL saved ✓';
+    statusText.textContent = t('settingsSaved');
 });
 
 // ─── Cost Tracking ─────────────────────────
