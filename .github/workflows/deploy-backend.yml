@@ -13,6 +13,7 @@ on:
     paths:
       - "backend/**"
       - "Dockerfile"
+  workflow_dispatch:
 
 concurrency:
   group: deploy-backend
