@@ -48,9 +48,6 @@ def _get_jwt_secret() -> str:
     return _jwt_secret
 
 
-
-
-
 def hash_password(password: str) -> str:
     """Hash a password using PBKDF2-SHA256 (stdlib, no extra deps)."""
     salt = os.urandom(16)
