@@ -96,9 +96,9 @@ jobs:
       - name: 📏 File size check (500 line soft limit)
         run: |
           echo "Files over 500 lines:"
-          find lib/ -name "*.dart" -exec sh -c 'lines=$(wc -l < "$1"); if [ "$lines" -gt 500 ]; then echo "  ⚠️  $1 — $lines lines"; fi' _ {} \;
-          # Hard limit: 800 lines
-          OVER800=$(find lib/ -name "*.dart" -exec sh -c 'lines=$(wc -l < "$1"); if [ "$lines" -gt 800 ]; then echo "$1"; fi' _ {} \;)
+          find lib/ -name "*.dart" -not -path "*/l10n/generated/*" -exec sh -c 'lines=$(wc -l < "$1"); if [ "$lines" -gt 500 ]; then echo "  ⚠️  $1 — $lines lines"; fi' _ {} \;
+          # Hard limit: 800 lines (excludes generated files)
+          OVER800=$(find lib/ -name "*.dart" -not -path "*/l10n/generated/*" -exec sh -c 'lines=$(wc -l < "$1"); if [ "$lines" -gt 800 ]; then echo "$1"; fi' _ {} \;)
           if [ -n "$OVER800" ]; then
             echo "❌ Files over 800-line hard limit: $OVER800"
             exit 1
