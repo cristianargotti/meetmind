@@ -12,7 +12,10 @@ from __future__ import annotations
 from unittest.mock import MagicMock, patch
 
 import numpy as np
+import numpy as np
 import pytest
+
+qwen_asr = pytest.importorskip("qwen_asr")
 
 from meetmind.providers.qwen_stt import (
     MIN_AUDIO_SECONDS,

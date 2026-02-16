@@ -11,8 +11,10 @@ from meetmind.providers.whisper_stt import (
 )
 
 # We need to import faster_whisper to patch it, even if we don't use it directly here
-with contextlib.suppress(ImportError):
-    import faster_whisper  # noqa: F401
+# In CI, this module might not exist, so we skip the entire file if missing
+import pytest
+
+faster_whisper = pytest.importorskip("faster_whisper")
 
 
 @patch("meetmind.providers.whisper_stt.subprocess.run")

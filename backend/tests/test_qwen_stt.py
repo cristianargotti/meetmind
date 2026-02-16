@@ -13,7 +13,11 @@ import time
 from unittest.mock import MagicMock, patch
 
 import numpy as np
+import numpy as np
 import pytest
+
+torch = pytest.importorskip("torch")
+qwen_asr = pytest.importorskip("qwen_asr")
 
 from meetmind.providers.qwen_stt import (
     MIN_AUDIO_SECONDS,
