@@ -64,3 +64,4 @@ terraform.tfstate*
 
 # Apple API Keys
 *.p8
+*.p12

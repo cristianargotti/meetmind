@@ -71,12 +71,63 @@ jobs:
       - name: 📦 Get dependencies
         run: flutter pub get
 
+      - name: 🔑 Install distribution certificate
+        env:
+          CERT_BASE64: ${{ secrets.IOS_DISTRIBUTION_CERT_BASE64 }}
+          CERT_PASSWORD: ${{ secrets.IOS_CERT_PASSWORD }}
+        run: |
+          # Create temporary keychain
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          KEYCHAIN_PASSWORD=$(openssl rand -hex 16)
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          # Import certificate
+          CERT_PATH=$RUNNER_TEMP/certificate.p12
+          echo "$CERT_BASE64" | base64 --decode > "$CERT_PATH"
+
+          security import "$CERT_PATH" \
+            -P "$CERT_PASSWORD" \
+            -A -t cert -f pkcs12 \
+            -k "$KEYCHAIN_PATH"
+
+          # Add keychain to search list
+          security list-keychains -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | tr -d '"')
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          # Cleanup temp cert
+          rm -f "$CERT_PATH"
+          echo "✅ Distribution certificate installed"
+
+      - name: 📋 Generate ExportOptions.plist
+        run: |
+          cat > ios/ExportOptions.plist << 'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store-connect</string>
+            <key>destination</key>
+            <string>upload</string>
+            <key>signingStyle</key>
+            <string>automatic</string>
+            <key>teamID</key>
+            <string>9L6258YNVJ</string>
+            <key>uploadSymbols</key>
+            <true/>
+          </dict>
+          </plist>
+          EOF
+          echo "✅ ExportOptions.plist generated"
+
       - name: 🏗️ Build IPA (release)
         run: |
           flutter build ipa \
             --release \
-            --export-options-plist=ios/ExportOptions.plist 2>/dev/null || \
-          flutter build ipa --release
+            --export-options-plist=ios/ExportOptions.plist
 
       - name: 🩹 Patch MinimumOSVersion (Xcode 16 fix)
         run: |
