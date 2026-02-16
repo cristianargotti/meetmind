@@ -218,7 +218,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
         children: [
           Container(
             padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: MeetMindTheme.primaryDim,
               shape: BoxShape.circle,
             ),

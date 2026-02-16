@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:typed_data';
-import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
@@ -9,8 +8,8 @@ import 'package:meetmind/config/app_config.dart';
 import 'package:meetmind/models/meeting_models.dart';
 import 'package:meetmind/services/audio_service.dart';
 import 'package:meetmind/services/model_manager.dart';
-import 'package:meetmind/services/permission_service.dart';
 import 'package:meetmind/services/notification_service.dart';
+import 'package:meetmind/services/permission_service.dart';
 import 'package:meetmind/services/websocket_service.dart';
 import 'package:meetmind/services/whisper_stt_service.dart';
 import 'package:uuid/uuid.dart';

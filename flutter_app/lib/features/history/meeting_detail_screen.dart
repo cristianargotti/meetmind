@@ -8,7 +8,7 @@ import 'package:meetmind/services/meeting_api_service.dart';
 /// Meeting detail screen — view a past meeting's transcript, summary, insights.
 class MeetingDetailScreen extends StatefulWidget {
   /// Create meeting detail screen.
-  const MeetingDetailScreen({super.key, required this.meetingId});
+  const MeetingDetailScreen({required this.meetingId, super.key});
 
   /// The meeting ID to display.
   final String meetingId;
@@ -72,7 +72,8 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen>
     final buffer = StringBuffer();
     buffer.writeln('# ${_meeting?['title'] ?? 'Meeting Transcript'}\n');
 
-    for (final seg in segments) {
+    for (final part in segments) {
+      final seg = part as Map<String, dynamic>;
       final speaker = seg['speaker'] as String? ?? 'Unknown';
       final text = seg['text'] as String? ?? '';
       buffer.writeln('**$speaker**: $text');
