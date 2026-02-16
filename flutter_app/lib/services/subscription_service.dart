@@ -32,7 +32,7 @@ enum SubscriptionTier {
       case SubscriptionTier.free:
         return '\$0';
       case SubscriptionTier.pro:
-        return '\$9.99/mo';
+        return '\$14.99/mo';
       case SubscriptionTier.team:
         return '\$19.99/user/mo';
       case SubscriptionTier.business:
@@ -107,9 +107,8 @@ class SubscriptionService {
   SubscriptionService._();
   static final instance = SubscriptionService._();
 
-  // TODO: Replace with actual RevenueCat API keys from dashboard
-  // Create at: https://app.revenuecat.com
-  static const _iosApiKey = 'appl_REPLACE_WITH_YOUR_KEY';
+  // RevenueCat SDK API keys (from dashboard)
+  static const _iosApiKey = 'test_mBFQFdOodjgLwpaNrnHsabaMUFn';
   static const _androidApiKey = 'goog_REPLACE_WITH_YOUR_KEY';
 
   // RevenueCat entitlement ID (configured in dashboard)

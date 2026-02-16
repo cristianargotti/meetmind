@@ -94,7 +94,7 @@ class LegalScreen extends StatelessWidget {
       _sectionTitle('💰 Subscriptions'),
       _body(
         '• Free plan: 3 meetings/week with limited features\n'
-        '• Pro plan: \$9.99/month or \$79.99/year\n'
+        '• Pro plan: \$14.99/month or \$119.99/year\n'
         '• Subscriptions auto-renew unless cancelled\n'
         '• Cancel anytime through App Store or Google Play\n'
         '• No refunds for partial billing periods',

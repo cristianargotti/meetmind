@@ -207,8 +207,8 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       ),
       child: Row(
         children: [
-          Expanded(child: _toggleButton('Monthly', '\$9.99/mo', !_isYearly)),
-          Expanded(child: _toggleButton('Yearly', '\$6.66/mo', _isYearly, badge: 'Save 33%')),
+          Expanded(child: _toggleButton('Monthly', '\$14.99/mo', !_isYearly)),
+          Expanded(child: _toggleButton('Yearly', '\$9.99/mo', _isYearly, badge: 'Save 33%')),
         ],
       ),
     ).animate().fadeIn(delay: 200.ms, duration: 400.ms);
@@ -363,7 +363,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                 ),
               )
             : Text(
-                _isYearly ? 'Start Pro — \$79.99/year' : 'Start Pro — \$9.99/month',
+                _isYearly ? 'Start Pro — \$119.99/year' : 'Start Pro — \$14.99/month',
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
