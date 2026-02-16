@@ -21,7 +21,7 @@ concurrency:
 
 env:
   IMAGE_NAME: meetmind-backend
-  ECR_REPOSITORY: meetmind
+  ECR_REPOSITORY: meetmind-backend
 
 jobs:
   build-scan-push:
