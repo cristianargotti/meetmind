@@ -13,15 +13,31 @@ import 'package:meetmind/l10n/generated/app_localizations.dart';
 import 'package:meetmind/providers/auth_provider.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
-/// Login screen — Google + Apple Sign-In.
-///
-/// This is the first screen users see if not authenticated.
-/// Clean, minimal design with the Aura Meet logo and two auth buttons.
-class LoginScreen extends ConsumerWidget {
+/// Login screen — Email/Password + Google + Apple Sign-In.
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends ConsumerState<LoginScreen> {
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _nameController = TextEditingController();
+  bool _isRegisterMode = false;
+  bool _obscurePassword = true;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final authState = ref.watch(authProvider);
 
@@ -35,23 +51,23 @@ class LoginScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: MeetMindTheme.darkBg,
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 32),
           child: Column(
             children: [
-              const Spacer(flex: 2),
+              const SizedBox(height: 48),
 
               // Logo
               ClipRRect(
                 borderRadius: BorderRadius.circular(24),
                 child: Image.asset(
                   'assets/images/app_logo.png',
-                  width: 100,
-                  height: 100,
+                  width: 80,
+                  height: 80,
                 ),
               ).animate().scale(duration: 600.ms, curve: Curves.elasticOut),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
 
               // Title
               Text(
@@ -62,18 +78,15 @@ class LoginScreen extends ConsumerWidget {
                 ),
               ).animate().fadeIn(delay: 200.ms),
 
-              const SizedBox(height: 8),
+              const SizedBox(height: 4),
 
               // Tagline
               Text(
                 l10n.appTagline,
-                style: const TextStyle(
-                  color: Colors.white54,
-                  fontSize: 16,
-                ),
+                style: const TextStyle(color: Colors.white54, fontSize: 14),
               ).animate().fadeIn(delay: 300.ms),
 
-              const Spacer(flex: 2),
+              const SizedBox(height: 32),
 
               // Error message
               if (authState.error != null)
@@ -83,7 +96,8 @@ class LoginScreen extends ConsumerWidget {
                   decoration: BoxDecoration(
                     color: Colors.red.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                    border:
+                        Border.all(color: Colors.red.withValues(alpha: 0.3)),
                   ),
                   child: Text(
                     authState.error!,
@@ -92,19 +106,56 @@ class LoginScreen extends ConsumerWidget {
                   ),
                 ),
 
-              // Google Sign-In button
+              // ─── Email/Password Form ────────────────────
+              if (_isRegisterMode)
+                _buildTextField(
+                  controller: _nameController,
+                  hint: 'Nombre',
+                  icon: Icons.person_outline,
+                ).animate().fadeIn(duration: 200.ms),
+
+              if (_isRegisterMode) const SizedBox(height: 12),
+
+              _buildTextField(
+                controller: _emailController,
+                hint: 'Email',
+                icon: Icons.email_outlined,
+                keyboardType: TextInputType.emailAddress,
+              ).animate().fadeIn(delay: 100.ms),
+
+              const SizedBox(height: 12),
+
+              _buildTextField(
+                controller: _passwordController,
+                hint: 'Contraseña',
+                icon: Icons.lock_outline,
+                obscureText: _obscurePassword,
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscurePassword
+                        ? Icons.visibility_off
+                        : Icons.visibility,
+                    color: Colors.white38,
+                    size: 20,
+                  ),
+                  onPressed: () =>
+                      setState(() => _obscurePassword = !_obscurePassword),
+                ),
+              ).animate().fadeIn(delay: 150.ms),
+
+              const SizedBox(height: 16),
+
+              // Submit button
               SizedBox(
                 width: double.infinity,
-                height: 52,
-                child: ElevatedButton.icon(
+                height: 50,
+                child: ElevatedButton(
                   onPressed: authState.isLoading
                       ? null
-                      : () => _handleGoogleSignIn(context, ref),
-                  icon: const Icon(Icons.g_mobiledata, size: 24),
-                  label: Text(l10n.loginWithGoogle),
+                      : () => _handleEmailAuth(context),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.black87,
+                    backgroundColor: MeetMindTheme.accent,
+                    foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -113,37 +164,87 @@ class LoginScreen extends ConsumerWidget {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
+                  child: Text(
+                      _isRegisterMode ? 'Crear cuenta' : 'Iniciar sesión'),
                 ),
-              ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.1),
+              ).animate().fadeIn(delay: 200.ms),
+
+              const SizedBox(height: 8),
+
+              // Toggle register/login
+              TextButton(
+                onPressed: () =>
+                    setState(() => _isRegisterMode = !_isRegisterMode),
+                child: Text(
+                  _isRegisterMode
+                      ? '¿Ya tienes cuenta? Inicia sesión'
+                      : '¿No tienes cuenta? Regístrate',
+                  style: const TextStyle(color: Colors.white54, fontSize: 13),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Divider
+              Row(
+                children: [
+                  Expanded(
+                      child: Divider(color: Colors.white.withValues(alpha: 0.1))),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: Text('o', style: TextStyle(color: Colors.white38)),
+                  ),
+                  Expanded(
+                      child: Divider(color: Colors.white.withValues(alpha: 0.1))),
+                ],
+              ),
+
+              const SizedBox(height: 16),
+
+              // Google Sign-In button
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: OutlinedButton.icon(
+                  onPressed: authState.isLoading
+                      ? null
+                      : () => _handleGoogleSignIn(context),
+                  icon: const Icon(Icons.g_mobiledata, size: 24),
+                  label: Text(l10n.loginWithGoogle),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ).animate().fadeIn(delay: 300.ms),
 
               const SizedBox(height: 12),
 
-              // Apple Sign-In button (iOS only)
+              // Apple Sign-In button
               if (defaultTargetPlatform == TargetPlatform.iOS ||
                   defaultTargetPlatform == TargetPlatform.macOS)
                 SizedBox(
                   width: double.infinity,
-                  height: 52,
-                  child: ElevatedButton.icon(
+                  height: 50,
+                  child: OutlinedButton.icon(
                     onPressed: authState.isLoading
                         ? null
-                        : () => _handleAppleSignIn(context, ref),
+                        : () => _handleAppleSignIn(context),
                     icon: const Icon(Icons.apple, size: 24),
                     label: Text(l10n.loginWithApple),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white10,
+                    style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.white,
+                      side:
+                          BorderSide(color: Colors.white.withValues(alpha: 0.2)),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      textStyle: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
                     ),
                   ),
-                ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.1),
-
+                ).animate().fadeIn(delay: 400.ms),
 
               // Loading indicator
               if (authState.isLoading)
@@ -152,7 +253,7 @@ class LoginScreen extends ConsumerWidget {
                   child: CircularProgressIndicator(strokeWidth: 2),
                 ),
 
-              const Spacer(),
+              const SizedBox(height: 24),
 
               // Legal links
               Row(
@@ -162,18 +263,17 @@ class LoginScreen extends ConsumerWidget {
                     onPressed: () => context.push('/legal/privacy'),
                     child: Text(
                       l10n.legalPrivacyPolicy,
-                      style: const TextStyle(color: Colors.white24, fontSize: 12),
+                      style:
+                          const TextStyle(color: Colors.white24, fontSize: 12),
                     ),
                   ),
-                  const Text(
-                    '•',
-                    style: TextStyle(color: Colors.white12),
-                  ),
+                  const Text('•', style: TextStyle(color: Colors.white12)),
                   TextButton(
                     onPressed: () => context.push('/legal/terms'),
                     child: Text(
                       l10n.legalTermsOfService,
-                      style: const TextStyle(color: Colors.white24, fontSize: 12),
+                      style:
+                          const TextStyle(color: Colors.white24, fontSize: 12),
                     ),
                   ),
                 ],
@@ -187,13 +287,85 @@ class LoginScreen extends ConsumerWidget {
     );
   }
 
-  /// Google Sign-In flow.
-  Future<void> _handleGoogleSignIn(BuildContext context, WidgetRef ref) async {
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String hint,
+    required IconData icon,
+    TextInputType? keyboardType,
+    bool obscureText = false,
+    Widget? suffixIcon,
+  }) {
+    return TextField(
+      controller: controller,
+      keyboardType: keyboardType,
+      obscureText: obscureText,
+      style: const TextStyle(color: Colors.white),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: const TextStyle(color: Colors.white38),
+        prefixIcon: Icon(icon, color: Colors.white38, size: 20),
+        suffixIcon: suffixIcon,
+        filled: true,
+        fillColor: Colors.white.withValues(alpha: 0.05),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: MeetMindTheme.accent),
+        ),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      ),
+    );
+  }
+
+  /// Email/password auth flow.
+  Future<void> _handleEmailAuth(BuildContext context) async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      _showError(context, 'Ingresa email y contraseña');
+      return;
+    }
+
+    if (_isRegisterMode && password.length < 6) {
+      _showError(context, 'La contraseña debe tener al menos 6 caracteres');
+      return;
+    }
+
     try {
-      final googleSignIn = GoogleSignIn(
-        scopes: ['email', 'profile'],
-        serverClientId: '190972367615-4ft721hggursqog484ftlibtthkeeskm.apps.googleusercontent.com',
-      );
+      if (_isRegisterMode) {
+        await ref.read(authProvider.notifier).register(
+              email: email,
+              password: password,
+              name: _nameController.text.trim().isNotEmpty
+                  ? _nameController.text.trim()
+                  : null,
+            );
+      } else {
+        await ref.read(authProvider.notifier).emailLogin(
+              email: email,
+              password: password,
+            );
+      }
+
+      if (mounted) context.go('/');
+    } catch (e) {
+      if (mounted) _showError(context, '$e');
+    }
+  }
+
+  /// Google Sign-In flow.
+  Future<void> _handleGoogleSignIn(BuildContext context) async {
+    try {
+      final googleSignIn = GoogleSignIn(scopes: ['email', 'profile']);
       final account = await googleSignIn.signIn();
 
       if (account == null) return; // User cancelled
@@ -212,20 +384,15 @@ class LoginScreen extends ConsumerWidget {
         name: account.displayName,
       );
 
-      if (context.mounted) {
-        context.go('/');
-      }
+      if (mounted) context.go('/');
     } catch (e) {
-      if (context.mounted) {
-        _showError(context, 'Google sign-in error: $e');
-      }
+      if (mounted) _showError(context, 'Google sign-in error: $e');
     }
   }
 
   /// Apple Sign-In flow.
-  Future<void> _handleAppleSignIn(BuildContext context, WidgetRef ref) async {
+  Future<void> _handleAppleSignIn(BuildContext context) async {
     try {
-      // Generate nonce for security
       final rawNonce = _generateNonce();
       final nonce = sha256.convert(utf8.encode(rawNonce)).toString();
 
@@ -243,7 +410,6 @@ class LoginScreen extends ConsumerWidget {
         return;
       }
 
-      // Apple only sends name on first login
       String? name;
       if (credential.givenName != null) {
         name = '${credential.givenName ?? ''} ${credential.familyName ?? ''}'
@@ -256,18 +422,12 @@ class LoginScreen extends ConsumerWidget {
         name: name,
       );
 
-      if (context.mounted) {
-        context.go('/');
-      }
+      if (mounted) context.go('/');
     } on SignInWithAppleAuthorizationException catch (e) {
       if (e.code == AuthorizationErrorCode.canceled) return;
-      if (context.mounted) {
-        _showError(context, 'Apple sign-in error: ${e.message}');
-      }
+      if (mounted) _showError(context, 'Apple sign-in error: ${e.message}');
     } catch (e) {
-      if (context.mounted) {
-        _showError(context, 'Apple sign-in error: $e');
-      }
+      if (mounted) _showError(context, 'Apple sign-in error: $e');
     }
   }
 
@@ -281,7 +441,6 @@ class LoginScreen extends ConsumerWidget {
     );
   }
 
-  /// Generate a random nonce string for Apple Sign-In security.
   String _generateNonce([int length = 32]) {
     const charset =
         '0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._';

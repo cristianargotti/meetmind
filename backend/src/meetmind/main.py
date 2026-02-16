@@ -23,8 +23,10 @@ from meetmind.core.auth import (
     create_refresh_token,
     decode_token,
     get_current_user,
+    hash_password,
     verify_apple_token,
     verify_google_token,
+    verify_password,
 )
 
 logger = structlog.get_logger(__name__)
@@ -58,6 +60,21 @@ class RefreshRequest(BaseModel):
     """Token refresh request."""
 
     refresh_token: str
+
+
+class EmailRegisterRequest(BaseModel):
+    """Email registration request."""
+
+    email: str
+    password: str
+    name: str | None = None
+
+
+class EmailLoginRequest(BaseModel):
+    """Email login request."""
+
+    email: str
+    password: str
 
 
 # ─── Lifespan ────────────────────────────────────────────────────
@@ -162,6 +179,80 @@ async def auth_login(body: AuthLoginRequest) -> AuthTokenResponse:
     return AuthTokenResponse(
         access_token=create_access_token(user_id, user["email"]),
         refresh_token=create_refresh_token(user_id),
+        user={
+            "id": user["id"],
+            "email": user["email"],
+            "name": user.get("name", ""),
+            "avatar_url": user.get("avatar_url", ""),
+        },
+    )
+
+
+@app.post("/api/auth/register")
+async def auth_register(body: EmailRegisterRequest) -> AuthTokenResponse:
+    """Register a new user with email and password."""
+    existing = await storage.get_user_by_email(body.email)
+    if existing:
+        raise HTTPException(status_code=409, detail="Email already registered")
+
+    user_id = str(uuid.uuid4())
+    password_hash = hash_password(body.password)
+
+    user = await storage.upsert_user(
+        user_id=user_id,
+        email=body.email,
+        name=body.name or body.email.split("@")[0],
+        avatar_url=None,
+        provider="email",
+        provider_id=body.email,
+    )
+
+    # Store the password hash
+    pool = await storage.get_pool()
+    async with pool.acquire() as conn:
+        await conn.execute(
+            "UPDATE users SET password_hash = $1 WHERE id = $2",
+            password_hash,
+            user_id,
+        )
+
+    logger.info("auth_register_success", user_id=user_id)
+
+    return AuthTokenResponse(
+        access_token=create_access_token(user_id, user["email"]),
+        refresh_token=create_refresh_token(user_id),
+        user={
+            "id": user["id"],
+            "email": user["email"],
+            "name": user.get("name", ""),
+            "avatar_url": user.get("avatar_url", ""),
+        },
+    )
+
+
+@app.post("/api/auth/email-login")
+async def auth_email_login(body: EmailLoginRequest) -> AuthTokenResponse:
+    """Login with email and password."""
+    user = await storage.get_user_by_email(body.email)
+    if not user or not user.get("password_hash"):
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+
+    if not verify_password(body.password, user["password_hash"]):
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+
+    # Update last_login
+    pool = await storage.get_pool()
+    async with pool.acquire() as conn:
+        await conn.execute(
+            "UPDATE users SET last_login = NOW() WHERE id = $1",
+            user["id"],
+        )
+
+    logger.info("auth_email_login_success", user_id=user["id"])
+
+    return AuthTokenResponse(
+        access_token=create_access_token(user["id"], user["email"]),
+        refresh_token=create_refresh_token(user["id"]),
         user={
             "id": user["id"],
             "email": user["email"],

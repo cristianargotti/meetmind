@@ -93,6 +93,63 @@ class AuthService {
     return _user!;
   }
 
+  /// Register with email and password.
+  Future<Map<String, dynamic>> register({
+    required String email,
+    required String password,
+    String? name,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$_baseUrl/api/auth/register'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'email': email,
+        'password': password,
+        if (name != null) 'name': name,
+      }),
+    );
+
+    if (response.statusCode == 409) {
+      throw Exception('Email already registered');
+    }
+    if (response.statusCode != 200) {
+      throw Exception('Registration failed: ${response.body}');
+    }
+
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    _accessToken = data['access_token'] as String;
+    _refreshToken = data['refresh_token'] as String;
+    _user = data['user'] as Map<String, dynamic>;
+    await _persistTokens();
+    return _user!;
+  }
+
+  /// Login with email and password.
+  Future<Map<String, dynamic>> emailLogin({
+    required String email,
+    required String password,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$_baseUrl/api/auth/email-login'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'email': email,
+        'password': password,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Invalid email or password');
+    }
+
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    _accessToken = data['access_token'] as String;
+    _refreshToken = data['refresh_token'] as String;
+    _user = data['user'] as Map<String, dynamic>;
+    await _persistTokens();
+    return _user!;
+  }
+
   /// Refresh the access token.
   Future<void> refreshToken() async {
     if (_refreshToken == null) throw Exception('No refresh token');

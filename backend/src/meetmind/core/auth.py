@@ -44,6 +44,30 @@ def _get_jwt_secret() -> str:
     return _jwt_secret
 
 
+# ─── Password Hashing ──────────────────────────────────────────
+
+import hashlib
+import os
+
+
+def hash_password(password: str) -> str:
+    """Hash a password using PBKDF2-SHA256 (stdlib, no extra deps)."""
+    salt = os.urandom(16)
+    dk = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, iterations=260_000)
+    return f"{salt.hex()}${dk.hex()}"
+
+
+def verify_password(password: str, stored_hash: str) -> bool:
+    """Verify a password against a stored PBKDF2-SHA256 hash."""
+    try:
+        salt_hex, dk_hex = stored_hash.split("$")
+        salt = bytes.fromhex(salt_hex)
+        dk = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, iterations=260_000)
+        return dk.hex() == dk_hex
+    except (ValueError, AttributeError):
+        return False
+
+
 # ─── Token Creation ─────────────────────────────────────────────
 
 

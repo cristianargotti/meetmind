@@ -110,6 +110,56 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  /// Register with email and password.
+  Future<void> register({
+    required String email,
+    required String password,
+    String? name,
+  }) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final user = await _auth.register(
+        email: email,
+        password: password,
+        name: name,
+      );
+      state = AuthState(
+        isAuthenticated: true,
+        isLoading: false,
+        user: user,
+      );
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString(),
+      );
+    }
+  }
+
+  /// Login with email and password.
+  Future<void> emailLogin({
+    required String email,
+    required String password,
+  }) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final user = await _auth.emailLogin(
+        email: email,
+        password: password,
+      );
+      state = AuthState(
+        isAuthenticated: true,
+        isLoading: false,
+        user: user,
+      );
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString(),
+      );
+    }
+  }
+
   /// Logout.
   Future<void> logout() async {
     await _auth.logout();

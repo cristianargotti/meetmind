@@ -81,6 +81,9 @@ async def _create_schema(conn: asyncpg.Connection) -> None:
             last_login      TIMESTAMPTZ NOT NULL DEFAULT NOW()
         );
 
+        -- Add password_hash column for email/password auth (idempotent)
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT;
+
         CREATE TABLE IF NOT EXISTS meetings (
             id              TEXT PRIMARY KEY,
             user_id         TEXT REFERENCES users(id) ON DELETE CASCADE,
@@ -620,6 +623,17 @@ async def get_user_by_provider(provider: str, provider_id: str) -> dict[str, Any
             "SELECT * FROM users WHERE provider = $1 AND provider_id = $2",
             provider,
             provider_id,
+        )
+    return dict(row) if row else None
+
+
+async def get_user_by_email(email: str) -> dict[str, Any] | None:
+    """Get a user by email address."""
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            "SELECT * FROM users WHERE email = $1",
+            email,
         )
     return dict(row) if row else None
 
