@@ -34,10 +34,10 @@
 	<dict>
 		<key>NSExceptionDomains</key>
 		<dict>
-			<key>44.218.65.208</key>
+			<key>api.aurameet.app</key>
 			<dict>
 				<key>NSExceptionAllowsInsecureHTTPLoads</key>
-				<true/>
+				<false/>
 				<key>NSIncludesSubdomains</key>
 				<true/>
 			</dict>

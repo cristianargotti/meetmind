@@ -52,7 +52,7 @@ class Settings(BaseSettings):
     jwt_refresh_days: int = 30
     google_client_id: str = ""  # From Google Cloud Console
     apple_team_id: str = ""
-    apple_bundle_id: str = ""  # e.g. com.aurameet.app
+    apple_bundle_id: str = "com.meetmind.meetmind"
     apple_service_id: str = ""  # For web Sign in with Apple
 
     # STT Engine selection ("parakeet", "moonshine", "whisper", or "qwen")

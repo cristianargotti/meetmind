@@ -1,10 +1,17 @@
+import 'dart:convert';
+import 'dart:math';
+
+import 'package:crypto/crypto.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:meetmind/config/theme.dart';
 import 'package:meetmind/l10n/generated/app_localizations.dart';
 import 'package:meetmind/providers/auth_provider.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 /// Login screen — Google + Apple Sign-In.
 ///
@@ -19,7 +26,7 @@ class LoginScreen extends ConsumerWidget {
     final authState = ref.watch(authProvider);
 
     // Redirect to home if already authenticated
-    if (authState.isAuthenticated) {
+    if (authState.isAuthenticated && !authState.isLoading) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         context.go('/');
       });
@@ -111,29 +118,31 @@ class LoginScreen extends ConsumerWidget {
 
               const SizedBox(height: 12),
 
-              // Apple Sign-In button
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: ElevatedButton.icon(
-                  onPressed: authState.isLoading
-                      ? null
-                      : () => _handleAppleSignIn(context, ref),
-                  icon: const Icon(Icons.apple, size: 24),
-                  label: Text(l10n.loginWithApple),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white10,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    textStyle: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+              // Apple Sign-In button (iOS only)
+              if (defaultTargetPlatform == TargetPlatform.iOS ||
+                  defaultTargetPlatform == TargetPlatform.macOS)
+                SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: ElevatedButton.icon(
+                    onPressed: authState.isLoading
+                        ? null
+                        : () => _handleAppleSignIn(context, ref),
+                    icon: const Icon(Icons.apple, size: 24),
+                    label: Text(l10n.loginWithApple),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white10,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      textStyle: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
-                ),
-              ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.1),
+                ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.1),
 
               const SizedBox(height: 24),
 
@@ -188,24 +197,103 @@ class LoginScreen extends ConsumerWidget {
     );
   }
 
+  /// Google Sign-In flow.
   Future<void> _handleGoogleSignIn(BuildContext context, WidgetRef ref) async {
-    // TODO: Integrate google_sign_in package
-    // For now, show a placeholder message
+    try {
+      final googleSignIn = GoogleSignIn(scopes: ['email', 'profile']);
+      final account = await googleSignIn.signIn();
+
+      if (account == null) return; // User cancelled
+
+      final auth = await account.authentication;
+      final idToken = auth.idToken;
+
+      if (idToken == null) {
+        _showError(context, 'Google sign-in failed: no id_token received');
+        return;
+      }
+
+      await ref.read(authProvider.notifier).login(
+        provider: 'google',
+        idToken: idToken,
+        name: account.displayName,
+      );
+
+      if (context.mounted) {
+        context.go('/');
+      }
+    } catch (e) {
+      if (context.mounted) {
+        _showError(context, 'Google sign-in error: $e');
+      }
+    }
+  }
+
+  /// Apple Sign-In flow.
+  Future<void> _handleAppleSignIn(BuildContext context, WidgetRef ref) async {
+    try {
+      // Generate nonce for security
+      final rawNonce = _generateNonce();
+      final nonce = sha256.convert(utf8.encode(rawNonce)).toString();
+
+      final credential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+        nonce: nonce,
+      );
+
+      final idToken = credential.identityToken;
+      if (idToken == null) {
+        _showError(context, 'Apple sign-in failed: no identity token');
+        return;
+      }
+
+      // Apple only sends name on first login
+      String? name;
+      if (credential.givenName != null) {
+        name = '${credential.givenName ?? ''} ${credential.familyName ?? ''}'
+            .trim();
+      }
+
+      await ref.read(authProvider.notifier).login(
+        provider: 'apple',
+        idToken: idToken,
+        name: name,
+      );
+
+      if (context.mounted) {
+        context.go('/');
+      }
+    } on SignInWithAppleAuthorizationException catch (e) {
+      if (e.code == AuthorizationErrorCode.canceled) return;
+      if (context.mounted) {
+        _showError(context, 'Apple sign-in error: ${e.message}');
+      }
+    } catch (e) {
+      if (context.mounted) {
+        _showError(context, 'Apple sign-in error: $e');
+      }
+    }
+  }
+
+  void _showError(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Google Sign-In: requires google_sign_in package'),
+      SnackBar(
+        content: Text(message),
         behavior: SnackBarBehavior.floating,
+        backgroundColor: Colors.red.shade800,
       ),
     );
   }
 
-  Future<void> _handleAppleSignIn(BuildContext context, WidgetRef ref) async {
-    // TODO: Integrate sign_in_with_apple package
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Apple Sign-In: requires sign_in_with_apple package'),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+  /// Generate a random nonce string for Apple Sign-In security.
+  String _generateNonce([int length = 32]) {
+    const charset =
+        '0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._';
+    final random = Random.secure();
+    return List.generate(length, (_) => charset[random.nextInt(charset.length)])
+        .join();
   }
 }
