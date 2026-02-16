@@ -145,11 +145,13 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, size: 48, color: MeetMindTheme.error),
+              const Icon(Icons.error_outline,
+                  size: 48, color: MeetMindTheme.error),
               const SizedBox(height: 16),
               Text(_error ?? 'Meeting not found'),
               const SizedBox(height: 16),
-              ElevatedButton(onPressed: _loadMeeting, child: const Text('Retry')),
+              ElevatedButton(
+                  onPressed: _loadMeeting, child: const Text('Retry')),
             ],
           ),
         ),
@@ -693,8 +695,7 @@ class _ActionItemCard extends StatelessWidget {
                     color: isDone
                         ? MeetMindTheme.textTertiary
                         : MeetMindTheme.textPrimary,
-                    decoration:
-                        isDone ? TextDecoration.lineThrough : null,
+                    decoration: isDone ? TextDecoration.lineThrough : null,
                   ),
                 ),
                 if (assignee != null && assignee.isNotEmpty)

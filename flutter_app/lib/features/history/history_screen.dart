@@ -149,8 +149,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
                         icon: const Icon(Icons.clear_rounded, size: 18),
-                        onPressed: () =>
-                            setState(() => _searchQuery = ''),
+                        onPressed: () => setState(() => _searchQuery = ''),
                       )
                     : null,
               ),

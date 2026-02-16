@@ -121,9 +121,8 @@ class ModelManager {
         );
       }
 
-      final int contentLength = response.contentLength > 0
-          ? response.contentLength
-          : info.sizeBytes;
+      final int contentLength =
+          response.contentLength > 0 ? response.contentLength : info.sizeBytes;
 
       final IOSink sink = tempFile.openWrite();
       int downloaded = 0;

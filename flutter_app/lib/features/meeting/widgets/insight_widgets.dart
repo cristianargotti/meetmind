@@ -62,9 +62,9 @@ class _EmptyInsightsState extends StatelessWidget {
           Text(
             'AI Insights',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: MeetMindTheme.textPrimary,
-              fontWeight: FontWeight.w700,
-            ),
+                  color: MeetMindTheme.textPrimary,
+                  fontWeight: FontWeight.w700,
+                ),
           ),
           const SizedBox(height: 8),
           Text(
@@ -72,9 +72,9 @@ class _EmptyInsightsState extends StatelessWidget {
             'as the conversation unfolds.',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: MeetMindTheme.textTertiary,
-              height: 1.6,
-            ),
+                  color: MeetMindTheme.textTertiary,
+                  height: 1.6,
+                ),
           ),
         ],
       ).animate().fadeIn(duration: 500.ms),
@@ -289,8 +289,7 @@ class _CompactInsightCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text(insight.categoryEmoji,
-                  style: const TextStyle(fontSize: 16)),
+              Text(insight.categoryEmoji, style: const TextStyle(fontSize: 16)),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
