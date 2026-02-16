@@ -39,6 +39,13 @@ jobs:
       - name: 📥 Checkout
         uses: actions/checkout@v4
 
+      - name: 🧹 Cleanup Docker space
+        run: |
+          echo "Cleaning up Docker system to free space..."
+          docker system prune -af --volumes || true
+          docker image prune -af || true
+          df -h
+
       # Runner is ON the EC2 with IAM role meetmind-production-ec2
       # No AWS secrets needed — uses instance profile automatically
       - name: 🔑 Login to Amazon ECR
