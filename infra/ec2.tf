@@ -118,23 +118,34 @@ resource "aws_iam_role" "ec2" {
   })
 }
 
-resource "aws_iam_role_policy" "ecr_pull" {
-  name = "ecr-pull"
+resource "aws_iam_role_policy" "ecr_access" {
+  name = "ecr-access"
   role = aws_iam_role.ec2.id
 
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
-        Sid    = "ECRPull"
+        Sid    = "ECRAuth"
+        Effect = "Allow"
+        Action = [
+          "ecr:GetAuthorizationToken",
+        ]
+        Resource = "*"
+      },
+      {
+        Sid    = "ECRPullPush"
         Effect = "Allow"
         Action = [
           "ecr:GetDownloadUrlForLayer",
           "ecr:BatchGetImage",
-          "ecr:GetAuthorizationToken",
           "ecr:BatchCheckLayerAvailability",
+          "ecr:InitiateLayerUpload",
+          "ecr:UploadLayerPart",
+          "ecr:CompleteLayerUpload",
+          "ecr:PutImage",
         ]
-        Resource = "*"
+        Resource = "arn:aws:ecr:${var.aws_region}:*:repository/${var.project_name}*"
       }
     ]
   })
