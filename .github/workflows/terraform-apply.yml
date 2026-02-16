@@ -1,0 +1,57 @@
+# =============================================================================
+# MeetMind — Terraform Apply
+# =============================================================================
+# Applies Terraform changes after merge to main.
+# Uses 'production' environment for manual approval gate.
+# =============================================================================
+name: 🏗️ Terraform Apply
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "infra/**"
+
+concurrency:
+  group: terraform-apply
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    name: Terraform Apply
+    runs-on: [self-hosted, linux, meetmind]
+    timeout-minutes: 30
+    environment: production # Manual approval required
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🔧 AWS credentials (EC2 instance profile)
+        run: aws sts get-caller-identity
+
+      - name: 🏗️ Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: 📋 Terraform Init
+        working-directory: infra
+        run: terraform init -input=false
+
+      - name: 📊 Terraform Plan
+        working-directory: infra
+        run: terraform plan -no-color -input=false -out=tfplan
+
+      - name: 🚀 Terraform Apply
+        working-directory: infra
+        run: terraform apply -auto-approve tfplan
+
+      - name: 🔔 Notify Slack
+        if: always() && env.SLACK_WEBHOOK_URL != ''
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          STATUS="${{ job.status }}"
+          EMOJI=$([[ "$STATUS" == "success" ]] && echo "✅" || echo "❌")
+          curl -s -X POST "$SLACK_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -d "{\"text\": \"$EMOJI *Terraform Apply* — $STATUS\n• Commit: \`${{ github.sha }}\`\n• <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>\"}"

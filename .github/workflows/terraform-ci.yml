@@ -1,0 +1,70 @@
+# =============================================================================
+# MeetMind — Terraform CI Quality Gate
+# =============================================================================
+# Runs tf-quality-check.sh on PRs affecting infra/.
+# Posts terraform plan output as PR comment.
+# =============================================================================
+name: 🏗️ Terraform CI
+
+on:
+  pull_request:
+    paths:
+      - "infra/**"
+      - "scripts/tf-quality-check.sh"
+      - ".github/workflows/terraform-ci.yml"
+
+concurrency:
+  group: terraform-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality-gate:
+    name: IaC Quality Gate
+    runs-on: [self-hosted, linux, meetmind]
+    timeout-minutes: 15
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🔧 AWS credentials (EC2 instance profile)
+        run: aws sts get-caller-identity # Verify IAM role is available
+
+      - name: 🏗️ Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+
+      - name: 🔍 TF Quality Gate (all checks)
+        run: bash scripts/tf-quality-check.sh
+
+      - name: 📋 Terraform Init
+        working-directory: infra
+        run: terraform init -input=false
+
+      - name: 📊 Terraform Plan
+        id: plan
+        working-directory: infra
+        continue-on-error: true
+        run: |
+          terraform plan -no-color -input=false -out=tfplan 2>&1 | tee plan_output.txt
+          echo "exitcode=$?" >> "$GITHUB_OUTPUT"
+
+      - name: 📝 PR Comment — Terraform Plan
+        if: github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: terraform-plan
+          message: |
+            ## 🏗️ Terraform Plan — ${{ steps.plan.outcome == 'success' && '✅' || '⚠️' }}
+
+            <details>
+            <summary>Click to expand plan output</summary>
+
+            ```hcl
+            ${{ steps.plan.outputs.stdout || 'See workflow run for full output' }}
+            ```
+
+            </details>
+
+            📋 [Full run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})

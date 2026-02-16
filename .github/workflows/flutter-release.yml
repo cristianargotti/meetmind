@@ -1,0 +1,116 @@
+# =============================================================================
+# MeetMind — Flutter Release (APK + IPA)
+# =============================================================================
+# Triggered on version tags (v*.*.*).
+# Android: builds on self-hosted (free).
+# iOS: builds on macos-latest (GitHub-hosted, ~15 min macOS runner).
+# =============================================================================
+name: 📦 Flutter Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  android:
+    name: 🤖 Android APK
+    runs-on: [self-hosted, linux, meetmind]
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: flutter_app
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 📱 Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.27.x"
+          channel: stable
+          cache: true
+
+      - name: 📦 Get dependencies
+        run: flutter pub get
+
+      - name: 🏗️ Build APK (release)
+        run: |
+          flutter build apk \
+            --release \
+            --obfuscate \
+            --split-debug-info=build/debug-info
+
+      - name: 📤 Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: meetmind-android-${{ github.ref_name }}
+          path: flutter_app/build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 90
+
+  ios:
+    name: 🍎 iOS IPA
+    runs-on: macos-latest # GitHub-hosted (only on tags to conserve minutes)
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: flutter_app
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 📱 Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.27.x"
+          channel: stable
+          cache: true
+
+      - name: 📦 Get dependencies
+        run: flutter pub get
+
+      - name: 🏗️ Build IPA (release)
+        run: |
+          flutter build ipa \
+            --release \
+            --export-options-plist=ios/ExportOptions.plist 2>/dev/null || \
+          flutter build ipa --release
+
+      - name: 🩹 Patch MinimumOSVersion (Xcode 16 fix)
+        run: |
+          ARCHIVE=$(find build/ios/archive -name "*.xcarchive" 2>/dev/null | head -1)
+          if [ -n "$ARCHIVE" ]; then
+            PLIST="$ARCHIVE/Products/Applications/Runner.app/Frameworks/App.framework/Info.plist"
+            if [ -f "$PLIST" ]; then
+              plutil -replace MinimumOSVersion -string "13.0" "$PLIST"
+              echo "✅ Patched MinimumOSVersion to 13.0"
+            fi
+          fi
+
+      - name: 📤 Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: meetmind-ios-${{ github.ref_name }}
+          path: flutter_app/build/ios/ipa/*.ipa
+          retention-days: 90
+
+  notify:
+    name: 🔔 Release Notification
+    needs: [android, ios]
+    runs-on: [self-hosted, linux, meetmind]
+    if: always()
+    steps:
+      - name: Notify Slack
+        if: env.SLACK_WEBHOOK_URL != ''
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          ANDROID="${{ needs.android.result }}"
+          IOS="${{ needs.ios.result }}"
+          curl -s -X POST "$SLACK_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"text\": \"📦 *MeetMind Release ${{ github.ref_name }}*\n• Android: $ANDROID\n• iOS: $IOS\n• <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Download Artifacts>\"
+            }"

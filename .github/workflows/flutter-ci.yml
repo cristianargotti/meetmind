@@ -1,0 +1,94 @@
+# =============================================================================
+# MeetMind — Flutter CI Quality Gate
+# =============================================================================
+# Runs Flutter analyze, format check, tests, and custom checks on PRs.
+# =============================================================================
+name: 📱 Flutter CI
+
+on:
+  pull_request:
+    paths:
+      - "flutter_app/**"
+      - ".github/workflows/flutter-ci.yml"
+
+concurrency:
+  group: flutter-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Flutter Quality Gate
+    runs-on: [self-hosted, linux, meetmind]
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: flutter_app
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 📱 Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.27.x"
+          channel: stable
+          cache: true
+
+      - name: 📦 Get dependencies
+        run: flutter pub get
+
+      - name: 🔍 Analyze
+        run: flutter analyze --no-pub --fatal-infos
+
+      - name: 🎨 Format check
+        run: dart format --set-exit-if-changed lib/ test/
+
+      - name: 🧪 Tests
+        run: flutter test
+
+      - name: 🚫 No dynamic types (CODE-005)
+        run: |
+          FOUND=$(grep -rn 'dynamic ' lib/ --include='*.dart' \
+            | grep -v '// ignore-dynamic' \
+            | grep -v 'Map<String, dynamic>' \
+            | grep -v 'List<dynamic>' \
+            | grep -v 'as dynamic' || true)
+          if [ -n "$FOUND" ]; then
+            echo "❌ Found bare 'dynamic' types:"
+            echo "$FOUND"
+            exit 1
+          fi
+          echo "✅ No bare dynamic types found"
+
+      - name: 🚫 No print() (use debugPrint)
+        run: |
+          FOUND=$(grep -rn 'print(' lib/ --include='*.dart' \
+            | grep -v 'debugPrint' \
+            | grep -v '// ignore-print' || true)
+          if [ -n "$FOUND" ]; then
+            echo "❌ Found print() — use debugPrint or logger:"
+            echo "$FOUND"
+            exit 1
+          fi
+          echo "✅ No print() found"
+
+      - name: 📏 File size check (500 line soft limit)
+        run: |
+          echo "Files over 500 lines:"
+          find lib/ -name "*.dart" -exec sh -c 'lines=$(wc -l < "$1"); if [ "$lines" -gt 500 ]; then echo "  ⚠️  $1 — $lines lines"; fi' _ {} \;
+          # Hard limit: 800 lines
+          OVER800=$(find lib/ -name "*.dart" -exec sh -c 'lines=$(wc -l < "$1"); if [ "$lines" -gt 800 ]; then echo "$1"; fi' _ {} \;)
+          if [ -n "$OVER800" ]; then
+            echo "❌ Files over 800-line hard limit: $OVER800"
+            exit 1
+          fi
+
+      - name: 📝 PR Comment
+        if: github.event_name == 'pull_request' && always()
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: flutter-ci
+          message: |
+            ## 📱 Flutter CI — ${{ job.status == 'success' && '✅ PASSED' || '❌ FAILED' }}
+            📋 [Full report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})

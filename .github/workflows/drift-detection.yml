@@ -1,0 +1,65 @@
+# =============================================================================
+# MeetMind — Infrastructure Drift Detection
+# =============================================================================
+# Runs nightly at 6am UTC. Detects if real AWS state has drifted from Terraform.
+# Alerts via Slack if drift is found.
+# =============================================================================
+name: 🔍 Drift Detection
+
+on:
+  schedule:
+    - cron: "0 6 * * *" # Daily at 6am UTC (1am EST)
+  workflow_dispatch: # Manual trigger
+
+jobs:
+  detect-drift:
+    name: Detect Infrastructure Drift
+    runs-on: [self-hosted, linux, meetmind]
+    timeout-minutes: 15
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🔧 AWS credentials (EC2 instance profile)
+        run: aws sts get-caller-identity
+
+      - name: 🏗️ Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: 📋 Terraform Init
+        working-directory: infra
+        run: terraform init -input=false
+
+      - name: 🔍 Detect Drift
+        id: drift
+        working-directory: infra
+        run: |
+          set +e
+          terraform plan -detailed-exitcode -no-color -input=false > drift_output.txt 2>&1
+          EXIT_CODE=$?
+          set -e
+
+          if [ "$EXIT_CODE" -eq 0 ]; then
+            echo "✅ No drift detected — infrastructure matches Terraform state"
+            echo "drifted=false" >> "$GITHUB_OUTPUT"
+          elif [ "$EXIT_CODE" -eq 2 ]; then
+            echo "⚠️ DRIFT DETECTED — infrastructure has diverged!"
+            echo "drifted=true" >> "$GITHUB_OUTPUT"
+            cat drift_output.txt
+          else
+            echo "❌ Terraform plan failed"
+            echo "drifted=error" >> "$GITHUB_OUTPUT"
+            cat drift_output.txt
+          fi
+
+      - name: 🔔 Alert on Drift
+        if: steps.drift.outputs.drifted == 'true' && env.SLACK_WEBHOOK_URL != ''
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          curl -s -X POST "$SLACK_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"text\": \"⚠️ *Infrastructure Drift Detected!*\nTerraform state does not match real AWS resources.\n• <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Details>\"
+            }"

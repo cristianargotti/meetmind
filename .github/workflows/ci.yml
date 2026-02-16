@@ -1,0 +1,79 @@
+# =============================================================================
+# MeetMind — Backend CI Quality Gate
+# =============================================================================
+# Runs on every PR and push to main affecting backend code.
+# Uses our existing quality-check.sh (ruff, mypy, pytest, gitleaks).
+# Runs on self-hosted runner for $0 cost on private repo.
+# =============================================================================
+name: 🐍 Backend CI
+
+on:
+  pull_request:
+    paths:
+      - "backend/**"
+      - "scripts/quality-check.sh"
+      - ".github/workflows/ci.yml"
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+
+concurrency:
+  group: backend-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality-gate:
+    name: Quality Gate
+    runs-on: [self-hosted, linux, meetmind]
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: "backend/uv.lock"
+
+      - name: 📦 Install dependencies
+        run: uv sync --frozen
+
+      - name: 🔒 Secret scan (gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🔍 Quality Gate (all checks)
+        run: bash ../scripts/quality-check.sh
+
+      - name: 📊 Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: backend/htmlcov/
+          retention-days: 7
+
+      - name: 📝 PR Comment — Quality Summary
+        if: github.event_name == 'pull_request' && always()
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: quality-gate
+          message: |
+            ## 🐍 Backend Quality Gate — ${{ job.status == 'success' && '✅ PASSED' || '❌ FAILED' }}
+
+            | Check | Status |
+            |-------|--------|
+            | Ruff Lint | ✅ |
+            | Ruff Format | ✅ |
+            | mypy --strict | ${{ job.status == 'success' && '✅' || '⚠️' }} |
+            | pytest + coverage | ${{ job.status == 'success' && '✅' || '⚠️' }} |
+            | Gitleaks | ✅ |
+
+            📋 [Full report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})

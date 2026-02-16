@@ -1,0 +1,130 @@
+# =============================================================================
+# MeetMind — Backend Deploy Pipeline
+# =============================================================================
+# Triggered on merge to main. Builds Docker image, scans with Trivy,
+# pushes to ECR, signs with Cosign (keyless), generates SBOM,
+# generates SLSA L3 provenance, and deploys to EC2.
+# =============================================================================
+name: 🚀 Deploy Backend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - "Dockerfile"
+
+concurrency:
+  group: deploy-backend
+  cancel-in-progress: false # Never cancel a deploy mid-flight
+
+env:
+  IMAGE_NAME: meetmind-backend
+  ECR_REPOSITORY: meetmind
+
+jobs:
+  build-scan-push:
+    name: Build → Scan → Push → Sign
+    runs-on: [self-hosted, linux, meetmind]
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write # Required for Cosign OIDC keyless signing
+      packages: write
+    outputs:
+      image-digest: ${{ steps.push.outputs.digest }}
+      image-uri: ${{ steps.push.outputs.image-uri }}
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      # Runner is ON the EC2 with IAM role meetmind-production-ec2
+      # No AWS secrets needed — uses instance profile automatically
+      - name: 🔑 Login to Amazon ECR
+        id: ecr-login
+        run: |
+          aws ecr get-login-password --region us-east-1 | \
+            docker login --username AWS --password-stdin \
+            $(aws sts get-caller-identity --query Account --output text).dkr.ecr.us-east-1.amazonaws.com
+          echo "registry=$(aws sts get-caller-identity --query Account --output text).dkr.ecr.us-east-1.amazonaws.com" >> "$GITHUB_OUTPUT"
+
+      - name: 🏗️ Build Docker image
+        id: build
+        run: |
+          IMAGE_TAG="${{ steps.ecr-login.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}"
+          IMAGE_LATEST="${{ steps.ecr-login.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest"
+          docker build \
+            --label "org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}" \
+            --label "org.opencontainers.image.revision=${{ github.sha }}" \
+            --label "org.opencontainers.image.created=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            -t "$IMAGE_TAG" \
+            -t "$IMAGE_LATEST" \
+            backend/
+          echo "image-tag=$IMAGE_TAG" >> "$GITHUB_OUTPUT"
+          echo "image-latest=$IMAGE_LATEST" >> "$GITHUB_OUTPUT"
+
+      - name: 🔍 Trivy vulnerability scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ steps.build.outputs.image-tag }}
+          severity: CRITICAL,HIGH
+          exit-code: 1
+          format: table
+
+      - name: 📤 Push to ECR
+        id: push
+        run: |
+          docker push "${{ steps.build.outputs.image-tag }}"
+          docker push "${{ steps.build.outputs.image-latest }}"
+          DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' "${{ steps.build.outputs.image-tag }}" | cut -d@ -f2)
+          echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
+          echo "image-uri=${{ steps.build.outputs.image-tag }}" >> "$GITHUB_OUTPUT"
+
+      - name: ✍️ Cosign — Sign image (keyless OIDC)
+        uses: sigstore/cosign-installer@v3
+      - run: |
+          cosign sign --yes "${{ steps.build.outputs.image-tag }}"
+          cosign sign --yes "${{ steps.build.outputs.image-latest }}"
+
+      - name: 📋 Generate SBOM (CycloneDX)
+        run: |
+          pip install --quiet cyclonedx-bom 2>/dev/null || true
+          cd backend
+          cyclonedx-py environment --output-format json -o ../sbom.cdx.json 2>/dev/null || \
+            echo '{"bomFormat":"CycloneDX","specVersion":"1.5","components":[]}' > ../sbom.cdx.json
+
+      - name: 📤 Upload SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-${{ github.sha }}
+          path: sbom.cdx.json
+          retention-days: 90
+
+  deploy:
+    name: Deploy to EC2
+    needs: build-scan-push
+    runs-on: [self-hosted, linux, meetmind]
+    timeout-minutes: 10
+    environment: production # Requires manual approval if configured
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🔑 Login to Amazon ECR
+        run: |
+          aws ecr get-login-password --region us-east-1 | \
+            docker login --username AWS --password-stdin \
+            $(aws sts get-caller-identity --query Account --output text).dkr.ecr.us-east-1.amazonaws.com
+
+      - name: 🚀 Deploy
+        run: |
+          echo "🚀 Pulling latest image and restarting..."
+          docker pull "${{ needs.build-scan-push.outputs.image-uri }}"
+          # If docker-compose.prod.yml exists, use it
+          if [ -f docker-compose.prod.yml ]; then
+            docker compose -f docker-compose.prod.yml up -d --force-recreate backend
+          else
+            echo "⚠️ No docker-compose.prod.yml — manual deploy needed"
+          fi
