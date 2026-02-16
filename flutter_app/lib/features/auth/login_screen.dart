@@ -148,7 +148,10 @@ class LoginScreen extends ConsumerWidget {
 
               // Skip / Continue without account
               TextButton(
-                onPressed: () => context.go('/'),
+                onPressed: () async {
+                  await ref.read(authProvider.notifier).skipLogin();
+                  if (context.mounted) context.go('/');
+                },
                 child: Text(
                   l10n.loginSkip,
                   style: const TextStyle(color: Colors.white38, fontSize: 14),

@@ -1,29 +1,34 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meetmind/services/auth_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Auth state — user profile + authentication status.
 class AuthState {
   const AuthState({
     this.isAuthenticated = false,
     this.isLoading = true,
+    this.isGuest = false,
     this.user,
     this.error,
   });
 
   final bool isAuthenticated;
   final bool isLoading;
+  final bool isGuest;
   final Map<String, dynamic>? user;
   final String? error;
 
   AuthState copyWith({
     bool? isAuthenticated,
     bool? isLoading,
+    bool? isGuest,
     Map<String, dynamic>? user,
     String? error,
   }) {
     return AuthState(
       isAuthenticated: isAuthenticated ?? this.isAuthenticated,
       isLoading: isLoading ?? this.isLoading,
+      isGuest: isGuest ?? this.isGuest,
       user: user ?? this.user,
       error: error,
     );
@@ -50,9 +55,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: true);
     try {
       await _auth.init();
+      // Check if user previously skipped login
+      final prefs = await SharedPreferences.getInstance();
+      final skipped = prefs.getBool('auth_skipped_login') ?? false;
       state = AuthState(
         isAuthenticated: _auth.isAuthenticated,
         isLoading: false,
+        isGuest: skipped && !_auth.isAuthenticated,
         user: _auth.user,
       );
     } catch (e) {
@@ -62,6 +71,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
         error: e.toString(),
       );
     }
+  }
+
+  /// Skip login — allow guest access.
+  Future<void> skipLogin() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('auth_skipped_login', true);
+    state = const AuthState(
+      isAuthenticated: false,
+      isLoading: false,
+      isGuest: true,
+    );
   }
 
   /// Login with Google or Apple.
