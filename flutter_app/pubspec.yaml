@@ -42,6 +42,13 @@ dependencies:
   # Notifications
   flutter_local_notifications: ^19.0.0
 
+  # Subscriptions
+  purchases_flutter: ^8.0.0
+
+  # Sharing & Links
+  share_plus: ^10.0.0
+  url_launcher: ^6.3.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -4,8 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:meetmind/config/theme.dart';
+import 'package:meetmind/features/subscription/widgets/free_limit_banner.dart';
 import 'package:meetmind/models/meeting_models.dart';
 import 'package:meetmind/providers/meeting_provider.dart';
+import 'package:meetmind/providers/subscription_provider.dart';
 
 /// Home screen — meeting hub with quick-start action.
 class HomeScreen extends ConsumerWidget {
@@ -52,6 +54,9 @@ class HomeScreen extends ConsumerWidget {
                   .animate()
                   .fadeIn(delay: 200.ms, duration: 500.ms)
                   .slideY(begin: 0.1),
+
+              // Free tier usage banner
+              const FreeLimitBanner(),
 
               const SizedBox(height: 24),
 
@@ -159,9 +164,16 @@ class HomeScreen extends ConsumerWidget {
         ],
       ),
 
-      // FAB — Start Meeting
+      // FAB — Start Meeting (gated by subscription)
       floatingActionButton: FloatingActionButton.large(
-        onPressed: () => context.push('/meeting'),
+        onPressed: () {
+          final canStart = ref.read(canStartMeetingProvider);
+          if (canStart) {
+            context.push('/meeting');
+          } else {
+            context.push('/paywall');
+          }
+        },
         child: const Icon(Icons.mic, size: 36),
       ).animate().scale(delay: 600.ms, duration: 400.ms),
     );

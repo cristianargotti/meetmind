@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:meetmind/config/app_config.dart';
 import 'package:meetmind/config/theme.dart';
+import 'package:meetmind/providers/subscription_provider.dart';
 
 /// Settings screen — app configuration.
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -255,6 +257,46 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
           const SizedBox(height: 24),
 
+          // ─── Subscription ─────────────────────
+          const _SectionHeader(title: 'Subscription'),
+          Card(
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const Icon(
+                    Icons.diamond,
+                    color: MeetMindTheme.primary,
+                  ),
+                  title: Text(
+                    ref.watch(subscriptionTierProvider).displayName,
+                  ),
+                  subtitle: Text(
+                    ref.watch(isProProvider)
+                        ? 'Active subscription'
+                        : 'Free plan — 3 meetings/week',
+                  ),
+                  trailing: ref.watch(isProProvider)
+                      ? null
+                      : ElevatedButton(
+                          onPressed: () => context.push('/paywall'),
+                          child: const Text('Upgrade'),
+                        ),
+                ),
+                if (ref.watch(isProProvider))
+                  ListTile(
+                    leading: const Icon(
+                      Icons.manage_accounts,
+                      color: MeetMindTheme.textSecondary,
+                    ),
+                    title: const Text('Manage Subscription'),
+                    onTap: () => context.push('/paywall'),
+                  ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
           // ─── About ────────────────────────────
           const _SectionHeader(title: 'About'),
           const Card(
@@ -263,8 +305,48 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 Icons.info_outline,
                 color: MeetMindTheme.primaryLight,
               ),
-              title: Text('MeetMind'),
-              subtitle: Text('v1.0.0 — The most powerful meeting AI'),
+              title: Text('Aura Meet'),
+              subtitle: Text('v5.0.0 — Your AI meeting copilot'),
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // ─── Legal ─────────────────────────────
+          const _SectionHeader(title: 'Legal'),
+          Card(
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const Icon(
+                    Icons.shield_outlined,
+                    color: MeetMindTheme.accent,
+                  ),
+                  title: const Text('Privacy Policy'),
+                  trailing: const Icon(
+                    Icons.chevron_right,
+                    color: MeetMindTheme.textTertiary,
+                  ),
+                  onTap: () => context.push('/legal/privacy'),
+                ),
+                const Divider(
+                  height: 1,
+                  indent: 56,
+                  color: MeetMindTheme.darkBorder,
+                ),
+                ListTile(
+                  leading: const Icon(
+                    Icons.description_outlined,
+                    color: MeetMindTheme.accent,
+                  ),
+                  title: const Text('Terms of Service'),
+                  trailing: const Icon(
+                    Icons.chevron_right,
+                    color: MeetMindTheme.textTertiary,
+                  ),
+                  onTap: () => context.push('/legal/terms'),
+                ),
+              ],
             ),
           ),
         ],

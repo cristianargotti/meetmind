@@ -4,8 +4,10 @@ import 'package:meetmind/features/history/history_screen.dart';
 import 'package:meetmind/features/history/meeting_detail_screen.dart';
 import 'package:meetmind/features/home/home_screen.dart';
 import 'package:meetmind/features/meeting/meeting_screen.dart';
+import 'package:meetmind/features/settings/legal_screen.dart';
 import 'package:meetmind/features/settings/settings_screen.dart';
 import 'package:meetmind/features/setup/model_download_screen.dart';
+import 'package:meetmind/features/subscription/paywall_screen.dart';
 
 /// App router configuration using GoRouter.
 final GoRouter appRouter = GoRouter(
@@ -42,5 +44,17 @@ final GoRouter appRouter = GoRouter(
       name: 'model-setup',
       builder: (context, state) => const ModelDownloadScreen(),
     ),
+    GoRoute(
+      path: '/paywall',
+      name: 'paywall',
+      builder: (context, state) => const PaywallScreen(),
+    ),
+    GoRoute(
+      path: '/legal/:type',
+      name: 'legal',
+      builder: (context, state) =>
+          LegalScreen(type: state.pathParameters['type'] ?? 'privacy'),
+    ),
   ],
 );
+
