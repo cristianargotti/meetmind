@@ -14,6 +14,10 @@ from typing import Any
 
 import httpx
 import jwt
+
+import hashlib
+import os
+
 import structlog
 from fastapi import Depends, HTTPException, WebSocket, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -44,10 +48,7 @@ def _get_jwt_secret() -> str:
     return _jwt_secret
 
 
-# ─── Password Hashing ──────────────────────────────────────────
 
-import hashlib
-import os
 
 
 def hash_password(password: str) -> str:

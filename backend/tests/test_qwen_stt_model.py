@@ -12,7 +12,6 @@ from __future__ import annotations
 from unittest.mock import MagicMock, patch
 
 import numpy as np
-import numpy as np
 import pytest
 
 qwen_asr = pytest.importorskip("qwen_asr")

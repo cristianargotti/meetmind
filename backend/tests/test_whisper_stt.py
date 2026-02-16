@@ -1,7 +1,10 @@
 """Tests for Whisper STT provider."""
 
-import contextlib
 from unittest.mock import MagicMock, patch
+
+# We need to import faster_whisper to patch it, even if we don't use it directly here
+# In CI, this module might not exist, so we skip the entire file if missing
+import pytest
 
 from meetmind.providers import whisper_stt
 from meetmind.providers.whisper_stt import (
@@ -9,10 +12,6 @@ from meetmind.providers.whisper_stt import (
     transcribe_audio_bytes,
     transcribe_with_speaker,
 )
-
-# We need to import faster_whisper to patch it, even if we don't use it directly here
-# In CI, this module might not exist, so we skip the entire file if missing
-import pytest
 
 faster_whisper = pytest.importorskip("faster_whisper")
 

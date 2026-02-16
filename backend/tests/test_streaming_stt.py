@@ -3,8 +3,8 @@
 from unittest.mock import MagicMock, patch
 
 import numpy as np
-
 import pytest
+
 from meetmind.providers.streaming_stt import StreamingTranscriber, TranscriptSegment
 
 faster_whisper = pytest.importorskip("faster_whisper")
