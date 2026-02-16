@@ -79,6 +79,7 @@ jobs:
           severity: CRITICAL,HIGH
           exit-code: 1
           format: table
+          trivyignores: backend/.trivyignore
 
       - name: 📤 Push to ECR
         id: push
