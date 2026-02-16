@@ -17,13 +17,9 @@ class AppConfig {
   static const String _keyProtocol = 'backend_protocol';
 
   // ─── Defaults ─────────────────────────────
-  // TODO: Switch to domain once DNS propagates:
-  // static const String defaultHost = 'api.aurameet.live';
-  // static const int defaultPort = 443;
-  // static const String defaultProtocol = 'wss';
-  static const String defaultHost = '44.218.65.208';
-  static const int defaultPort = 80;
-  static const String defaultProtocol = 'ws';
+  static const String defaultHost = 'api.aurameet.live';
+  static const int defaultPort = 443;
+  static const String defaultProtocol = 'wss';
 
   // ─── Singleton init ───────────────────────
 
