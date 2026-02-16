@@ -28,9 +28,9 @@ class HomeScreen extends ConsumerWidget {
               Text(
                 'MeetMind',
                 style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
               ).animate().fadeIn(duration: 400.ms).slideX(begin: -0.1),
 
               const SizedBox(height: 4),
@@ -46,8 +46,9 @@ class HomeScreen extends ConsumerWidget {
 
               // Quick Start Card
               _QuickStartCard(
-                isActive: meeting != null && meeting.status.name == 'recording',
-              )
+                    isActive:
+                        meeting != null && meeting.status.name == 'recording',
+                  )
                   .animate()
                   .fadeIn(delay: 200.ms, duration: 500.ms)
                   .slideY(begin: 0.1),
@@ -56,37 +57,38 @@ class HomeScreen extends ConsumerWidget {
 
               // Stats Row
               Row(
-                children: [
-                  const Expanded(
-                    child: _StatCard(
-                      icon: Icons.mic,
-                      label: 'Today',
-                      value: '0',
-                      color: MeetMindTheme.accent,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  const Expanded(
-                    child: _StatCard(
-                      icon: Icons.insights,
-                      label: 'Insights',
-                      value: '0',
-                      color: MeetMindTheme.success,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  const Expanded(
-                    child: _StatCard(
-                      icon: Icons.task_alt,
-                      label: 'Actions',
-                      value: '0',
-                      color: MeetMindTheme.warning,
-                    ),
-                  ),
-                ]
-                    .animate(interval: 100.ms)
-                    .fadeIn(delay: 300.ms)
-                    .slideY(begin: 0.1),
+                children:
+                    [
+                          const Expanded(
+                            child: _StatCard(
+                              icon: Icons.mic,
+                              label: 'Today',
+                              value: '0',
+                              color: MeetMindTheme.accent,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          const Expanded(
+                            child: _StatCard(
+                              icon: Icons.insights,
+                              label: 'Insights',
+                              value: '0',
+                              color: MeetMindTheme.success,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          const Expanded(
+                            child: _StatCard(
+                              icon: Icons.task_alt,
+                              label: 'Actions',
+                              value: '0',
+                              color: MeetMindTheme.warning,
+                            ),
+                          ),
+                        ]
+                        .animate(interval: 100.ms)
+                        .fadeIn(delay: 300.ms)
+                        .slideY(begin: 0.1),
               ),
 
               const SizedBox(height: 32),
@@ -95,9 +97,9 @@ class HomeScreen extends ConsumerWidget {
               Text(
                 'Recent Meetings',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
               ),
 
               const SizedBox(height: 12),

@@ -21,9 +21,9 @@ class MeetingApiService {
 
   /// Default request headers.
   Map<String, String> get _headers => {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      };
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  };
 
   // ─── Meetings ─────────────────────────────────────────────────
 
@@ -69,9 +69,7 @@ class MeetingApiService {
   /// Get all pending action items across meetings.
   ///
   /// Returns a list of action item maps with meeting context.
-  Future<List<Map<String, dynamic>>> getPendingActions({
-    int limit = 50,
-  }) async {
+  Future<List<Map<String, dynamic>>> getPendingActions({int limit = 50}) async {
     final response = await _get('/api/action-items?limit=$limit');
     final data = response['action_items'] as List<dynamic>;
     return data.cast<Map<String, dynamic>>();

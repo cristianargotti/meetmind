@@ -30,17 +30,17 @@ class StatusBar extends StatelessWidget {
         children: [
           // Recording indicator
           Container(
-            width: 10,
-            height: 10,
-            decoration: BoxDecoration(
-              color: status == MeetingStatus.recording
-                  ? MeetMindTheme.error
-                  : status == MeetingStatus.paused
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(
+                  color: status == MeetingStatus.recording
+                      ? MeetMindTheme.error
+                      : status == MeetingStatus.paused
                       ? MeetMindTheme.warning
                       : Colors.white38,
-              shape: BoxShape.circle,
-            ),
-          )
+                  shape: BoxShape.circle,
+                ),
+              )
               .animate(
                 target: status == MeetingStatus.recording ? 1 : 0,
                 onPlay: (AnimationController c) => c.repeat(reverse: true),
@@ -52,8 +52,8 @@ class StatusBar extends StatelessWidget {
             status == MeetingStatus.recording
                 ? 'Recording'
                 : status == MeetingStatus.paused
-                    ? 'Paused'
-                    : 'Idle',
+                ? 'Paused'
+                : 'Idle',
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w500,

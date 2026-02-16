@@ -145,13 +145,18 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline,
-                  size: 48, color: MeetMindTheme.error),
+              const Icon(
+                Icons.error_outline,
+                size: 48,
+                color: MeetMindTheme.error,
+              ),
               const SizedBox(height: 16),
               Text(_error ?? 'Meeting not found'),
               const SizedBox(height: 16),
               ElevatedButton(
-                  onPressed: _loadMeeting, child: const Text('Retry')),
+                onPressed: _loadMeeting,
+                child: const Text('Retry'),
+              ),
             ],
           ),
         ),
@@ -212,8 +217,11 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen>
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
             child: Row(
               children: [
-                const Icon(Icons.calendar_today_rounded,
-                    size: 13, color: MeetMindTheme.textTertiary),
+                const Icon(
+                  Icons.calendar_today_rounded,
+                  size: 13,
+                  color: MeetMindTheme.textTertiary,
+                ),
                 const SizedBox(width: 6),
                 Text(
                   dateStr,
@@ -223,8 +231,11 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen>
                   ),
                 ),
                 const SizedBox(width: 16),
-                const Icon(Icons.timer_outlined,
-                    size: 13, color: MeetMindTheme.textTertiary),
+                const Icon(
+                  Icons.timer_outlined,
+                  size: 13,
+                  color: MeetMindTheme.textTertiary,
+                ),
                 const SizedBox(width: 4),
                 Text(
                   durationSecs > 0
@@ -236,8 +247,11 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen>
                   ),
                 ),
                 const SizedBox(width: 16),
-                const Icon(Icons.segment_rounded,
-                    size: 13, color: MeetMindTheme.textTertiary),
+                const Icon(
+                  Icons.segment_rounded,
+                  size: 13,
+                  color: MeetMindTheme.textTertiary,
+                ),
                 const SizedBox(width: 4),
                 Text(
                   '${segments.length} segments',
@@ -266,10 +280,7 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen>
               controller: _tabController,
               children: [
                 _TranscriptTab(segments: segments),
-                _SummaryTab(
-                  meeting: _meeting!,
-                  onCopySummary: _copySummary,
-                ),
+                _SummaryTab(meeting: _meeting!, onCopySummary: _copySummary),
                 _InsightsTab(insights: insights),
               ],
             ),
@@ -313,10 +324,7 @@ class _TranscriptTab extends StatelessWidget {
               // Speaker badge
               Container(
                 margin: const EdgeInsets.only(top: 2),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 3,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: MeetMindTheme.primaryDim,
                   borderRadius: BorderRadius.circular(6),
@@ -345,9 +353,9 @@ class _TranscriptTab extends StatelessWidget {
             ],
           ),
         ).animate().fadeIn(
-              delay: Duration(milliseconds: index * 30),
-              duration: 300.ms,
-            );
+          delay: Duration(milliseconds: index * 30),
+          duration: 300.ms,
+        );
       },
     );
   }
@@ -355,10 +363,7 @@ class _TranscriptTab extends StatelessWidget {
 
 /// Summary tab — overview, key points, action items, decisions.
 class _SummaryTab extends StatelessWidget {
-  const _SummaryTab({
-    required this.meeting,
-    required this.onCopySummary,
-  });
+  const _SummaryTab({required this.meeting, required this.onCopySummary});
 
   final Map<String, dynamic> meeting;
   final VoidCallback onCopySummary;
@@ -618,9 +623,9 @@ class _InsightsTab extends StatelessWidget {
             ],
           ),
         ).animate().fadeIn(
-              delay: Duration(milliseconds: index * 50),
-              duration: 300.ms,
-            );
+          delay: Duration(milliseconds: index * 50),
+          duration: 300.ms,
+        );
       },
     );
   }

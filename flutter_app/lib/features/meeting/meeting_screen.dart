@@ -133,9 +133,7 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
                 ),
 
                 // Tab 2: Insights (proactive AI suggestions)
-                InsightsTab(
-                  insights: meeting?.insights ?? const [],
-                ),
+                InsightsTab(insights: meeting?.insights ?? const []),
 
                 // Tab 3: Copilot
                 CopilotPanel(

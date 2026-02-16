@@ -29,9 +29,8 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/meeting/:id',
       name: 'meeting-detail',
-      builder: (context, state) => MeetingDetailScreen(
-        meetingId: state.pathParameters['id']!,
-      ),
+      builder: (context, state) =>
+          MeetingDetailScreen(meetingId: state.pathParameters['id']!),
     ),
     GoRoute(
       path: '/settings',

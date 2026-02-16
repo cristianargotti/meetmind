@@ -94,15 +94,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
           _meetings.removeAt(index);
         });
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Meeting deleted')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Meeting deleted')));
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to delete: $e')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Failed to delete: $e')));
         }
       }
     }
@@ -165,10 +165,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     ),
                   )
                 : _error != null
-                    ? _buildError()
-                    : _filteredMeetings.isEmpty
-                        ? _buildEmpty()
-                        : _buildMeetingList(),
+                ? _buildError()
+                : _filteredMeetings.isEmpty
+                ? _buildEmpty()
+                : _buildMeetingList(),
           ),
         ],
       ),
@@ -186,13 +186,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
         itemBuilder: (context, index) {
           final meeting = _filteredMeetings[index];
           return _MeetingCard(
-            meeting: meeting,
-            onTap: () => context.push('/meeting/${meeting['id']}'),
-            onDelete: () => _deleteMeeting(
-              meeting['id'] as String,
-              _meetings.indexOf(meeting),
-            ),
-          )
+                meeting: meeting,
+                onTap: () => context.push('/meeting/${meeting['id']}'),
+                onDelete: () => _deleteMeeting(
+                  meeting['id'] as String,
+                  _meetings.indexOf(meeting),
+                ),
+              )
               .animate()
               .fadeIn(
                 delay: Duration(milliseconds: index * 60),
@@ -230,20 +230,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
           const SizedBox(height: 20),
           Text(
             _searchQuery.isEmpty ? 'No meetings yet' : 'No matches found',
-            style: Theme.of(context)
-                .textTheme
-                .titleMedium
-                ?.copyWith(color: MeetMindTheme.textSecondary),
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: MeetMindTheme.textSecondary,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
             _searchQuery.isEmpty
                 ? 'Start your first meeting to see it here'
                 : 'Try a different search term',
-            style: Theme.of(context)
-                .textTheme
-                .bodySmall
-                ?.copyWith(color: MeetMindTheme.textTertiary),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: MeetMindTheme.textTertiary),
           ),
         ],
       ),
@@ -264,10 +262,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
           const SizedBox(height: 16),
           Text(
             _error ?? 'Something went wrong',
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium
-                ?.copyWith(color: MeetMindTheme.textSecondary),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: MeetMindTheme.textSecondary,
+            ),
           ),
           const SizedBox(height: 16),
           ElevatedButton.icon(

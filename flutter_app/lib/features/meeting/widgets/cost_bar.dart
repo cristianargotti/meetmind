@@ -22,8 +22,8 @@ class CostBar extends StatelessWidget {
     final Color barColor = pct >= 80
         ? MeetMindTheme.error
         : pct >= 50
-            ? MeetMindTheme.warning
-            : MeetMindTheme.success;
+        ? MeetMindTheme.warning
+        : MeetMindTheme.success;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

@@ -54,14 +54,14 @@ final StateProvider<WhisperModelStatus> sttStatusProvider =
 /// Provider for the current meeting session.
 final StateNotifierProvider<MeetingNotifier, MeetingSession?> meetingProvider =
     StateNotifierProvider<MeetingNotifier, MeetingSession?>((Ref ref) {
-  return MeetingNotifier(ref);
-});
+      return MeetingNotifier(ref);
+    });
 
 /// Provider for connection status.
 final StateProvider<ConnectionStatus> connectionStatusProvider =
     StateProvider<ConnectionStatus>((Ref ref) {
-  return ConnectionStatus.disconnected;
-});
+      return ConnectionStatus.disconnected;
+    });
 
 /// Provider for whether AI agents are available on the backend.
 final StateProvider<bool> agentsReadyProvider = StateProvider<bool>((Ref ref) {
@@ -87,8 +87,8 @@ class MeetingNotifier extends StateNotifier<MeetingSession?> {
   Future<void> startMeeting({String title = 'New Meeting'}) async {
     // Check microphone permission first
     final PermissionService permissions = _ref.read(permissionProvider);
-    final PermissionResult permResult =
-        await permissions.requestMicPermission();
+    final PermissionResult permResult = await permissions
+        .requestMicPermission();
 
     if (permResult != PermissionResult.granted) {
       debugPrint('[MeetingNotifier] Mic permission: ${permResult.name}');
@@ -359,7 +359,8 @@ class MeetingNotifier extends StateNotifier<MeetingSession?> {
   /// Handle budget exceeded notification.
   void _handleBudgetExceeded() {
     if (state == null) return;
-    final CostData current = state!.costData ??
+    final CostData current =
+        state!.costData ??
         const CostData(
           totalCostUsd: 0,
           budgetUsd: 0.50,

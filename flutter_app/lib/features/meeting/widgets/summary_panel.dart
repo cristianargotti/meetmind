@@ -108,9 +108,9 @@ class _EmptyState extends StatelessWidget {
           Text(
             hasTranscript
                 ? 'Generate a structured summary with\n'
-                    'decisions, action items, and follow-ups.'
+                      'decisions, action items, and follow-ups.'
                 : 'Start recording to capture transcript.\n'
-                    'Summary will be available after.',
+                      'Summary will be available after.',
             textAlign: TextAlign.center,
             style: Theme.of(
               context,
@@ -266,9 +266,9 @@ class _SummaryCardGroup extends StatelessWidget {
             child: Text(
               item,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.white.withValues(alpha: 0.85),
-                    height: 1.4,
-                  ),
+                color: Colors.white.withValues(alpha: 0.85),
+                height: 1.4,
+              ),
             ),
           ),
         ),

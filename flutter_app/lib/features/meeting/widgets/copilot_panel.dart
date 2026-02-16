@@ -90,9 +90,7 @@ class _CopilotPanelState extends State<CopilotPanel> {
         Container(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
           decoration: const BoxDecoration(
-            border: Border(
-              top: BorderSide(color: MeetMindTheme.darkBorder),
-            ),
+            border: Border(top: BorderSide(color: MeetMindTheme.darkBorder)),
           ),
           child: Row(
             children: <Widget>[
@@ -184,9 +182,9 @@ class _EmptyCopilotState extends StatelessWidget {
           Text(
             'MeetMind Copilot',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: MeetMindTheme.textPrimary,
-                  fontWeight: FontWeight.w700,
-                ),
+              color: MeetMindTheme.textPrimary,
+              fontWeight: FontWeight.w700,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
@@ -194,9 +192,9 @@ class _EmptyCopilotState extends StatelessWidget {
             'Copilot has the full transcript as context.',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: MeetMindTheme.textTertiary,
-                  height: 1.6,
-                ),
+              color: MeetMindTheme.textTertiary,
+              height: 1.6,
+            ),
           ),
         ],
       ).animate().fadeIn(duration: 500.ms),
@@ -232,8 +230,8 @@ class _ChatBubble extends StatelessWidget {
           color: isUser
               ? null
               : isError
-                  ? MeetMindTheme.errorDim
-                  : MeetMindTheme.darkCard,
+              ? MeetMindTheme.errorDim
+              : MeetMindTheme.darkCard,
           borderRadius: BorderRadius.circular(MeetMindTheme.radiusMd).copyWith(
             bottomRight: isUser ? const Radius.circular(4) : null,
             bottomLeft: !isUser ? const Radius.circular(4) : null,
@@ -285,8 +283,9 @@ class _ChatBubble extends StatelessWidget {
             Text(
               message.text,
               style: TextStyle(
-                color:
-                    isError ? MeetMindTheme.error : MeetMindTheme.textPrimary,
+                color: isError
+                    ? MeetMindTheme.error
+                    : MeetMindTheme.textPrimary,
                 fontSize: 14,
                 height: 1.5,
               ),
@@ -337,10 +336,10 @@ class _ChatBubble extends StatelessWidget {
         ),
       ),
     ).animate().slideX(
-          begin: isUser ? 0.1 : -0.1,
-          duration: 200.ms,
-          curve: Curves.easeOut,
-        );
+      begin: isUser ? 0.1 : -0.1,
+      duration: 200.ms,
+      curve: Curves.easeOut,
+    );
   }
 }
 
@@ -367,13 +366,13 @@ class _TypingIndicator extends StatelessWidget {
           children: <Widget>[
             for (int i = 0; i < 3; i++) ...<Widget>[
               Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: MeetMindTheme.copilot.withValues(alpha: 0.6),
-                  shape: BoxShape.circle,
-                ),
-              )
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: MeetMindTheme.copilot.withValues(alpha: 0.6),
+                      shape: BoxShape.circle,
+                    ),
+                  )
                   .animate(onPlay: (AnimationController c) => c.repeat())
                   .scaleXY(
                     begin: 0.5,

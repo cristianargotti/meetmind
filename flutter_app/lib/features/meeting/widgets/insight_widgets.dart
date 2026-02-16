@@ -62,9 +62,9 @@ class _EmptyInsightsState extends StatelessWidget {
           Text(
             'AI Insights',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: MeetMindTheme.textPrimary,
-                  fontWeight: FontWeight.w700,
-                ),
+              color: MeetMindTheme.textPrimary,
+              fontWeight: FontWeight.w700,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
@@ -72,9 +72,9 @@ class _EmptyInsightsState extends StatelessWidget {
             'as the conversation unfolds.',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: MeetMindTheme.textTertiary,
-                  height: 1.6,
-                ),
+              color: MeetMindTheme.textTertiary,
+              height: 1.6,
+            ),
           ),
         ],
       ).animate().fadeIn(duration: 500.ms),
@@ -103,10 +103,9 @@ class InsightsPanel extends StatelessWidget {
         itemCount: insights.length,
         itemBuilder: (BuildContext context, int index) {
           final AIInsight insight = insights[insights.length - 1 - index];
-          return _CompactInsightCard(insight: insight)
-              .animate()
-              .fadeIn(duration: 300.ms)
-              .slideX(begin: 0.1);
+          return _CompactInsightCard(
+            insight: insight,
+          ).animate().fadeIn(duration: 300.ms).slideX(begin: 0.1);
         },
       ),
     );
@@ -279,9 +278,7 @@ class _CompactInsightCard extends StatelessWidget {
           ],
         ),
         borderRadius: BorderRadius.circular(MeetMindTheme.radiusMd),
-        border: Border.all(
-          color: MeetMindTheme.accent.withValues(alpha: 0.25),
-        ),
+        border: Border.all(color: MeetMindTheme.accent.withValues(alpha: 0.25)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
