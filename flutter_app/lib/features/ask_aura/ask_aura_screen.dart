@@ -120,7 +120,11 @@ class _AskAuraScreenState extends ConsumerState<AskAuraScreen> {
       appBar: AppBar(
         title: Row(
           children: [
-            const Icon(Icons.auto_awesome, size: 20, color: MeetMindTheme.primary),
+            const Icon(
+              Icons.auto_awesome,
+              size: 20,
+              color: MeetMindTheme.primary,
+            ),
             const SizedBox(width: 8),
             Text(l10n.askAuraTitle),
           ],
@@ -302,8 +306,7 @@ class _ChatBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Align(
-      alignment:
-          message.isUser ? Alignment.centerRight : Alignment.centerLeft,
+      alignment: message.isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 4),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

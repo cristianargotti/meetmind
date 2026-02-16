@@ -49,7 +49,9 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       orElse: () => _packages.first,
     );
 
-    final success = await ref.read(subscriptionProvider.notifier).purchase(package);
+    final success = await ref
+        .read(subscriptionProvider.notifier)
+        .purchase(package);
 
     if (mounted) {
       setState(() => _isLoading = false);
@@ -69,9 +71,9 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       setState(() => _isRestoring = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(success
-              ? '✅ Purchases restored!'
-              : 'No previous purchases found'),
+          content: Text(
+            success ? '✅ Purchases restored!' : 'No previous purchases found',
+          ),
         ),
       );
       if (success) Navigator.of(context).pop();
@@ -93,7 +95,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                 alignment: Alignment.topRight,
                 child: IconButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.close, color: MeetMindTheme.textSecondary),
+                  icon: const Icon(
+                    Icons.close,
+                    color: MeetMindTheme.textSecondary,
+                  ),
                 ),
               ),
 
@@ -172,10 +177,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
             ],
           ),
           child: const Icon(Icons.auto_awesome, color: Colors.white, size: 32),
-        ).animate().scale(
-              duration: 600.ms,
-              curve: Curves.elasticOut,
-            ),
+        ).animate().scale(duration: 600.ms, curve: Curves.elasticOut),
         const SizedBox(height: 20),
         const Text(
           'Unlock Aura Pro',
@@ -189,10 +191,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
         const SizedBox(height: 8),
         const Text(
           'Your AI meeting copilot, unleashed',
-          style: TextStyle(
-            color: MeetMindTheme.textSecondary,
-            fontSize: 15,
-          ),
+          style: TextStyle(color: MeetMindTheme.textSecondary, fontSize: 15),
         ).animate().fadeIn(delay: 100.ms, duration: 400.ms),
       ],
     );
@@ -209,20 +208,34 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       child: Row(
         children: [
           Expanded(child: _toggleButton('Monthly', '\$14.99/mo', !_isYearly)),
-          Expanded(child: _toggleButton('Yearly', '\$9.99/mo', _isYearly, badge: 'Save 33%')),
+          Expanded(
+            child: _toggleButton(
+              'Yearly',
+              '\$9.99/mo',
+              _isYearly,
+              badge: 'Save 33%',
+            ),
+          ),
         ],
       ),
     ).animate().fadeIn(delay: 200.ms, duration: 400.ms);
   }
 
-  Widget _toggleButton(String label, String price, bool selected, {String? badge}) {
+  Widget _toggleButton(
+    String label,
+    String price,
+    bool selected, {
+    String? badge,
+  }) {
     return GestureDetector(
       onTap: () => setState(() => _isYearly = label == 'Yearly'),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: selected ? MeetMindTheme.primary.withValues(alpha: 0.15) : Colors.transparent,
+          color: selected
+              ? MeetMindTheme.primary.withValues(alpha: 0.15)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
           border: selected
               ? Border.all(color: MeetMindTheme.primary.withValues(alpha: 0.5))
@@ -250,7 +263,9 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
             Text(
               label,
               style: TextStyle(
-                color: selected ? MeetMindTheme.textPrimary : MeetMindTheme.textSecondary,
+                color: selected
+                    ? MeetMindTheme.textPrimary
+                    : MeetMindTheme.textSecondary,
                 fontWeight: FontWeight.w600,
                 fontSize: 14,
               ),
@@ -259,7 +274,9 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
             Text(
               price,
               style: TextStyle(
-                color: selected ? MeetMindTheme.primary : MeetMindTheme.textTertiary,
+                color: selected
+                    ? MeetMindTheme.primary
+                    : MeetMindTheme.textTertiary,
                 fontWeight: FontWeight.w500,
                 fontSize: 12,
               ),
@@ -290,91 +307,95 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
 
   Widget _buildFeatureRow(_FeatureRow feature, int index) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: MeetMindTheme.darkCard,
-        borderRadius: BorderRadius.circular(MeetMindTheme.radiusSm),
-        border: Border.all(color: MeetMindTheme.darkBorder),
-      ),
-      child: Row(
-        children: [
-          Icon(feature.icon, color: MeetMindTheme.primary, size: 20),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              feature.name,
-              style: const TextStyle(
-                color: MeetMindTheme.textPrimary,
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
+          margin: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: MeetMindTheme.darkCard,
+            borderRadius: BorderRadius.circular(MeetMindTheme.radiusSm),
+            border: Border.all(color: MeetMindTheme.darkBorder),
           ),
-          SizedBox(
-            width: 56,
-            child: Text(
-              feature.free,
-              style: const TextStyle(
-                color: MeetMindTheme.textTertiary,
-                fontSize: 12,
+          child: Row(
+            children: [
+              Icon(feature.icon, color: MeetMindTheme.primary, size: 20),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  feature.name,
+                  style: const TextStyle(
+                    color: MeetMindTheme.textPrimary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-          SizedBox(
-            width: 56,
-            child: Text(
-              feature.pro,
-              style: const TextStyle(
-                color: MeetMindTheme.accent,
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
+              SizedBox(
+                width: 56,
+                child: Text(
+                  feature.free,
+                  style: const TextStyle(
+                    color: MeetMindTheme.textTertiary,
+                    fontSize: 12,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
               ),
-              textAlign: TextAlign.center,
-            ),
+              SizedBox(
+                width: 56,
+                child: Text(
+                  feature.pro,
+                  style: const TextStyle(
+                    color: MeetMindTheme.accent,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-    ).animate().fadeIn(delay: (200 + index * 60).ms, duration: 300.ms)
+        )
+        .animate()
+        .fadeIn(delay: (200 + index * 60).ms, duration: 300.ms)
         .slideX(begin: 0.05, end: 0);
   }
 
   Widget _buildCTA() {
     return SizedBox(
-      width: double.infinity,
-      height: 54,
-      child: ElevatedButton(
-        onPressed: _isLoading ? null : _purchase,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: MeetMindTheme.primary,
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(MeetMindTheme.radiusMd),
-          ),
-          elevation: 0,
-        ),
-        child: _isLoading
-            ? const SizedBox(
-                width: 22,
-                height: 22,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Colors.white,
-                ),
-              )
-            : Text(
-                _isYearly ? 'Start Pro — \$119.99/year' : 'Start Pro — \$14.99/month',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                ),
+          width: double.infinity,
+          height: 54,
+          child: ElevatedButton(
+            onPressed: _isLoading ? null : _purchase,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: MeetMindTheme.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(MeetMindTheme.radiusMd),
               ),
-      ),
-    ).animate().fadeIn(delay: 600.ms, duration: 400.ms).scale(
-          begin: const Offset(0.95, 0.95),
-          end: const Offset(1.0, 1.0),
-        );
+              elevation: 0,
+            ),
+            child: _isLoading
+                ? const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : Text(
+                    _isYearly
+                        ? 'Start Pro — \$119.99/year'
+                        : 'Start Pro — \$14.99/month',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+          ),
+        )
+        .animate()
+        .fadeIn(delay: 600.ms, duration: 400.ms)
+        .scale(begin: const Offset(0.95, 0.95), end: const Offset(1.0, 1.0));
   }
 }
 

@@ -46,8 +46,8 @@ class SubscriptionNotifier extends StateNotifier<SubscriptionState> {
 /// Main subscription state provider.
 final subscriptionProvider =
     StateNotifierProvider<SubscriptionNotifier, SubscriptionState>(
-  (ref) => SubscriptionNotifier(),
-);
+      (ref) => SubscriptionNotifier(),
+    );
 
 /// Whether the user has an active Pro (or higher) subscription.
 final isProProvider = Provider<bool>(

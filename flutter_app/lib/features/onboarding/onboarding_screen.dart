@@ -275,18 +275,16 @@ class _LanguagePage extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
-                      Text(
-                        locale.flag,
-                        style: const TextStyle(fontSize: 24),
-                      ),
+                      Text(locale.flag, style: const TextStyle(fontSize: 24)),
                       const SizedBox(width: 16),
                       Text(
                         locale.displayName,
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 16,
-                          fontWeight:
-                              isSelected ? FontWeight.w700 : FontWeight.w400,
+                          fontWeight: isSelected
+                              ? FontWeight.w700
+                              : FontWeight.w400,
                         ),
                       ),
                       const Spacer(),
@@ -310,10 +308,7 @@ class _LanguagePage extends StatelessWidget {
 
 /// Page 3: Microphone permission.
 class _MicPermissionPage extends StatelessWidget {
-  const _MicPermissionPage({
-    required this.l10n,
-    required this.onAllow,
-  });
+  const _MicPermissionPage({required this.l10n, required this.onAllow});
 
   final AppLocalizations l10n;
   final VoidCallback onAllow;
@@ -362,10 +357,7 @@ class _MicPermissionPage extends StatelessWidget {
             icon: const Icon(Icons.mic),
             label: Text(l10n.onboardingMicAllow),
             style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 32,
-                vertical: 14,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
               backgroundColor: MeetMindTheme.success,
             ),
           ),
@@ -388,10 +380,10 @@ class _ReadyPage extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const Icon(
-            Icons.check_circle_outline,
-            size: 80,
-            color: MeetMindTheme.success,
-          )
+                Icons.check_circle_outline,
+                size: 80,
+                color: MeetMindTheme.success,
+              )
               .animate()
               .scale(duration: 600.ms, curve: Curves.elasticOut)
               .then()

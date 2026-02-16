@@ -175,9 +175,7 @@ class UserPreferences {
   /// Current audio quality.
   AudioQuality get audioQuality {
     final String? code = _prefs.getString(_keyAudioQuality);
-    return code != null
-        ? AudioQuality.fromCode(code)
-        : AudioQuality.standard;
+    return code != null ? AudioQuality.fromCode(code) : AudioQuality.standard;
   }
 
   /// Set audio quality.
@@ -189,8 +187,7 @@ class UserPreferences {
   // ─── Notifications ────────────────────────
 
   /// Whether notifications are enabled.
-  bool get notificationsEnabled =>
-      _prefs.getBool(_keyNotifications) ?? true;
+  bool get notificationsEnabled => _prefs.getBool(_keyNotifications) ?? true;
 
   /// Set notifications enabled.
   Future<void> setNotificationsEnabled(bool value) async {

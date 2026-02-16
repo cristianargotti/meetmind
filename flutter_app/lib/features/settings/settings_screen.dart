@@ -213,9 +213,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 },
                 style: const ButtonStyle(
                   visualDensity: VisualDensity.compact,
-                  textStyle: WidgetStatePropertyAll(
-                    TextStyle(fontSize: 11),
-                  ),
+                  textStyle: WidgetStatePropertyAll(TextStyle(fontSize: 11)),
                 ),
               ),
             ),
@@ -249,9 +247,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 },
                 style: const ButtonStyle(
                   visualDensity: VisualDensity.compact,
-                  textStyle: WidgetStatePropertyAll(
-                    TextStyle(fontSize: 12),
-                  ),
+                  textStyle: WidgetStatePropertyAll(TextStyle(fontSize: 12)),
                 ),
               ),
             ),
@@ -314,10 +310,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       const Spacer(),
                       SegmentedButton<String>(
                         segments: const [
-                          ButtonSegment<String>(
-                            value: 'ws',
-                            label: Text('WS'),
-                          ),
+                          ButtonSegment<String>(value: 'ws', label: Text('WS')),
                           ButtonSegment<String>(
                             value: 'wss',
                             label: Text('WSS'),
@@ -481,9 +474,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     Icons.diamond,
                     color: MeetMindTheme.primary,
                   ),
-                  title: Text(
-                    ref.watch(subscriptionTierProvider).displayName,
-                  ),
+                  title: Text(ref.watch(subscriptionTierProvider).displayName),
                   subtitle: Text(
                     ref.watch(isProProvider)
                         ? l10n.subscriptionActive

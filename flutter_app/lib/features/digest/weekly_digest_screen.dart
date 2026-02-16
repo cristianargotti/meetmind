@@ -80,11 +80,7 @@ class WeeklyDigestScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Row(
           children: [
-            const Icon(
-              Icons.summarize,
-              size: 20,
-              color: MeetMindTheme.accent,
-            ),
+            const Icon(Icons.summarize, size: 20, color: MeetMindTheme.accent),
             const SizedBox(width: 8),
             Text(l10n.digestTitle),
           ],
@@ -112,10 +108,7 @@ class WeeklyDigestScreen extends ConsumerWidget {
                 children: [
                   Text(
                     l10n.digestSubtitle,
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                    ),
+                    style: const TextStyle(color: Colors.white70, fontSize: 14),
                   ),
                   const SizedBox(height: 8),
                   const Text(
@@ -202,10 +195,7 @@ class WeeklyDigestScreen extends ConsumerWidget {
                   const SizedBox(height: 4),
                   Text(
                     l10n.digestEmptyHint,
-                    style: const TextStyle(
-                      color: Colors.white30,
-                      fontSize: 13,
-                    ),
+                    style: const TextStyle(color: Colors.white30, fontSize: 13),
                     textAlign: TextAlign.center,
                   ),
                 ],

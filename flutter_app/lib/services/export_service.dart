@@ -8,7 +8,10 @@ class ExportService {
   static final instance = ExportService._();
 
   /// Format a meeting as readable text.
-  String formatMeetingText(Map<String, dynamic> meeting, {bool fullExport = true}) {
+  String formatMeetingText(
+    Map<String, dynamic> meeting, {
+    bool fullExport = true,
+  }) {
     final buffer = StringBuffer();
     final title = meeting['title'] ?? 'Meeting';
     final date = meeting['created_at'] ?? '';
@@ -43,7 +46,9 @@ class ExportService {
 
     if (!fullExport) {
       buffer.writeln('---');
-      buffer.writeln('📌 Upgrade to Aura Pro for full export (transcript, insights, action items)');
+      buffer.writeln(
+        '📌 Upgrade to Aura Pro for full export (transcript, insights, action items)',
+      );
       return buffer.toString();
     }
 
@@ -51,7 +56,9 @@ class ExportService {
     if (insights.isNotEmpty) {
       buffer.writeln('## Key Insights');
       for (final insight in insights) {
-        final text = insight is Map ? (insight['text'] ?? insight.toString()) : insight.toString();
+        final text = insight is Map
+            ? (insight['text'] ?? insight.toString())
+            : insight.toString();
         buffer.writeln('💡 $text');
       }
       buffer.writeln();
@@ -61,7 +68,9 @@ class ExportService {
     if (actionItems.isNotEmpty) {
       buffer.writeln('## Action Items');
       for (final item in actionItems) {
-        final text = item is Map ? (item['text'] ?? item.toString()) : item.toString();
+        final text = item is Map
+            ? (item['text'] ?? item.toString())
+            : item.toString();
         final status = item is Map ? (item['status'] ?? 'pending') : 'pending';
         final check = status == 'done' ? '✅' : '⬜';
         buffer.writeln('$check $text');
@@ -91,13 +100,19 @@ class ExportService {
   }
 
   /// Copy meeting to clipboard.
-  Future<void> copyToClipboard(Map<String, dynamic> meeting, {bool fullExport = true}) async {
+  Future<void> copyToClipboard(
+    Map<String, dynamic> meeting, {
+    bool fullExport = true,
+  }) async {
     final text = formatMeetingText(meeting, fullExport: fullExport);
     await Clipboard.setData(ClipboardData(text: text));
   }
 
   /// Share meeting via native share sheet.
-  Future<void> shareMeeting(Map<String, dynamic> meeting, {bool fullExport = true}) async {
+  Future<void> shareMeeting(
+    Map<String, dynamic> meeting, {
+    bool fullExport = true,
+  }) async {
     final text = formatMeetingText(meeting, fullExport: fullExport);
     // ignore: deprecated_member_use
     await Share.share(text);

@@ -46,18 +46,16 @@ class PreferencesState {
 /// Notifier that wraps UserPreferences and exposes reactive state.
 class PreferencesNotifier extends StateNotifier<PreferencesState> {
   PreferencesNotifier()
-      : super(
-          PreferencesState(
-            locale: UserPreferences.instance.locale,
-            transcriptionLanguage:
-                UserPreferences.instance.transcriptionLanguage,
-            themeMode: _parseThemeMode(UserPreferences.instance.themeMode),
-            audioQuality: UserPreferences.instance.audioQuality,
-            notificationsEnabled:
-                UserPreferences.instance.notificationsEnabled,
-            hapticFeedback: UserPreferences.instance.hapticFeedback,
-          ),
-        ) {
+    : super(
+        PreferencesState(
+          locale: UserPreferences.instance.locale,
+          transcriptionLanguage: UserPreferences.instance.transcriptionLanguage,
+          themeMode: _parseThemeMode(UserPreferences.instance.themeMode),
+          audioQuality: UserPreferences.instance.audioQuality,
+          notificationsEnabled: UserPreferences.instance.notificationsEnabled,
+          hapticFeedback: UserPreferences.instance.hapticFeedback,
+        ),
+      ) {
     _sub = UserPreferences.instance.onChange.listen((_) => _refresh());
   }
 
@@ -134,8 +132,8 @@ class PreferencesNotifier extends StateNotifier<PreferencesState> {
 /// Main preferences provider.
 final preferencesProvider =
     StateNotifierProvider<PreferencesNotifier, PreferencesState>(
-  (ref) => PreferencesNotifier(),
-);
+      (ref) => PreferencesNotifier(),
+    );
 
 /// Convenience: current locale.
 final localeProvider = Provider<Locale>(

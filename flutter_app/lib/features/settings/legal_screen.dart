@@ -69,18 +69,14 @@ class LegalScreen extends StatelessWidget {
       _sectionTitle('📧 Contact'),
       _body('For privacy inquiries: privacy@aurameet.app'),
       const SizedBox(height: 16),
-      _body(
-        'Last updated: February 2026',
-      ),
+      _body('Last updated: February 2026'),
     ];
   }
 
   List<Widget> _termsContent() {
     return [
       _sectionTitle('Terms of Service'),
-      _body(
-        'By using Aura Meet, you agree to these terms:',
-      ),
+      _body('By using Aura Meet, you agree to these terms:'),
       const SizedBox(height: 20),
       _sectionTitle('📱 Service'),
       _body(

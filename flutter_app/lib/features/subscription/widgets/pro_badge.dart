@@ -51,10 +51,7 @@ class ProBadge extends ConsumerWidget {
 ///
 /// Shows the child if Pro, otherwise shows a locked overlay that taps to paywall.
 class ProGate extends ConsumerWidget {
-  const ProGate({
-    required this.child,
-    super.key,
-  });
+  const ProGate({required this.child, super.key});
 
   final Widget child;
 
@@ -79,7 +76,9 @@ class ProGate extends ConsumerWidget {
                 decoration: BoxDecoration(
                   color: MeetMindTheme.darkCard.withValues(alpha: 0.9),
                   borderRadius: BorderRadius.circular(MeetMindTheme.radiusSm),
-                  border: Border.all(color: MeetMindTheme.primary.withValues(alpha: 0.3)),
+                  border: Border.all(
+                    color: MeetMindTheme.primary.withValues(alpha: 0.3),
+                  ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,

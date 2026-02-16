@@ -265,14 +265,16 @@ class SubscriptionService {
       }
     }
 
-    _updateState(_state.copyWith(
-      tier: tier,
-      isActive: isActive,
-      expirationDate: proEntitlement?.expirationDate != null
-          ? DateTime.tryParse(proEntitlement!.expirationDate!)
-          : null,
-      managementUrl: info.managementURL,
-    ));
+    _updateState(
+      _state.copyWith(
+        tier: tier,
+        isActive: isActive,
+        expirationDate: proEntitlement?.expirationDate != null
+            ? DateTime.tryParse(proEntitlement!.expirationDate!)
+            : null,
+        managementUrl: info.managementURL,
+      ),
+    );
   }
 
   Future<void> _loadWeeklyUsage() async {
