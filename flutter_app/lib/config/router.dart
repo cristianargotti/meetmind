@@ -1,6 +1,7 @@
 import 'package:go_router/go_router.dart';
 
 import 'package:meetmind/features/ask_aura/ask_aura_screen.dart';
+import 'package:meetmind/features/auth/login_screen.dart';
 import 'package:meetmind/features/digest/weekly_digest_screen.dart';
 import 'package:meetmind/features/history/history_screen.dart';
 import 'package:meetmind/features/history/meeting_detail_screen.dart';
@@ -19,6 +20,11 @@ final GoRouter appRouter = GoRouter(
       path: '/',
       name: 'home',
       builder: (context, state) => const HomeScreen(),
+    ),
+    GoRoute(
+      path: '/login',
+      name: 'login',
+      builder: (context, state) => const LoginScreen(),
     ),
     GoRoute(
       path: '/meeting',

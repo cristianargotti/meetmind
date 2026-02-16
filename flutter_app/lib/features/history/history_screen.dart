@@ -432,15 +432,6 @@ class _MeetingCard extends StatelessWidget {
                     color: MeetMindTheme.copilot,
                   ),
                   const Spacer(),
-                  if (costUsd > 0)
-                    Text(
-                      '\$${costUsd.toStringAsFixed(3)}',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                        color: MeetMindTheme.textTertiary,
-                      ),
-                    ),
                 ],
               ),
             ],

@@ -95,7 +95,7 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
       body: Column(
         children: <Widget>[
           // Cost bar (shown when AI calls have been made)
-          CostBar(costData: meeting?.costData),
+          // Cost tracker hidden — Groq free tier ($0/month)
 
           // Status bar
           StatusBar(

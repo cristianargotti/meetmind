@@ -4,6 +4,10 @@
   "appTitle": "Aura Meet",
   "appTagline": "Tu copiloto de reuniones con IA",
 
+  "loginWithGoogle": "Continuar con Google",
+  "loginWithApple": "Continuar con Apple",
+  "loginSkip": "Continuar sin cuenta",
+
   "homeTitle": "Aura Meet",
   "homeSubtitle": "Tu compañero de reuniones con IA",
   "homeToday": "Hoy",
