@@ -41,6 +41,11 @@
 				<key>NSIncludesSubdomains</key>
 				<true/>
 			</dict>
+			<key>44.218.65.208</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+			</dict>
 		</dict>
 	</dict>
 	<key>NSBonjourServices</key>
