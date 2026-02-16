@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:meetmind/config/theme.dart';
@@ -15,6 +16,7 @@ class FreeLimitBanner extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final isPro = ref.watch(isProProvider);
     if (isPro) return const SizedBox.shrink();
 
@@ -51,8 +53,8 @@ class FreeLimitBanner extends ConsumerWidget {
               Expanded(
                 child: Text(
                   isAtLimit
-                      ? 'Weekly limit reached'
-                      : '$remaining meeting${remaining == 1 ? '' : 's'} left this week',
+                      ? l10n.freeLimitBannerReached
+                      : l10n.freeLimitBannerRemaining(remaining),
                   style: TextStyle(
                     color: isAtLimit
                         ? MeetMindTheme.warning
@@ -77,9 +79,9 @@ class FreeLimitBanner extends ConsumerWidget {
                       borderRadius:
                           BorderRadius.circular(MeetMindTheme.radiusPill),
                     ),
-                    child: const Text(
-                      'Upgrade',
-                      style: TextStyle(
+                    child: Text(
+                      l10n.subscriptionUpgrade,
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
@@ -102,7 +104,7 @@ class FreeLimitBanner extends ConsumerWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            '$used / $limit meetings',
+            l10n.freeLimitBannerUsage(used, limit),
             style: const TextStyle(
               color: MeetMindTheme.textTertiary,
               fontSize: 11,

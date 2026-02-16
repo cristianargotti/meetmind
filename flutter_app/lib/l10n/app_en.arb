@@ -1,0 +1,213 @@
+{
+  "@@locale": "en",
+
+  "appTitle": "Aura Meet",
+  "appTagline": "Your AI meeting copilot",
+
+  "homeTitle": "Aura Meet",
+  "homeSubtitle": "Your AI meeting companion",
+  "homeToday": "Today",
+  "homeInsights": "Insights",
+  "homeActions": "Actions",
+  "homeRecentMeetings": "Recent Meetings",
+  "homeNoMeetings": "No meetings yet",
+  "homeNoMeetingsHint": "Tap the button below to start your first meeting",
+  "homeStartMeeting": "Start a Meeting",
+  "homeMeetingInProgress": "Meeting in Progress",
+  "homeAiListening": "AI is listening and analyzing...",
+  "homeTranscribeRealtime": "Aura will transcribe and analyze in real-time",
+  "homeLive": "LIVE",
+
+  "meetingTitle": "Meeting",
+  "meetingRecording": "Recording",
+  "meetingPaused": "Paused",
+  "meetingStopped": "Stopped",
+  "meetingStart": "Start",
+  "meetingPause": "Pause",
+  "meetingResume": "Resume",
+  "meetingStop": "Stop",
+  "meetingTranscript": "Transcript",
+  "meetingInsights": "Insights",
+  "meetingSummary": "Summary",
+  "meetingNoTranscript": "Waiting for audio...",
+  "meetingNoInsights": "No insights yet",
+  "meetingCopySummary": "Copy Summary",
+  "meetingSummaryCopied": "Summary copied to clipboard",
+
+  "historyTitle": "History",
+  "historyEmpty": "No meeting history",
+  "historyEmptyHint": "Your past meetings will appear here",
+
+  "settingsTitle": "Settings",
+  "settingsLanguage": "Language",
+  "settingsUiLanguage": "App Language",
+  "settingsTranscriptionLanguage": "Transcription Language",
+  "settingsAutoDetect": "Auto-detect",
+  "settingsAppearance": "Appearance",
+  "settingsThemeMode": "Theme",
+  "settingsThemeDark": "Dark",
+  "settingsThemeLight": "Light",
+  "settingsThemeSystem": "System",
+  "settingsAudio": "Audio",
+  "settingsAudioQuality": "Recording Quality",
+  "settingsAudioStandard": "Standard",
+  "settingsAudioHigh": "High",
+  "settingsNotifications": "Notifications",
+  "settingsNotificationsEnabled": "Meeting Reminders",
+  "settingsHapticFeedback": "Haptic Feedback",
+  "settingsBackendConnection": "Backend Connection",
+  "settingsProtocol": "Protocol",
+  "settingsHost": "Host (IP or domain)",
+  "settingsHostHint": "192.168.0.12 or api.aurameet.io",
+  "settingsPort": "Port",
+  "settingsPortHint": "8000",
+  "settingsResetDefaults": "Reset Defaults",
+  "settingsBackendUpdated": "Backend updated: {url}",
+  "@settingsBackendUpdated": {
+    "placeholders": {
+      "url": { "type": "String" }
+    }
+  },
+  "settingsResetDone": "Reset to defaults",
+  "settingsSave": "Save",
+  "settingsAiModels": "AI Models",
+  "settingsScreening": "Screening",
+  "settingsAnalysis": "Analysis",
+  "settingsDeepThink": "Deep Think",
+
+  "subscriptionTitle": "Subscription",
+  "subscriptionFree": "Free",
+  "subscriptionPro": "Pro",
+  "subscriptionTeam": "Team",
+  "subscriptionBusiness": "Business",
+  "subscriptionActive": "Active subscription",
+  "subscriptionFreePlan": "Free plan — {limit} meetings/week",
+  "@subscriptionFreePlan": {
+    "placeholders": {
+      "limit": { "type": "int" }
+    }
+  },
+  "subscriptionManage": "Manage Subscription",
+  "subscriptionUpgrade": "Upgrade",
+
+  "paywallTitle": "Unlock Full Power",
+  "paywallSubtitle": "Get unlimited meetings and AI features",
+  "paywallMonthly": "Monthly",
+  "paywallYearly": "Yearly",
+  "paywallSaveBadge": "Save {percent}%",
+  "@paywallSaveBadge": {
+    "placeholders": {
+      "percent": { "type": "int" }
+    }
+  },
+  "paywallStartProMonthly": "Start Pro — {price}/month",
+  "@paywallStartProMonthly": {
+    "placeholders": {
+      "price": { "type": "String" }
+    }
+  },
+  "paywallStartProYearly": "Start Pro — {price}/year",
+  "@paywallStartProYearly": {
+    "placeholders": {
+      "price": { "type": "String" }
+    }
+  },
+  "paywallRestore": "Restore Purchases",
+  "paywallRestoreSuccess": "Purchases restored",
+  "paywallRestoreNone": "No purchases found to restore",
+  "paywallPurchaseSuccess": "Welcome to Aura Pro! 🎉",
+  "paywallPurchaseCancelled": "Purchase cancelled",
+  "paywallPurchaseError": "Purchase failed: {error}",
+  "@paywallPurchaseError": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "paywallFeatureFree": "Free",
+  "paywallFeaturePro": "Pro",
+  "paywallFeatureMeetings": "Meetings",
+  "paywallFeatureMeetingsFreeValue": "{limit}/week",
+  "@paywallFeatureMeetingsFreeValue": {
+    "placeholders": {
+      "limit": { "type": "int" }
+    }
+  },
+  "paywallFeatureMeetingsProValue": "Unlimited",
+  "paywallFeatureTranscription": "Transcription",
+  "paywallFeatureInsights": "AI Insights",
+  "paywallFeatureAskAura": "Ask Aura",
+  "paywallFeatureExport": "Full Export",
+  "paywallFeatureDigest": "Weekly Digest",
+  "paywallLegal": "Subscription auto-renews. Cancel anytime.",
+
+  "freeLimitBannerRemaining": "{remaining} meeting(s) left this week",
+  "@freeLimitBannerRemaining": {
+    "placeholders": {
+      "remaining": { "type": "int" }
+    }
+  },
+  "freeLimitBannerReached": "Weekly limit reached",
+  "freeLimitBannerUsage": "{used} / {limit} meetings",
+  "@freeLimitBannerUsage": {
+    "placeholders": {
+      "used": { "type": "int" },
+      "limit": { "type": "int" }
+    }
+  },
+
+  "proBadge": "PRO",
+  "proGateLocked": "Pro Feature",
+  "proGateUnlock": "Unlock",
+
+  "legalPrivacyPolicy": "Privacy Policy",
+  "legalTermsOfService": "Terms of Service",
+
+  "aboutTitle": "About",
+  "aboutVersion": "v{version} — Your AI meeting copilot",
+  "@aboutVersion": {
+    "placeholders": {
+      "version": { "type": "String" }
+    }
+  },
+
+  "askAuraTitle": "Ask Aura",
+  "askAuraSubtitle": "Chat with your meetings",
+  "askAuraPlaceholder": "Ask about your meetings...",
+  "askAuraEmpty": "Ask me anything about your meetings",
+  "askAuraEmptyHint": "I can search across all your past conversations",
+  "askAuraSuggestion1": "What did we decide about pricing?",
+  "askAuraSuggestion2": "What are my pending action items?",
+  "askAuraSuggestion3": "Summarize last week's meetings",
+
+  "digestTitle": "Weekly Digest",
+  "digestSubtitle": "Your week at a glance",
+  "digestMeetings": "Meetings",
+  "digestTimeSpent": "Time Spent",
+  "digestTopTopics": "Top Topics",
+  "digestActionItems": "Action Items",
+  "digestCompleted": "Completed",
+  "digestPending": "Pending",
+  "digestEmpty": "No meetings this week",
+  "digestEmptyHint": "Start recording meetings to see your weekly summary",
+
+  "onboardingWelcome": "Welcome to Aura Meet",
+  "onboardingWelcomeDesc": "Your AI-powered meeting copilot that transcribes, analyzes, and learns from every conversation.",
+  "onboardingLanguage": "Choose Your Language",
+  "onboardingLanguageDesc": "Select the language for the app interface and transcription.",
+  "onboardingMic": "Microphone Access",
+  "onboardingMicDesc": "Aura needs microphone access to transcribe your meetings in real-time.",
+  "onboardingMicAllow": "Allow Microphone",
+  "onboardingReady": "You're All Set!",
+  "onboardingReadyDesc": "Start your first meeting and let Aura do the rest.",
+  "onboardingGetStarted": "Get Started",
+  "onboardingNext": "Next",
+  "onboardingSkip": "Skip",
+
+  "commonCancel": "Cancel",
+  "commonOk": "OK",
+  "commonDone": "Done",
+  "commonError": "Something went wrong",
+  "commonRetry": "Retry",
+  "commonLoading": "Loading...",
+  "commonCopied": "Copied to clipboard"
+}

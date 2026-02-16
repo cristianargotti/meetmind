@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:meetmind/config/theme.dart';
@@ -15,6 +16,7 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final MeetingSession? meeting = ref.watch(meetingProvider);
 
     return Scaffold(
@@ -28,7 +30,7 @@ class HomeScreen extends ConsumerWidget {
 
               // Header
               Text(
-                'MeetMind',
+                l10n.homeTitle,
                 style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                   fontWeight: FontWeight.w700,
                   color: Colors.white,
@@ -38,7 +40,7 @@ class HomeScreen extends ConsumerWidget {
               const SizedBox(height: 4),
 
               Text(
-                'Your AI meeting companion',
+                l10n.homeSubtitle,
                 style: Theme.of(
                   context,
                 ).textTheme.bodyLarge?.copyWith(color: Colors.white54),
@@ -64,28 +66,28 @@ class HomeScreen extends ConsumerWidget {
               Row(
                 children:
                     [
-                          const Expanded(
+                          Expanded(
                             child: _StatCard(
                               icon: Icons.mic,
-                              label: 'Today',
+                              label: l10n.homeToday,
                               value: '0',
                               color: MeetMindTheme.accent,
                             ),
                           ),
                           const SizedBox(width: 12),
-                          const Expanded(
+                          Expanded(
                             child: _StatCard(
                               icon: Icons.insights,
-                              label: 'Insights',
+                              label: l10n.homeInsights,
                               value: '0',
                               color: MeetMindTheme.success,
                             ),
                           ),
                           const SizedBox(width: 12),
-                          const Expanded(
+                          Expanded(
                             child: _StatCard(
                               icon: Icons.task_alt,
-                              label: 'Actions',
+                              label: l10n.homeActions,
                               value: '0',
                               color: MeetMindTheme.warning,
                             ),
@@ -100,7 +102,7 @@ class HomeScreen extends ConsumerWidget {
 
               // Recent Meetings Header
               Text(
-                'Recent Meetings',
+                l10n.homeRecentMeetings,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
@@ -122,14 +124,14 @@ class HomeScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'No meetings yet',
+                        l10n.homeNoMeetings,
                         style: Theme.of(
                           context,
                         ).textTheme.bodyLarge?.copyWith(color: Colors.white38),
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Tap the button below to start your first meeting',
+                        l10n.homeNoMeetingsHint,
                         style: Theme.of(
                           context,
                         ).textTheme.bodySmall?.copyWith(color: Colors.white24),
@@ -154,12 +156,18 @@ class HomeScreen extends ConsumerWidget {
               context.push('/settings');
           }
         },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.history), label: 'History'),
+        items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Settings',
+            icon: const Icon(Icons.home),
+            label: l10n.homeTitle.split(' ').first,
+          ),
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.history),
+            label: l10n.historyTitle,
+          ),
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.settings),
+            label: l10n.settingsTitle,
           ),
         ],
       ),
@@ -181,13 +189,15 @@ class HomeScreen extends ConsumerWidget {
 }
 
 /// Quick-start hero card.
-class _QuickStartCard extends StatelessWidget {
+class _QuickStartCard extends ConsumerWidget {
   const _QuickStartCard({required this.isActive});
 
   final bool isActive;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -234,18 +244,18 @@ class _QuickStartCard extends StatelessWidget {
                     color: MeetMindTheme.success.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.fiber_manual_record,
                         color: MeetMindTheme.success,
                         size: 8,
                       ),
-                      SizedBox(width: 6),
+                      const SizedBox(width: 6),
                       Text(
-                        'LIVE',
-                        style: TextStyle(
+                        l10n.homeLive,
+                        style: const TextStyle(
                           color: MeetMindTheme.success,
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
@@ -258,7 +268,7 @@ class _QuickStartCard extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           Text(
-            isActive ? 'Meeting in Progress' : 'Start a Meeting',
+            isActive ? l10n.homeMeetingInProgress : l10n.homeStartMeeting,
             style: const TextStyle(
               color: Colors.white,
               fontSize: 22,
@@ -267,9 +277,7 @@ class _QuickStartCard extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            isActive
-                ? 'AI is listening and analyzing...'
-                : 'MeetMind will transcribe and analyze in real-time',
+            isActive ? l10n.homeAiListening : l10n.homeTranscribeRealtime,
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.7),
               fontSize: 14,

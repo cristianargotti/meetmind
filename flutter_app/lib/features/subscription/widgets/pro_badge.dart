@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:meetmind/config/theme.dart';
@@ -16,6 +17,7 @@ class ProBadge extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final isPro = ref.watch(isProProvider);
     if (isPro) return const SizedBox.shrink();
 
@@ -33,7 +35,7 @@ class ProBadge extends ConsumerWidget {
           borderRadius: BorderRadius.circular(MeetMindTheme.radiusPill),
         ),
         child: Text(
-          'PRO',
+          l10n.proBadge,
           style: TextStyle(
             color: Colors.white,
             fontSize: compact ? 9 : 10,
@@ -53,14 +55,13 @@ class ProGate extends ConsumerWidget {
   const ProGate({
     super.key,
     required this.child,
-    this.message = 'Upgrade to Pro to unlock',
   });
 
   final Widget child;
-  final String message;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final isPro = ref.watch(isProProvider);
     if (isPro) return child;
 
@@ -91,7 +92,7 @@ class ProGate extends ConsumerWidget {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      message,
+                      l10n.proGateLocked,
                       style: const TextStyle(
                         color: MeetMindTheme.textSecondary,
                         fontSize: 12,

@@ -1,9 +1,12 @@
 import 'package:go_router/go_router.dart';
 
+import 'package:meetmind/features/ask_aura/ask_aura_screen.dart';
+import 'package:meetmind/features/digest/weekly_digest_screen.dart';
 import 'package:meetmind/features/history/history_screen.dart';
 import 'package:meetmind/features/history/meeting_detail_screen.dart';
 import 'package:meetmind/features/home/home_screen.dart';
 import 'package:meetmind/features/meeting/meeting_screen.dart';
+import 'package:meetmind/features/onboarding/onboarding_screen.dart';
 import 'package:meetmind/features/settings/legal_screen.dart';
 import 'package:meetmind/features/settings/settings_screen.dart';
 import 'package:meetmind/features/setup/model_download_screen.dart';
@@ -55,6 +58,20 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) =>
           LegalScreen(type: state.pathParameters['type'] ?? 'privacy'),
     ),
+    GoRoute(
+      path: '/ask-aura',
+      name: 'ask-aura',
+      builder: (context, state) => const AskAuraScreen(),
+    ),
+    GoRoute(
+      path: '/digest',
+      name: 'digest',
+      builder: (context, state) => const WeeklyDigestScreen(),
+    ),
+    GoRoute(
+      path: '/onboarding',
+      name: 'onboarding',
+      builder: (context, state) => const OnboardingScreen(),
+    ),
   ],
 );
-

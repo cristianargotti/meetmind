@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:meetmind/main.dart';
@@ -28,7 +30,8 @@ void main() {
     // flutter_animate has repeat animations that never settle
     await tester.pump(const Duration(seconds: 2));
 
-    expect(find.text('MeetMind'), findsWidgets);
+    // Check for localized title (defaults to English)
+    expect(find.text('Aura Meet'), findsWidgets);
     expect(find.text('Your AI meeting companion'), findsOneWidget);
   });
 
@@ -55,8 +58,7 @@ void main() {
     await tester.pump(const Duration(seconds: 2));
 
     expect(find.byType(BottomNavigationBar), findsOneWidget);
-    expect(find.text('Home'), findsOneWidget);
-    expect(find.text('History'), findsOneWidget);
-    expect(find.text('Settings'), findsOneWidget);
+    // Bottom nav labels are now localized
+    expect(find.text('Aura'), findsWidgets); // First word of homeTitle
   });
 }

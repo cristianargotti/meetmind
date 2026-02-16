@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:meetmind/config/app_config.dart';
 import 'package:meetmind/config/theme.dart';
+import 'package:meetmind/providers/preferences_provider.dart';
 import 'package:meetmind/providers/subscription_provider.dart';
+import 'package:meetmind/services/user_preferences.dart';
 
 /// Settings screen — app configuration.
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -48,9 +51,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     setState(() => _hasChanges = false);
 
     if (mounted) {
+      final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Backend updated: ${config.displayUrl}'),
+          content: Text(l10n.settingsBackendUpdated(config.displayUrl)),
           backgroundColor: MeetMindTheme.success,
           duration: const Duration(seconds: 2),
         ),
@@ -70,10 +74,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     });
 
     if (mounted) {
+      final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Reset to defaults'),
-          duration: Duration(seconds: 2),
+        SnackBar(
+          content: Text(l10n.settingsResetDone),
+          duration: const Duration(seconds: 2),
         ),
       );
     }
@@ -87,23 +92,214 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final prefs = ref.watch(preferencesProvider);
+    final prefsNotifier = ref.read(preferencesProvider.notifier);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Settings'),
+        title: Text(l10n.settingsTitle),
         actions: [
           if (_hasChanges)
             TextButton.icon(
               onPressed: _saveConfig,
               icon: const Icon(Icons.save, size: 18),
-              label: const Text('Save'),
+              label: Text(l10n.settingsSave),
             ),
         ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // ─── Connection ───────────────────────
-          const _SectionHeader(title: 'Backend Connection'),
+          // ─── Language ───────────────────────────
+          _SectionHeader(title: l10n.settingsLanguage),
+          Card(
+            child: Column(
+              children: [
+                // UI Language
+                ListTile(
+                  leading: const Icon(
+                    Icons.language,
+                    color: MeetMindTheme.accent,
+                  ),
+                  title: Text(l10n.settingsUiLanguage),
+                  trailing: DropdownButton<AppLocale>(
+                    value: prefs.locale,
+                    underline: const SizedBox.shrink(),
+                    dropdownColor: MeetMindTheme.cardDark,
+                    items: AppLocale.values.map((locale) {
+                      return DropdownMenuItem(
+                        value: locale,
+                        child: Text(
+                          '${locale.flag} ${locale.displayName}',
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        prefsNotifier.setLocale(value);
+                      }
+                    },
+                  ),
+                ),
+                const Divider(
+                  height: 1,
+                  indent: 56,
+                  color: MeetMindTheme.darkBorder,
+                ),
+                // Transcription Language
+                ListTile(
+                  leading: const Icon(
+                    Icons.mic,
+                    color: MeetMindTheme.primaryLight,
+                  ),
+                  title: Text(l10n.settingsTranscriptionLanguage),
+                  trailing: DropdownButton<TranscriptionLanguage>(
+                    value: prefs.transcriptionLanguage,
+                    underline: const SizedBox.shrink(),
+                    dropdownColor: MeetMindTheme.cardDark,
+                    items: TranscriptionLanguage.values.map((lang) {
+                      return DropdownMenuItem(
+                        value: lang,
+                        child: Text(
+                          '${lang.icon} ${lang.displayName}',
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        prefsNotifier.setTranscriptionLanguage(value);
+                      }
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // ─── Appearance ─────────────────────────
+          _SectionHeader(title: l10n.settingsAppearance),
+          Card(
+            child: ListTile(
+              leading: const Icon(
+                Icons.palette_outlined,
+                color: MeetMindTheme.primary,
+              ),
+              title: Text(l10n.settingsThemeMode),
+              trailing: SegmentedButton<ThemeMode>(
+                segments: [
+                  ButtonSegment(
+                    value: ThemeMode.dark,
+                    label: Text(l10n.settingsThemeDark),
+                    icon: const Icon(Icons.dark_mode, size: 16),
+                  ),
+                  ButtonSegment(
+                    value: ThemeMode.light,
+                    label: Text(l10n.settingsThemeLight),
+                    icon: const Icon(Icons.light_mode, size: 16),
+                  ),
+                  ButtonSegment(
+                    value: ThemeMode.system,
+                    label: Text(l10n.settingsThemeSystem),
+                    icon: const Icon(Icons.settings_brightness, size: 16),
+                  ),
+                ],
+                selected: {prefs.themeMode},
+                onSelectionChanged: (Set<ThemeMode> value) {
+                  prefsNotifier.setThemeMode(value.first);
+                },
+                style: const ButtonStyle(
+                  visualDensity: VisualDensity.compact,
+                  textStyle: WidgetStatePropertyAll(
+                    TextStyle(fontSize: 11),
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // ─── Audio ──────────────────────────────
+          _SectionHeader(title: l10n.settingsAudio),
+          Card(
+            child: ListTile(
+              leading: const Icon(
+                Icons.graphic_eq,
+                color: MeetMindTheme.success,
+              ),
+              title: Text(l10n.settingsAudioQuality),
+              trailing: SegmentedButton<AudioQuality>(
+                segments: [
+                  ButtonSegment(
+                    value: AudioQuality.standard,
+                    label: Text(l10n.settingsAudioStandard),
+                  ),
+                  ButtonSegment(
+                    value: AudioQuality.high,
+                    label: Text(l10n.settingsAudioHigh),
+                  ),
+                ],
+                selected: {prefs.audioQuality},
+                onSelectionChanged: (Set<AudioQuality> value) {
+                  prefsNotifier.setAudioQuality(value.first);
+                },
+                style: const ButtonStyle(
+                  visualDensity: VisualDensity.compact,
+                  textStyle: WidgetStatePropertyAll(
+                    TextStyle(fontSize: 12),
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // ─── Notifications ──────────────────────
+          _SectionHeader(title: l10n.settingsNotifications),
+          Card(
+            child: Column(
+              children: [
+                SwitchListTile(
+                  secondary: const Icon(
+                    Icons.notifications_outlined,
+                    color: MeetMindTheme.warning,
+                  ),
+                  title: Text(l10n.settingsNotificationsEnabled),
+                  value: prefs.notificationsEnabled,
+                  onChanged: (value) {
+                    prefsNotifier.setNotificationsEnabled(value);
+                  },
+                ),
+                const Divider(
+                  height: 1,
+                  indent: 56,
+                  color: MeetMindTheme.darkBorder,
+                ),
+                SwitchListTile(
+                  secondary: const Icon(
+                    Icons.vibration,
+                    color: MeetMindTheme.textSecondary,
+                  ),
+                  title: Text(l10n.settingsHapticFeedback),
+                  value: prefs.hapticFeedback,
+                  onChanged: (value) {
+                    prefsNotifier.setHapticFeedback(value);
+                  },
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // ─── Connection ─────────────────────────
+          _SectionHeader(title: l10n.settingsBackendConnection),
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -113,14 +309,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   // Protocol toggle
                   Row(
                     children: [
-                      const Text(
-                        'Protocol',
-                        style: TextStyle(color: Colors.white70, fontSize: 13),
+                      Text(
+                        l10n.settingsProtocol,
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 13,
+                        ),
                       ),
                       const Spacer(),
                       SegmentedButton<String>(
                         segments: const [
-                          ButtonSegment<String>(value: 'ws', label: Text('WS')),
+                          ButtonSegment<String>(
+                            value: 'ws',
+                            label: Text('WS'),
+                          ),
                           ButtonSegment<String>(
                             value: 'wss',
                             label: Text('WSS'),
@@ -146,10 +348,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   TextField(
                     controller: _hostController,
                     onChanged: (_) => _markDirty(),
-                    decoration: const InputDecoration(
-                      labelText: 'Host (IP or domain)',
-                      hintText: '192.168.0.12 or api.meetmind.io',
-                      prefixIcon: Icon(Icons.dns_outlined, size: 20),
+                    decoration: InputDecoration(
+                      labelText: l10n.settingsHost,
+                      hintText: l10n.settingsHostHint,
+                      prefixIcon: const Icon(Icons.dns_outlined, size: 20),
                       isDense: true,
                     ),
                     keyboardType: TextInputType.url,
@@ -160,10 +362,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   TextField(
                     controller: _portController,
                     onChanged: (_) => _markDirty(),
-                    decoration: const InputDecoration(
-                      labelText: 'Port',
-                      hintText: '8000',
-                      prefixIcon: Icon(Icons.numbers_outlined, size: 20),
+                    decoration: InputDecoration(
+                      labelText: l10n.settingsPort,
+                      hintText: l10n.settingsPortHint,
+                      prefixIcon: const Icon(Icons.numbers_outlined, size: 20),
                       isDense: true,
                     ),
                     keyboardType: TextInputType.number,
@@ -215,7 +417,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     child: TextButton.icon(
                       onPressed: _resetDefaults,
                       icon: const Icon(Icons.restore, size: 16),
-                      label: const Text('Reset Defaults'),
+                      label: Text(l10n.settingsResetDefaults),
                       style: TextButton.styleFrom(
                         foregroundColor: Colors.white38,
                         textStyle: const TextStyle(fontSize: 12),
@@ -229,27 +431,44 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
           const SizedBox(height: 24),
 
-          // ─── AI Models ────────────────────────
-          const _SectionHeader(title: 'AI Models'),
-          const Card(
+          // ─── AI Models ──────────────────────────
+          _SectionHeader(title: l10n.settingsAiModels),
+          Card(
             child: Column(
               children: [
                 ListTile(
-                  leading: Icon(Icons.speed, color: MeetMindTheme.success),
-                  title: Text('Screening'),
-                  subtitle: Text('Claude Haiku 3.5'),
+                  leading: const Icon(
+                    Icons.speed,
+                    color: MeetMindTheme.success,
+                  ),
+                  title: Text(l10n.settingsScreening),
+                  subtitle: const Text('Claude Haiku 3.5'),
                 ),
-                Divider(height: 1, indent: 56, color: MeetMindTheme.darkBorder),
-                ListTile(
-                  leading: Icon(Icons.analytics, color: MeetMindTheme.accent),
-                  title: Text('Analysis'),
-                  subtitle: Text('Claude Sonnet 4.5'),
+                const Divider(
+                  height: 1,
+                  indent: 56,
+                  color: MeetMindTheme.darkBorder,
                 ),
-                Divider(height: 1, indent: 56, color: MeetMindTheme.darkBorder),
                 ListTile(
-                  leading: Icon(Icons.psychology, color: MeetMindTheme.primary),
-                  title: Text('Deep Think'),
-                  subtitle: Text('Claude Opus 4'),
+                  leading: const Icon(
+                    Icons.analytics,
+                    color: MeetMindTheme.accent,
+                  ),
+                  title: Text(l10n.settingsAnalysis),
+                  subtitle: const Text('Claude Sonnet 4.5'),
+                ),
+                const Divider(
+                  height: 1,
+                  indent: 56,
+                  color: MeetMindTheme.darkBorder,
+                ),
+                ListTile(
+                  leading: const Icon(
+                    Icons.psychology,
+                    color: MeetMindTheme.primary,
+                  ),
+                  title: Text(l10n.settingsDeepThink),
+                  subtitle: const Text('Claude Opus 4'),
                 ),
               ],
             ),
@@ -257,8 +476,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
           const SizedBox(height: 24),
 
-          // ─── Subscription ─────────────────────
-          const _SectionHeader(title: 'Subscription'),
+          // ─── Subscription ───────────────────────
+          _SectionHeader(title: l10n.subscriptionTitle),
           Card(
             child: Column(
               children: [
@@ -272,14 +491,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                   subtitle: Text(
                     ref.watch(isProProvider)
-                        ? 'Active subscription'
-                        : 'Free plan — 3 meetings/week',
+                        ? l10n.subscriptionActive
+                        : l10n.subscriptionFreePlan(3),
                   ),
                   trailing: ref.watch(isProProvider)
                       ? null
                       : ElevatedButton(
                           onPressed: () => context.push('/paywall'),
-                          child: const Text('Upgrade'),
+                          child: Text(l10n.subscriptionUpgrade),
                         ),
                 ),
                 if (ref.watch(isProProvider))
@@ -288,7 +507,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       Icons.manage_accounts,
                       color: MeetMindTheme.textSecondary,
                     ),
-                    title: const Text('Manage Subscription'),
+                    title: Text(l10n.subscriptionManage),
                     onTap: () => context.push('/paywall'),
                   ),
               ],
@@ -297,23 +516,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
           const SizedBox(height: 24),
 
-          // ─── About ────────────────────────────
-          const _SectionHeader(title: 'About'),
-          const Card(
+          // ─── About ──────────────────────────────
+          _SectionHeader(title: l10n.aboutTitle),
+          Card(
             child: ListTile(
-              leading: Icon(
+              leading: const Icon(
                 Icons.info_outline,
                 color: MeetMindTheme.primaryLight,
               ),
-              title: Text('Aura Meet'),
-              subtitle: Text('v5.0.0 — Your AI meeting copilot'),
+              title: const Text('Aura Meet'),
+              subtitle: Text(l10n.aboutVersion('5.0.0')),
             ),
           ),
 
           const SizedBox(height: 24),
 
-          // ─── Legal ─────────────────────────────
-          const _SectionHeader(title: 'Legal'),
+          // ─── Legal ──────────────────────────────
+          _SectionHeader(title: l10n.legalPrivacyPolicy.split(' ').first),
           Card(
             child: Column(
               children: [
@@ -322,7 +541,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     Icons.shield_outlined,
                     color: MeetMindTheme.accent,
                   ),
-                  title: const Text('Privacy Policy'),
+                  title: Text(l10n.legalPrivacyPolicy),
                   trailing: const Icon(
                     Icons.chevron_right,
                     color: MeetMindTheme.textTertiary,
@@ -339,7 +558,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     Icons.description_outlined,
                     color: MeetMindTheme.accent,
                   ),
-                  title: const Text('Terms of Service'),
+                  title: Text(l10n.legalTermsOfService),
                   trailing: const Icon(
                     Icons.chevron_right,
                     color: MeetMindTheme.textTertiary,
