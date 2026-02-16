@@ -132,7 +132,16 @@ jobs:
           echo "🚀 Pulling latest image and restarting..."
           FULL_URI="${{ needs.build-scan-push.outputs.image-uri }}"
           docker pull "$FULL_URI"
-          cd backend
+
+          # Production directory with .env.production (NOT the checkout dir)
+          PROD_DIR="$HOME/meetmind-prod"
+          mkdir -p "$PROD_DIR"
+
+          # Sync latest compose + Caddyfile from checkout → production
+          cp backend/docker-compose.prod.yml "$PROD_DIR/docker-compose.prod.yml"
+          cp backend/Caddyfile "$PROD_DIR/Caddyfile"
+
+          cd "$PROD_DIR"
           # Split "registry/name:tag" into ECR_REPO and TAG for docker-compose
           export ECR_REPO="${FULL_URI%:*}"
           export TAG="${FULL_URI##*:}"
