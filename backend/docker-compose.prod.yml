@@ -41,11 +41,15 @@ services:
   backend:
     image: ${ECR_REPO:-meetmind-backend}:${TAG:-latest}
     container_name: meetmind-backend
-    env_file: .env.production
     environment:
+      - MEETMIND_ENVIRONMENT=production
       - MEETMIND_OPENAI_API_KEY=${MEETMIND_OPENAI_API_KEY}
+      - MEETMIND_OPENAI_BASE_URL=${MEETMIND_OPENAI_BASE_URL:-https://api.groq.com/openai/v1}
+      - MEETMIND_JWT_SECRET_KEY=${MEETMIND_JWT_SECRET_KEY}
+      - MEETMIND_GOOGLE_CLIENT_ID=${MEETMIND_GOOGLE_CLIENT_ID:-}
       - MEETMIND_HUGGINGFACE_TOKEN=${MEETMIND_HUGGINGFACE_TOKEN:-}
       - MEETMIND_DATABASE_URL=postgresql://meetmind:${POSTGRES_PASSWORD:-meetmind_secure_2026}@postgres:5432/meetmind
+      - MEETMIND_LOG_LEVEL=INFO
     depends_on:
       postgres:
         condition: service_healthy

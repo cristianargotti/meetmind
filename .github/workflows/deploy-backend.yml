@@ -128,21 +128,25 @@ jobs:
             $(aws sts get-caller-identity --query Account --output text).dkr.ecr.us-east-1.amazonaws.com
 
       - name: 🚀 Deploy
+        env:
+          MEETMIND_OPENAI_API_KEY: ${{ secrets.MEETMIND_OPENAI_API_KEY }}
+          MEETMIND_JWT_SECRET_KEY: ${{ secrets.MEETMIND_JWT_SECRET_KEY }}
+          MEETMIND_GOOGLE_CLIENT_ID: ${{ secrets.MEETMIND_GOOGLE_CLIENT_ID }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
         run: |
           echo "🚀 Pulling latest image and restarting..."
           FULL_URI="${{ needs.build-scan-push.outputs.image-uri }}"
           docker pull "$FULL_URI"
 
-          # Production directory with .env.production (NOT the checkout dir)
+          # Production runtime directory
           PROD_DIR="$HOME/meetmind-prod"
           mkdir -p "$PROD_DIR"
 
-          # Sync latest compose + Caddyfile from checkout → production
+          # Sync latest compose + Caddyfile from checkout
           cp backend/docker-compose.prod.yml "$PROD_DIR/docker-compose.prod.yml"
           cp backend/Caddyfile "$PROD_DIR/Caddyfile"
 
           cd "$PROD_DIR"
-          # Split "registry/name:tag" into ECR_REPO and TAG for docker-compose
           export ECR_REPO="${FULL_URI%:*}"
           export TAG="${FULL_URI##*:}"
           echo "ECR_REPO=$ECR_REPO TAG=$TAG"
