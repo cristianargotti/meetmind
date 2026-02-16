@@ -41,6 +41,9 @@ jobs:
       - name: 📦 Get dependencies
         run: flutter pub get
 
+      - name: 🌐 Generate localizations
+        run: flutter gen-l10n
+
       - name: 🏗️ Build APK (release)
         run: |
           flutter build apk \
@@ -76,6 +79,9 @@ jobs:
 
       - name: 📦 Get dependencies
         run: flutter pub get
+
+      - name: 🌐 Generate localizations
+        run: flutter gen-l10n
 
       - name: 🔑 Install certificate & API key
         env:
