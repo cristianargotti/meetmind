@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:meetmind/l10n/generated/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:meetmind/main.dart';

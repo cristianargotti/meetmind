@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:meetmind/l10n/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:meetmind/config/theme.dart';
+import 'package:meetmind/l10n/generated/app_localizations.dart';
 import 'package:meetmind/providers/subscription_provider.dart';
 import 'package:meetmind/services/subscription_service.dart';
 
@@ -22,7 +22,7 @@ class FreeLimitBanner extends ConsumerWidget {
 
     final sub = ref.watch(subscriptionProvider);
     final used = sub.meetingsThisWeek;
-    final limit = FreeTierLimits.meetingsPerWeek;
+    const limit = FreeTierLimits.meetingsPerWeek;
     final remaining = limit - used;
     final progress = used / limit;
     final isAtLimit = remaining <= 0;

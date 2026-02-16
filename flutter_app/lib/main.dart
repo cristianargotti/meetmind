@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:meetmind/l10n/generated/app_localizations.dart';
 
 import 'package:meetmind/config/app_config.dart';
 import 'package:meetmind/config/router.dart';
 import 'package:meetmind/config/theme.dart';
+import 'package:meetmind/l10n/generated/app_localizations.dart';
 import 'package:meetmind/providers/preferences_provider.dart';
 import 'package:meetmind/services/notification_service.dart';
 import 'package:meetmind/services/subscription_service.dart';

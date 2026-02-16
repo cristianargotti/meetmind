@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:meetmind/l10n/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:meetmind/config/theme.dart';
+import 'package:meetmind/l10n/generated/app_localizations.dart';
 import 'package:meetmind/providers/subscription_provider.dart';
 
 /// Inline "PRO" badge for gated features.
