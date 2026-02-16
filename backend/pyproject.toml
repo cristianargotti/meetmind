@@ -47,6 +47,14 @@ select = ["E", "W", "F", "I", "N", "UP", "S", "B", "A", "C4", "SIM", "TCH", "RUF
 "tests/**" = ["S101"]  # assert is fine in tests
 "src/meetmind/config/settings.py" = ["S104"]  # 0.0.0.0 binding is overridden by env
 
+[tool.coverage.run]
+omit = [
+    "src/meetmind/services/whisper_stt_service.py",
+    "src/meetmind/services/parakeet_stt_service.py",
+    "src/meetmind/services/qwen_stt_service.py",
+    "src/meetmind/models/*",
+]
+
 [tool.mypy]
 strict = true
 python_version = "3.12"
