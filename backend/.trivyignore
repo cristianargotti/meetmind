@@ -1,0 +1,8 @@
+# Unfixable Debian 12 (Bookworm) vulnerabilities (Feb 2026)
+# These dependencies are pulled from the official python:3.12-slim-bookworm image
+# and have no available patches in the stable repositories yet.
+
+CVE-2025-7458  # libsqlite3-0: SQLite integer overflow (CRITICAL) - No fix yet in Debian stable
+CVE-2026-0861  # libc-bin: glibc integer overflow (HIGH) - No fix yet in Debian stable
+CVE-2023-2953  # libldap-2.5-0: null pointer dereference - No fix yet
+CVE-2023-45853 # zlib1g: integer overflow - Marked as will_not_fix in Debian

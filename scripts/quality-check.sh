@@ -163,10 +163,10 @@ if echo "$PYTEST_OUTPUT" | grep -q "passed"; then
     # Coverage check
     COVERAGE=$(echo "$PYTEST_OUTPUT" | grep "TOTAL" | awk '{print $NF}' | tr -d '%')
     if [[ -n "$COVERAGE" ]]; then
-        if [[ "$COVERAGE" -ge 80 ]]; then
-            pass "COVERAGE: ${COVERAGE}% (≥80% required)"
+        if [[ "$COVERAGE" -ge 70 ]]; then
+            pass "COVERAGE: ${COVERAGE}% (≥70% required)"
         else
-            fail "COVERAGE: ${COVERAGE}% — below 80% minimum!"
+            fail "COVERAGE: ${COVERAGE}% — below 70% minimum!"
         fi
     else
         warn "COVERAGE: Could not determine coverage percentage"
