@@ -8,6 +8,7 @@
 name: 🐍 Backend CI
 
 on:
+  workflow_dispatch: # Manual trigger for testing
   pull_request:
     paths:
       - "backend/**"
