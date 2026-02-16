@@ -2,13 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
-
 import 'package:meetmind/main.dart';
+import 'package:meetmind/services/user_preferences.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  setUp(() {
+  setUp(() async {
     // Prevent GoogleFonts from making HTTP requests in tests
     GoogleFonts.config.allowRuntimeFetching = false;
+
+    // Initialize SharedPreferences with empty values for test environment
+    SharedPreferences.setMockInitialValues({});
+    await UserPreferences.initialize();
   });
 
   Widget buildApp() {

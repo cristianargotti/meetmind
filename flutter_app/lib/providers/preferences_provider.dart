@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:meetmind/services/user_preferences.dart';
 
 /// Preferences state exposed to the UI.
