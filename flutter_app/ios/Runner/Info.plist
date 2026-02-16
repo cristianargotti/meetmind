@@ -34,7 +34,7 @@
 	<dict>
 		<key>NSExceptionDomains</key>
 		<dict>
-			<key>api.aurameet.app</key>
+			<key>api.aurameet.live</key>
 			<dict>
 				<key>NSExceptionAllowsInsecureHTTPLoads</key>
 				<false/>

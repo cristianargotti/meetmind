@@ -177,7 +177,7 @@
   "privacySubsDesc": "• We never see or store your payment details\n• Apple/Google handles all payment processing",
   "privacyRightsTitle": "🔒 Your Rights",
   "privacyRightsDesc": "• Request deletion of all your data at any time\n• Export all your meeting data\n• We do not sell your data to third parties\n• We do not use your data for advertising",
-  "privacyContact": "For privacy inquiries: privacy@aurameet.app",
+  "privacyContact": "For privacy inquiries: privacy@aurameet.live",
   "privacyDeleteAccount": "Delete My Account",
   "privacyDeleteConfirm": "This will permanently delete your account and all associated data. This action cannot be undone.",
   "privacyDeleteButton": "Delete Everything",
@@ -192,7 +192,7 @@
   "termsUseDesc": "• Use Aura Meet for legitimate meeting assistance\n• Comply with all applicable recording consent laws\n• You are responsible for obtaining consent from meeting participants",
   "termsLiabilityTitle": "⚖️ Liability",
   "termsLiabilityDesc": "• AI-generated insights may not be 100% accurate\n• We are not liable for decisions made based on AI analysis\n• Service is provided \"as-is\" without warranties",
-  "termsContact": "For support: support@aurameet.app",
+  "termsContact": "For support: support@aurameet.live",
 
   "aboutTitle": "About",
   "aboutVersion": "v{version} — Your AI meeting copilot",

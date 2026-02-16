@@ -17,7 +17,7 @@ class AppConfig {
   static const String _keyProtocol = 'backend_protocol';
 
   // ─── Defaults ─────────────────────────────
-  static const String defaultHost = 'api.aurameet.app';
+  static const String defaultHost = 'api.aurameet.live';
   static const int defaultPort = 443;
   static const String defaultProtocol = 'wss';
 
