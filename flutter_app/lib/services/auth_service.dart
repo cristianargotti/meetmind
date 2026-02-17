@@ -73,7 +73,7 @@ class AuthService {
       body: jsonEncode({
         'provider': provider,
         'id_token': idToken,
-        ?'name': name,
+        if (name != null) 'name': name, // ignore: use_null_aware_elements
       }),
     );
 
@@ -104,7 +104,7 @@ class AuthService {
       body: jsonEncode({
         'email': email,
         'password': password,
-        ?'name': name,
+        if (name != null) 'name': name, // ignore: use_null_aware_elements
       }),
     );
 

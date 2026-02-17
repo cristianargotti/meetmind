@@ -156,3 +156,119 @@ def test_get_stats(mock_storage: AsyncMock, authed_client: TestClient) -> None:
     assert response.status_code == 200
     data = response.json()
     assert "total_meetings" in data
+
+
+# ─── End Meeting ─────────────────────────────────────────────────
+
+
+@patch("meetmind.main.storage")
+def test_end_meeting_success(mock_storage: AsyncMock, authed_client: TestClient) -> None:
+    """End meeting returns completed status."""
+    mock_storage.get_meeting = AsyncMock(
+        return_value={"id": "m1", "title": "Test", "status": "recording"}
+    )
+    mock_storage.end_meeting = AsyncMock(
+        return_value={"id": "m1", "title": "Test", "status": "completed"}
+    )
+    response = authed_client.post("/api/meetings/m1/end")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "completed"
+
+
+@patch("meetmind.main.storage")
+def test_end_meeting_not_found(mock_storage: AsyncMock, authed_client: TestClient) -> None:
+    """End meeting returns 404 when meeting not found."""
+    mock_storage.get_meeting = AsyncMock(return_value=None)
+    response = authed_client.post("/api/meetings/nonexistent/end")
+    assert response.status_code == 404
+
+
+@patch("meetmind.main.storage")
+def test_end_meeting_idempotent(mock_storage: AsyncMock, authed_client: TestClient) -> None:
+    """End meeting returns already_completed for ended meetings."""
+    mock_storage.get_meeting = AsyncMock(
+        return_value={"id": "m1", "title": "Test", "status": "completed"}
+    )
+    response = authed_client.post("/api/meetings/m1/end")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "already_completed"
+
+
+# ─── Password Reset ─────────────────────────────────────────────
+
+
+@patch("meetmind.main.storage")
+def test_forgot_password_existing_email(mock_storage: AsyncMock, client: TestClient) -> None:
+    """Forgot password returns 200 for existing email."""
+    mock_storage.get_user_by_email = AsyncMock(
+        return_value={"id": "user-123", "email": "test@example.com"}
+    )
+    response = client.post(
+        "/api/auth/forgot-password",
+        json={"email": "test@example.com"},
+    )
+    assert response.status_code == 200
+    assert "reset email" in response.json()["message"].lower()
+
+
+@patch("meetmind.main.storage")
+def test_forgot_password_nonexistent_email(mock_storage: AsyncMock, client: TestClient) -> None:
+    """Forgot password returns 200 even for nonexistent email (anti-enumeration)."""
+    mock_storage.get_user_by_email = AsyncMock(return_value=None)
+    response = client.post(
+        "/api/auth/forgot-password",
+        json={"email": "nobody@example.com"},
+    )
+    assert response.status_code == 200
+
+
+@patch("meetmind.main.storage")
+def test_reset_password_success(mock_storage: AsyncMock, client: TestClient) -> None:
+    """Reset password works with valid reset token."""
+    from unittest.mock import MagicMock
+
+    from meetmind.core.auth import create_reset_token
+
+    token = create_reset_token(user_id="user-123")
+
+    # Mock the asyncpg pool → acquire() → conn chain
+    conn_mock = AsyncMock()
+    ctx_mock = MagicMock()
+    ctx_mock.__aenter__ = AsyncMock(return_value=conn_mock)
+    ctx_mock.__aexit__ = AsyncMock(return_value=False)
+    pool_mock = MagicMock()
+    pool_mock.acquire.return_value = ctx_mock
+    mock_storage.get_pool = AsyncMock(return_value=pool_mock)
+
+    response = client.post(
+        "/api/auth/reset-password",
+        json={"token": token, "new_password": "newpass123"},
+    )
+    assert response.status_code == 200
+    assert "reset successfully" in response.json()["message"].lower()
+
+
+def test_reset_password_invalid_token(client: TestClient) -> None:
+    """Reset password returns 400 for invalid token."""
+    response = client.post(
+        "/api/auth/reset-password",
+        json={"token": "invalid-token", "new_password": "newpass123"},
+    )
+    assert response.status_code == 400
+
+
+@patch("meetmind.main.storage")
+def test_reset_password_wrong_purpose(mock_storage: AsyncMock, client: TestClient) -> None:
+    """Reset password rejects tokens without password_reset purpose."""
+    from meetmind.core.auth import create_access_token
+
+    # Regular access token — wrong purpose
+    token = create_access_token(user_id="user-123", email="test@example.com")
+    response = client.post(
+        "/api/auth/reset-password",
+        json={"token": token, "new_password": "newpass123"},
+    )
+    assert response.status_code == 400
+
