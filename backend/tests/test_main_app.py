@@ -271,4 +271,3 @@ def test_reset_password_wrong_purpose(mock_storage: AsyncMock, client: TestClien
         json={"token": token, "new_password": "newpass123"},
     )
     assert response.status_code == 400
-

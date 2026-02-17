@@ -29,12 +29,13 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
 
     await tester.pumpWidget(buildApp());
-    // Use pump with duration instead of pumpAndSettle —
-    // flutter_animate has repeat animations that never settle
-    await tester.pump(const Duration(seconds: 2));
+    await tester.pump(const Duration(milliseconds: 500));
 
     // Splash screen shows app name
     expect(find.text('Aura Meet'), findsWidgets);
+
+    // Drain all remaining timers (splash delay + flutter_animate)
+    await tester.pumpAndSettle(const Duration(seconds: 5));
   });
 
   testWidgets('App navigates to login after splash', (
@@ -50,11 +51,15 @@ void main() {
     await UserPreferences.initialize();
 
     await tester.pumpWidget(buildApp());
-    // Wait for splash animation + navigation delay (2.5s)
-    await tester.pump(const Duration(seconds: 3));
-    await tester.pump(const Duration(milliseconds: 500));
 
-    // Should see login screen elements
+    // Advance past splash delay (2.5s) + animations
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pump(const Duration(seconds: 1));
+
+    // Should see login/app content
     expect(find.text('Aura Meet'), findsWidgets);
+
+    // Drain all remaining timers
+    await tester.pumpAndSettle(const Duration(seconds: 5));
   });
 }
