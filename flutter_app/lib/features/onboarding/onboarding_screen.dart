@@ -71,7 +71,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   onPressed: _completeOnboarding,
                   child: Text(
                     l10n.onboardingSkip,
-                    style: const TextStyle(color: Colors.white54),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                    ),
                   ),
                 ),
               ),
@@ -190,15 +192,15 @@ class _WelcomePage extends StatelessWidget {
             l10n.onboardingWelcome,
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.w800,
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
             textAlign: TextAlign.center,
           ).animate().fadeIn(delay: 200.ms, duration: 400.ms),
           const SizedBox(height: 16),
           Text(
             l10n.onboardingWelcomeDesc,
-            style: const TextStyle(
-              color: Colors.white54,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
               fontSize: 16,
               height: 1.5,
             ),
@@ -239,14 +241,16 @@ class _LanguagePage extends StatelessWidget {
             l10n.onboardingLanguage,
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w700,
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
           Text(
             l10n.onboardingLanguageDesc,
-            style: const TextStyle(color: Colors.white54, fontSize: 15),
+            style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                fontSize: 15),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 32),
@@ -282,7 +286,9 @@ class _LanguagePage extends StatelessWidget {
                       Text(
                         locale.displayName,
                         style: TextStyle(
-                          color: Colors.white,
+                          color: isSelected
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context).colorScheme.onSurface,
                           fontSize: 16,
                           fontWeight:
                               isSelected ? FontWeight.w700 : FontWeight.w400,
@@ -338,15 +344,15 @@ class _MicPermissionPage extends StatelessWidget {
             l10n.onboardingMic,
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w700,
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 12),
           Text(
             l10n.onboardingMicDesc,
-            style: const TextStyle(
-              color: Colors.white54,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
               fontSize: 15,
               height: 1.5,
             ),
@@ -394,15 +400,15 @@ class _ReadyPage extends StatelessWidget {
             l10n.onboardingReady,
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.w800,
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
             textAlign: TextAlign.center,
           ).animate().fadeIn(delay: 300.ms),
           const SizedBox(height: 12),
           Text(
             l10n.onboardingReadyDesc,
-            style: const TextStyle(
-              color: Colors.white54,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
               fontSize: 16,
               height: 1.5,
             ),

@@ -211,5 +211,51 @@
   "commonError": "Algo salió mal",
   "commonRetry": "Reintentar",
   "commonLoading": "Cargando...",
-  "commonCopied": "Copiado al portapapeles"
+  "commonCopied": "Copiado al portapapeles",
+
+  "paywallWelcome": "¡Bienvenido a Aura Pro!",
+  "paywallTitle": "Desbloquea Aura Pro",
+  "paywallSubtitle": "Tu copiloto de reuniones con IA, desatado",
+  "paywallMonthly": "Mensual",
+  "paywallYearly": "Anual",
+  "paywallSave": "Ahorra {amount}%",
+  "@paywallSave": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "paywallStartProYearly": "Iniciar Pro — {price}/año",
+  "@paywallStartProYearly": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "paywallStartProMonthly": "Iniciar Pro — {price}/mes",
+  "@paywallStartProMonthly": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "paywallRestore": "Restaurar Compras",
+  "paywallRestoring": "Restaurando...",
+  "paywallSuccessRestore": "✅ Compras restauradas!",
+  "paywallNoRestore": "No se encontraron compras previas",
+  "paywallLegal": "Cancela cuando quieras. Facturación recurrente.",
+
+  "paywallFeatUnlimited": "Ilimitadas",
+  "paywallFeatForever": "Por siempre",
+  "paywallFeatAll": "Todos",
+  "paywallFeatMeetings": "Reuniones por semana",
+  "paywallFeatHistory": "Historial de reuniones",
+  "paywallFeatInsights": "Hallazgos por reunión",
+  "paywallFeatChat": "Pregunta a Aura (Chat AI)",
+  "paywallFeatDigest": "Resumen Semanal",
+  "paywallFeatExport": "Exportar y compartir",
+  "paywallFeatBriefing": "Briefing Pre-Reunión"
 }

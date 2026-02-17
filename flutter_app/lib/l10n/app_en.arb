@@ -262,5 +262,51 @@
   "commonError": "Something went wrong",
   "commonRetry": "Retry",
   "commonLoading": "Loading...",
-  "commonCopied": "Copied to clipboard"
+  "commonCopied": "Copied to clipboard",
+
+  "paywallWelcome": "Welcome to Aura Pro!",
+  "paywallTitle": "Unlock Aura Pro",
+  "paywallSubtitle": "Your AI meeting copilot, unleashed",
+  "paywallMonthly": "Monthly",
+  "paywallYearly": "Yearly",
+  "paywallSave": "Save {amount}%",
+  "@paywallSave": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "paywallStartProYearly": "Start Pro — {price}/year",
+  "@paywallStartProYearly": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "paywallStartProMonthly": "Start Pro — {price}/month",
+  "@paywallStartProMonthly": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "paywallRestore": "Restore Purchases",
+  "paywallRestoring": "Restoring...",
+  "paywallSuccessRestore": "✅ Purchases restored!",
+  "paywallNoRestore": "No previous purchases found",
+  "paywallLegal": "Cancel anytime. Recurring billing.",
+
+  "paywallFeatUnlimited": "Unlimited",
+  "paywallFeatForever": "Forever",
+  "paywallFeatAll": "All",
+  "paywallFeatMeetings": "Meetings per week",
+  "paywallFeatHistory": "Meeting history",
+  "paywallFeatInsights": "Insights per meeting",
+  "paywallFeatChat": "Ask Aura (AI chat)",
+  "paywallFeatDigest": "Weekly Digest",
+  "paywallFeatExport": "Export & share",
+  "paywallFeatBriefing": "Pre-Meeting Briefing"
 }

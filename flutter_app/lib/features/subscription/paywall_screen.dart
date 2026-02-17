@@ -56,7 +56,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       setState(() => _isLoading = false);
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('🎉 Welcome to Aura Pro!')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.paywallWelcome)),
         );
         Navigator.of(context).pop();
       }
@@ -71,7 +71,9 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            success ? '✅ Purchases restored!' : 'No previous purchases found',
+            success
+                ? AppLocalizations.of(context)!.paywallSuccessRestore
+                : AppLocalizations.of(context)!.paywallNoRestore,
           ),
         ),
       );
@@ -125,7 +127,9 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
               TextButton(
                 onPressed: _isRestoring ? null : _restore,
                 child: Text(
-                  _isRestoring ? 'Restoring...' : 'Restore Purchases',
+                  _isRestoring
+                      ? AppLocalizations.of(context)!.paywallRestoring
+                      : AppLocalizations.of(context)!.paywallRestore,
                   style: const TextStyle(
                     color: MeetMindTheme.textTertiary,
                     fontSize: 13,
@@ -137,7 +141,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
 
               // Legal
               const Text(
-                'Cancel anytime. Recurring billing.',
+                AppLocalizations.of(context)!.paywallLegal,
                 style: TextStyle(
                   color: MeetMindTheme.textTertiary,
                   fontSize: 11,
@@ -179,7 +183,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
         ).animate().scale(duration: 600.ms, curve: Curves.elasticOut),
         const SizedBox(height: 20),
         const Text(
-          'Unlock Aura Pro',
+          AppLocalizations.of(context)!.paywallTitle,
           style: TextStyle(
             color: MeetMindTheme.textPrimary,
             fontSize: 28,
@@ -189,7 +193,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
         ).animate().fadeIn(duration: 400.ms),
         const SizedBox(height: 8),
         const Text(
-          'Your AI meeting copilot, unleashed',
+          AppLocalizations.of(context)!.paywallSubtitle,
           style: TextStyle(color: MeetMindTheme.textSecondary, fontSize: 15),
         ).animate().fadeIn(delay: 100.ms, duration: 400.ms),
       ],
@@ -206,13 +210,13 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       ),
       child: Row(
         children: [
-          Expanded(child: _toggleButton('Monthly', '\$14.99/mo', !_isYearly)),
+          Expanded(child: _toggleButton(AppLocalizations.of(context)!.paywallMonthly, '\$14.99/mo', !_isYearly)),
           Expanded(
             child: _toggleButton(
-              'Yearly',
+              AppLocalizations.of(context)!.paywallYearly,
               '\$9.99/mo',
               _isYearly,
-              badge: 'Save 33%',
+              badge: AppLocalizations.of(context)!.paywallSave('33'),
             ),
           ),
         ],
@@ -227,7 +231,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     String? badge,
   }) {
     return GestureDetector(
-      onTap: () => setState(() => _isYearly = label == 'Yearly'),
+      onTap: () => setState(() => _isYearly = label == AppLocalizations.of(context)!.paywallYearly),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 12),
@@ -287,14 +291,15 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   }
 
   Widget _buildFeatureComparison() {
-    const features = [
-      _FeatureRow('Meetings per week', '3', 'Unlimited', Icons.mic),
-      _FeatureRow('Meeting history', '7 days', 'Forever', Icons.history),
-      _FeatureRow('Insights per meeting', '1', 'All', Icons.lightbulb_outline),
-      _FeatureRow('Ask Aura (AI chat)', '—', '✓', Icons.chat_bubble_outline),
-      _FeatureRow('Weekly Digest', '—', '✓', Icons.summarize),
-      _FeatureRow('Export & share', '—', '✓', Icons.share),
-      _FeatureRow('Pre-Meeting Briefing', '—', '✓', Icons.event_note),
+    final l10n = AppLocalizations.of(context)!;
+    final features = [
+      _FeatureRow(l10n.paywallFeatMeetings, '3', l10n.paywallFeatUnlimited, Icons.mic),
+      _FeatureRow(l10n.paywallFeatHistory, '7 days', l10n.paywallFeatForever, Icons.history),
+      _FeatureRow(l10n.paywallFeatInsights, '1', l10n.paywallFeatAll, Icons.lightbulb_outline),
+      _FeatureRow(l10n.paywallFeatChat, '—', '✓', Icons.chat_bubble_outline),
+      _FeatureRow(l10n.paywallFeatDigest, '—', '✓', Icons.summarize),
+      _FeatureRow(l10n.paywallFeatExport, '—', '✓', Icons.share),
+      _FeatureRow(l10n.paywallFeatBriefing, '—', '✓', Icons.event_note),
     ];
 
     return Column(
@@ -383,8 +388,8 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
               )
             : Text(
                 _isYearly
-                    ? 'Start Pro — \$119.99/year'
-                    : 'Start Pro — \$14.99/month',
+                    ? AppLocalizations.of(context)!.paywallStartProYearly('\$119.99')
+                    : AppLocalizations.of(context)!.paywallStartProMonthly('\$14.99'),
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
