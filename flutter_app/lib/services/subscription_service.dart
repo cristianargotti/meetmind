@@ -111,8 +111,9 @@ class SubscriptionService {
   // In CI: --dart-define=REVENUECAT_IOS_KEY=${{ secrets.REVENUECAT_IOS_KEY }}
   // Locally: app runs in free mode if keys are empty.
   static const _iosApiKey = String.fromEnvironment('REVENUECAT_IOS_KEY');
-  static const _androidApiKey =
-      String.fromEnvironment('REVENUECAT_ANDROID_KEY');
+  static const _androidApiKey = String.fromEnvironment(
+    'REVENUECAT_ANDROID_KEY',
+  );
 
   // RevenueCat entitlement ID (configured in dashboard)
   static const _proEntitlement = 'pro';

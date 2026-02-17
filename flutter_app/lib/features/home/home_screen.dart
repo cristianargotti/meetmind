@@ -13,8 +13,9 @@ import 'package:meetmind/providers/subscription_provider.dart';
 import 'package:meetmind/services/meeting_api_service.dart';
 
 /// Provider that fetches recent meetings from the backend.
-final _recentMeetingsProvider =
-    FutureProvider<List<Map<String, dynamic>>>((ref) async {
+final _recentMeetingsProvider = FutureProvider<List<Map<String, dynamic>>>((
+  ref,
+) async {
   // Re-fetch whenever auth state changes
   ref.watch(authProvider);
   final api = MeetingApiService();
@@ -187,8 +188,9 @@ class HomeScreen extends ConsumerWidget {
                       remaining == -1 ? '∞' : remaining.toString();
                   final insightCount =
                       meeting?.insights.length.toString() ?? '0';
-                  final pendingActions =
-                      ref.watch(_pendingActionsCountProvider);
+                  final pendingActions = ref.watch(
+                    _pendingActionsCountProvider,
+                  );
                   final actionCount = pendingActions.when(
                     data: (count) => count.toString(),
                     loading: () => '…',
@@ -275,8 +277,9 @@ class HomeScreen extends ConsumerWidget {
                             if (startedAt != null) {
                               try {
                                 final dt = DateTime.parse(startedAt).toLocal();
-                                subtitle =
-                                    DateFormat('MMM d · h:mm a').format(dt);
+                                subtitle = DateFormat(
+                                  'MMM d · h:mm a',
+                                ).format(dt);
                               } catch (_) {
                                 subtitle = '';
                               }
@@ -399,10 +402,7 @@ class HomeScreen extends ConsumerWidget {
   }
 
   /// Empty state fallback for the recent meetings section.
-  static Widget _buildEmptyState(
-    BuildContext context,
-    AppLocalizations l10n,
-  ) {
+  static Widget _buildEmptyState(BuildContext context, AppLocalizations l10n) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -419,18 +419,16 @@ class HomeScreen extends ConsumerWidget {
           const SizedBox(height: 16),
           Text(
             l10n.homeNoMeetings,
-            style: Theme.of(context)
-                .textTheme
-                .bodyLarge
-                ?.copyWith(color: Colors.white38),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyLarge?.copyWith(color: Colors.white38),
           ),
           const SizedBox(height: 8),
           Text(
             l10n.homeNoMeetingsHint,
-            style: Theme.of(context)
-                .textTheme
-                .bodySmall
-                ?.copyWith(color: Colors.white24),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: Colors.white24),
           ),
         ],
       ).animate().fadeIn(delay: 500.ms),
