@@ -54,6 +54,12 @@ class AuthService {
     if (_refreshToken != null) {
       try {
         await refreshToken();
+        // Refresh user profile to get latest name, avatar, etc.
+        try {
+          await getProfile();
+        } catch (_) {
+          // Profile fetch failed — keep cached user data
+        }
       } catch (_) {
         // Refresh failed — clear everything
         await logout();

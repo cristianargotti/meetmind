@@ -1,0 +1,67 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import es from '../i18n/es.json';
+const t = es;
+---
+
+<Layout title="Support — Aura Meet" description="Get help with Aura Meet. Contact our support team." locale="en">
+  <Nav t={t} locale="es" />
+  <main class="legal-page">
+    <div class="container">
+      <article class="legal-content glass-card">
+        <h1>Support</h1>
+        <p class="legal-date">We're here to help you get the most out of Aura Meet.</p>
+
+        <h2>Contact Us</h2>
+        <p>For any questions, issues, or feedback, reach out to our support team:</p>
+        <p>📧 <strong><a href="mailto:support@aurameet.live">support@aurameet.live</a></strong></p>
+        <p>We typically respond within 24–48 business hours.</p>
+
+        <h2>Frequently Asked Questions</h2>
+
+        <h3>How do I start recording a meeting?</h3>
+        <p>Open the app, tap the microphone button on the Home screen, and recording starts immediately. The transcription appears in real-time on screen.</p>
+
+        <h3>Why isn't the transcription accurate?</h3>
+        <p>Transcription accuracy depends on audio quality. For best results: speak clearly, minimize background noise, and keep the device close to the speaker. The AI model supports 99 languages.</p>
+
+        <h3>How do I export my meeting notes?</h3>
+        <p>Go to the History tab, open any meeting, and tap the share/export icon. You can export as PDF or Markdown format.</p>
+
+        <h3>How do I cancel my Pro subscription?</h3>
+        <p>Subscriptions are managed through the Apple App Store or Google Play Store. Go to your device's subscription settings to cancel or modify your plan.</p>
+
+        <h3>How do I delete my account?</h3>
+        <p>Visit our <a href="/delete-account">Account Deletion page</a> for step-by-step instructions, or go to Settings → Account → Delete Account within the app.</p>
+
+        <h3>Is my data secure?</h3>
+        <p>Yes. Audio transcription happens on your device. Cloud-synced data is encrypted in transit (TLS 1.3) and at rest. Read our full <a href="/privacy">Privacy Policy</a>.</p>
+
+        <h2>Report a Bug</h2>
+        <p>If you encounter a bug, please email <a href="mailto:bugs@aurameet.live">bugs@aurameet.live</a> with:</p>
+        <ul>
+          <li>Device model and OS version</li>
+          <li>App version (found in Settings)</li>
+          <li>Steps to reproduce the issue</li>
+          <li>Screenshots (if applicable)</li>
+        </ul>
+      </article>
+    </div>
+  </main>
+  <Footer t={t} locale="es" />
+</Layout>
+
+<style>
+  .legal-page { padding: calc(var(--nav-height) + var(--space-xl)) 0 var(--space-3xl); }
+  .legal-content { max-width: 800px; margin: 0 auto; padding: var(--space-xl); }
+  .legal-content h1 { font-size: var(--fs-h1); font-weight: 900; margin-bottom: var(--space-xs); background: var(--accent-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .legal-date { color: var(--text-muted); font-size: var(--fs-body); margin-bottom: var(--space-xl); }
+  .legal-content h2 { font-size: var(--fs-h2); font-weight: 700; margin-top: var(--space-lg); margin-bottom: var(--space-sm); }
+  .legal-content h3 { font-size: var(--fs-h3); font-weight: 600; margin-top: var(--space-md); margin-bottom: var(--space-xs); color: var(--text-primary); }
+  .legal-content p, .legal-content li { color: var(--text-secondary); line-height: 1.8; margin-bottom: var(--space-sm); }
+  .legal-content ul { padding-left: var(--space-md); margin-bottom: var(--space-sm); }
+  .legal-content li { margin-bottom: var(--space-xs); }
+  .legal-content a { color: var(--accent-cyan); }
+</style>

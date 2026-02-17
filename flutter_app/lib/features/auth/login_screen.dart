@@ -73,9 +73,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               Text(
                 l10n.appTitle,
                 style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
-                ),
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                    ),
               ).animate().fadeIn(delay: 200.ms),
 
               const SizedBox(height: 4),
@@ -357,9 +357,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     try {
       if (_isRegisterMode) {
-        await ref
-            .read(authProvider.notifier)
-            .register(
+        await ref.read(authProvider.notifier).register(
               email: email,
               password: password,
               name: _nameController.text.trim().isNotEmpty
@@ -397,9 +395,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         return;
       }
 
-      await ref
-          .read(authProvider.notifier)
-          .login(
+      await ref.read(authProvider.notifier).login(
             provider: 'google',
             idToken: idToken,
             name: account.displayName,

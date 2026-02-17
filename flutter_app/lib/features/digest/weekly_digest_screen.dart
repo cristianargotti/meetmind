@@ -48,9 +48,9 @@ class WeeklyDigestScreen extends ConsumerWidget {
                 Text(
                   l10n.digestTitle,
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
                 ),
                 const SizedBox(height: 8),
                 Text(

@@ -1,0 +1,108 @@
+---
+const { t } = Astro.props;
+---
+
+<footer class="footer">
+  <div class="container footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="footer-logo">
+        <img src="/app-icon.png" alt="Aura Meet" width="40" height="40" class="footer-logo-img" />
+        <span class="footer-logo-text">Aura Meet</span>
+      </a>
+      <p class="footer-tagline">{t.meta.description}</p>
+    </div>
+    <div class="footer-col">
+      <h4 class="footer-heading">{t.footer.product}</h4>
+      <nav>
+        <a href="#features">{t.nav.features}</a>
+        <a href="#pricing">{t.nav.pricing}</a>
+        <a href="#how-it-works">{t.nav.howItWorks}</a>
+        <a href="/support">{t.nav.support}</a>
+      </nav>
+    </div>
+    <div class="footer-col">
+      <h4 class="footer-heading">{t.footer.legal}</h4>
+      <nav>
+        <a href="/privacy">{t.footer.privacy}</a>
+        <a href="/terms">{t.footer.terms}</a>
+        <a href="/support">{t.footer.support}</a>
+        <a href="/delete-account">{t.footer.deleteAccount}</a>
+      </nav>
+    </div>
+    <div class="footer-col">
+      <h4 class="footer-heading">{t.footer.connect}</h4>
+      <nav>
+        <a href="mailto:support@aurameet.live">support@aurameet.live</a>
+      </nav>
+    </div>
+  </div>
+  <div class="container footer-bottom">
+    <p>{t.footer.copyright}</p>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    border-top: 1px solid var(--border-dark);
+    padding: var(--space-2xl) 0 var(--space-lg);
+  }
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-xl);
+    margin-bottom: var(--space-xl);
+  }
+  .footer-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    margin-bottom: var(--space-sm);
+  }
+  .footer-logo-img { border-radius: 10px; }
+  .footer-logo-text {
+    font-size: 1.25rem;
+    font-weight: 800;
+    background: var(--brand-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .footer-tagline {
+    color: var(--text-secondary);
+    font-size: var(--fs-small);
+    max-width: 300px;
+    line-height: 1.6;
+  }
+  .footer-heading {
+    font-size: var(--fs-small);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--space-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: var(--fs-caption);
+  }
+  .footer-col nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .footer-col nav a {
+    color: var(--text-secondary);
+    font-size: var(--fs-small);
+    transition: color var(--transition-fast);
+  }
+  .footer-col nav a:hover { color: var(--primary-light); }
+  .footer-bottom {
+    border-top: 1px solid var(--border-dark);
+    padding-top: var(--space-md);
+    text-align: center;
+  }
+  .footer-bottom p {
+    color: var(--text-muted);
+    font-size: var(--fs-caption);
+  }
+
+  @media (min-width: 768px) {
+    .footer-grid { grid-template-columns: 2fr 1fr 1fr 1fr; }
+  }
+</style>

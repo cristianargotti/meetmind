@@ -49,9 +49,8 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       orElse: () => _packages.first,
     );
 
-    final success = await ref
-        .read(subscriptionProvider.notifier)
-        .purchase(package);
+    final success =
+        await ref.read(subscriptionProvider.notifier).purchase(package);
 
     if (mounted) {
       setState(() => _isLoading = false);
@@ -307,53 +306,53 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
 
   Widget _buildFeatureRow(_FeatureRow feature, int index) {
     return Container(
-          margin: const EdgeInsets.only(bottom: 8),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: MeetMindTheme.darkCard,
-            borderRadius: BorderRadius.circular(MeetMindTheme.radiusSm),
-            border: Border.all(color: MeetMindTheme.darkBorder),
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: MeetMindTheme.darkCard,
+        borderRadius: BorderRadius.circular(MeetMindTheme.radiusSm),
+        border: Border.all(color: MeetMindTheme.darkBorder),
+      ),
+      child: Row(
+        children: [
+          Icon(feature.icon, color: MeetMindTheme.primary, size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              feature.name,
+              style: const TextStyle(
+                color: MeetMindTheme.textPrimary,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
-          child: Row(
-            children: [
-              Icon(feature.icon, color: MeetMindTheme.primary, size: 20),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  feature.name,
-                  style: const TextStyle(
-                    color: MeetMindTheme.textPrimary,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
+          SizedBox(
+            width: 56,
+            child: Text(
+              feature.free,
+              style: const TextStyle(
+                color: MeetMindTheme.textTertiary,
+                fontSize: 12,
               ),
-              SizedBox(
-                width: 56,
-                child: Text(
-                  feature.free,
-                  style: const TextStyle(
-                    color: MeetMindTheme.textTertiary,
-                    fontSize: 12,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              SizedBox(
-                width: 56,
-                child: Text(
-                  feature.pro,
-                  style: const TextStyle(
-                    color: MeetMindTheme.accent,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ],
+              textAlign: TextAlign.center,
+            ),
           ),
-        )
+          SizedBox(
+            width: 56,
+            child: Text(
+              feature.pro,
+              style: const TextStyle(
+                color: MeetMindTheme.accent,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ],
+      ),
+    )
         .animate()
         .fadeIn(delay: (200 + index * 60).ms, duration: 300.ms)
         .slideX(begin: 0.05, end: 0);
@@ -361,38 +360,38 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
 
   Widget _buildCTA() {
     return SizedBox(
-          width: double.infinity,
-          height: 54,
-          child: ElevatedButton(
-            onPressed: _isLoading ? null : _purchase,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: MeetMindTheme.primary,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(MeetMindTheme.radiusMd),
-              ),
-              elevation: 0,
-            ),
-            child: _isLoading
-                ? const SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  )
-                : Text(
-                    _isYearly
-                        ? 'Start Pro — \$119.99/year'
-                        : 'Start Pro — \$14.99/month',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+      width: double.infinity,
+      height: 54,
+      child: ElevatedButton(
+        onPressed: _isLoading ? null : _purchase,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: MeetMindTheme.primary,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(MeetMindTheme.radiusMd),
           ),
-        )
+          elevation: 0,
+        ),
+        child: _isLoading
+            ? const SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+            : Text(
+                _isYearly
+                    ? 'Start Pro — \$119.99/year'
+                    : 'Start Pro — \$14.99/month',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+      ),
+    )
         .animate()
         .fadeIn(delay: 600.ms, duration: 400.ms)
         .scale(begin: const Offset(0.95, 0.95), end: const Offset(1.0, 1.0));

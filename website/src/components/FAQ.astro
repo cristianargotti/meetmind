@@ -1,0 +1,83 @@
+---
+const { t } = Astro.props;
+---
+
+<section class="section faq-section" id="faq">
+  <div class="container">
+    <div class="section-header animate-on-scroll">
+      <h2 class="section-title">{t.faq.title}</h2>
+    </div>
+    <div class="faq-list">
+      {t.faq.items.map((item: { question: string; answer: string }, i: number) => (
+        <details class="faq-item glass-card animate-on-scroll" style={`animation-delay: ${i * 0.08}s`}>
+          <summary class="faq-question">
+            <span>{item.question}</span>
+            <svg class="faq-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </summary>
+          <p class="faq-answer">{item.answer}</p>
+        </details>
+      ))}
+    </div>
+  </div>
+
+  <!-- Schema.org FAQPage -->
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": t.faq.items.map((item: { question: string; answer: string }) => ({
+      "@type": "Question",
+      "name": item.question,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": item.answer
+      }
+    }))
+  })} />
+</section>
+
+<style>
+  .faq-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  .faq-item {
+    padding: 0;
+    overflow: hidden;
+    transition: border-color var(--transition-medium);
+  }
+  .faq-item[open] {
+    border-color: rgba(139, 92, 246, 0.15);
+  }
+  .faq-question {
+    padding: var(--space-md) var(--space-lg);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-weight: 600;
+    font-size: var(--fs-body);
+    color: var(--text-primary);
+    list-style: none;
+    transition: color var(--transition-fast);
+  }
+  .faq-question::-webkit-details-marker { display: none; }
+  .faq-question:hover { color: var(--primary-light); }
+  .faq-chevron {
+    flex-shrink: 0;
+    color: var(--text-muted);
+    transition: transform var(--transition-medium);
+  }
+  .faq-item[open] .faq-chevron {
+    transform: rotate(180deg);
+    color: var(--primary);
+  }
+  .faq-answer {
+    padding: 0 var(--space-lg) var(--space-md);
+    color: var(--text-secondary);
+    font-size: var(--fs-small);
+    line-height: 1.7;
+  }
+</style>

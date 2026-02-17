@@ -1,0 +1,9 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://aurameet.live/sitemap-index.xml
+
+# Block non-public paths
+Disallow: /api/

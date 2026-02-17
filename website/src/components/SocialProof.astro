@@ -1,0 +1,120 @@
+---
+const { t } = Astro.props;
+const stars = '★★★★★';
+---
+
+<section class="section social-proof-section" id="testimonials">
+  <div class="container">
+    <div class="section-header animate-on-scroll">
+      <span class="badge">{t.socialProof.badge}</span>
+      <h2 class="section-title" style="margin-top: var(--space-md);">{t.socialProof.title}</h2>
+      <p class="section-subtitle">{t.socialProof.subtitle}</p>
+    </div>
+
+    <div class="testimonials-grid">
+      {t.socialProof.testimonials.map((item: any, i: number) => (
+        <div class="testimonial-card glass-card animate-on-scroll" style={`animation-delay: ${i * 0.1}s`}>
+          <div class="testimonial-stars" aria-label="5 stars">{stars}</div>
+          <p class="testimonial-text">"{item.text}"</p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar" style={`background: ${['var(--primary)', 'var(--accent)', '#EC4899'][i]}`}>
+              {item.name.charAt(0)}
+            </div>
+            <div class="testimonial-info">
+              <span class="testimonial-name">{item.name}</span>
+              <span class="testimonial-role">{item.role}</span>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+
+    <div class="app-rating animate-on-scroll">
+      <span class="rating-stars">{stars}</span>
+      <span class="rating-text">{t.socialProof.ratingText}</span>
+    </div>
+  </div>
+</section>
+
+<style>
+  .social-proof-section { position: relative; overflow: hidden; }
+  .testimonials-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-lg);
+    margin-bottom: var(--space-xl);
+  }
+  .testimonial-card {
+    padding: var(--space-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+  .testimonial-stars {
+    color: #FBBF24;
+    font-size: 16px;
+    letter-spacing: 2px;
+  }
+  .testimonial-text {
+    color: var(--text-primary);
+    font-size: var(--fs-body);
+    line-height: var(--lh-normal);
+    font-style: italic;
+    flex: 1;
+  }
+  .testimonial-author {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    margin-top: var(--space-xs);
+  }
+  .testimonial-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 16px;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  .testimonial-name {
+    display: block;
+    font-weight: 600;
+    font-size: var(--fs-small);
+    color: var(--text-primary);
+  }
+  .testimonial-role {
+    display: block;
+    font-size: var(--fs-caption);
+    color: var(--text-muted);
+  }
+  .app-rating {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    padding: var(--space-md);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    border: var(--glass-border);
+    border-radius: var(--glass-radius);
+    max-width: 400px;
+    margin: 0 auto;
+  }
+  .rating-stars {
+    color: #FBBF24;
+    font-size: 20px;
+    letter-spacing: 2px;
+  }
+  .rating-text {
+    color: var(--text-secondary);
+    font-size: var(--fs-small);
+    font-weight: 500;
+  }
+  @media (min-width: 768px) {
+    .testimonials-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+</style>

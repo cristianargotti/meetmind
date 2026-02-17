@@ -129,9 +129,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
                   // Action button
                   ElevatedButton(
-                    onPressed: _currentPage == 2
-                        ? _requestMicPermission
-                        : _nextPage,
+                    onPressed:
+                        _currentPage == 2 ? _requestMicPermission : _nextPage,
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 28,
@@ -190,9 +189,9 @@ class _WelcomePage extends StatelessWidget {
           Text(
             l10n.onboardingWelcome,
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: Colors.white,
-            ),
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                ),
             textAlign: TextAlign.center,
           ).animate().fadeIn(delay: 200.ms, duration: 400.ms),
           const SizedBox(height: 16),
@@ -239,9 +238,9 @@ class _LanguagePage extends StatelessWidget {
           Text(
             l10n.onboardingLanguage,
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-            ),
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
@@ -285,9 +284,8 @@ class _LanguagePage extends StatelessWidget {
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 16,
-                          fontWeight: isSelected
-                              ? FontWeight.w700
-                              : FontWeight.w400,
+                          fontWeight:
+                              isSelected ? FontWeight.w700 : FontWeight.w400,
                         ),
                       ),
                       const Spacer(),
@@ -339,9 +337,9 @@ class _MicPermissionPage extends StatelessWidget {
           Text(
             l10n.onboardingMic,
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-            ),
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 12),
@@ -383,10 +381,10 @@ class _ReadyPage extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const Icon(
-                Icons.check_circle_outline,
-                size: 80,
-                color: MeetMindTheme.success,
-              )
+            Icons.check_circle_outline,
+            size: 80,
+            color: MeetMindTheme.success,
+          )
               .animate()
               .scale(duration: 600.ms, curve: Curves.elasticOut)
               .then()
@@ -395,9 +393,9 @@ class _ReadyPage extends StatelessWidget {
           Text(
             l10n.onboardingReady,
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: Colors.white,
-            ),
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                ),
             textAlign: TextAlign.center,
           ).animate().fadeIn(delay: 300.ms),
           const SizedBox(height: 12),

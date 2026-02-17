@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:meetmind/config/app_config.dart';
+import 'package:meetmind/services/auth_service.dart';
 
 /// REST API service for meeting history and stats.
 ///
@@ -19,11 +20,18 @@ class MeetingApiService {
     return '$protocol://${config.host}:${config.port}';
   }
 
-  /// Default request headers.
-  Map<String, String> get _headers => {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-  };
+  /// Default request headers (includes auth token when available).
+  Map<String, String> get _headers {
+    final headers = <String, String>{
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+    final token = AuthService.instance.accessToken;
+    if (token != null) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+    return headers;
+  }
 
   // ─── Meetings ─────────────────────────────────────────────────
 

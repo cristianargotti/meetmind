@@ -1,0 +1,723 @@
+---
+const { t } = Astro.props;
+
+const screens = [
+  { key: 'home', color: '#00d4ff', activeNav: 0 },
+  { key: 'meeting', color: '#06D6A0', activeNav: 1 },
+  { key: 'history', color: '#8b5cf6', activeNav: 2 },
+  { key: 'copilot', color: '#f59e0b', activeNav: 1 },
+  { key: 'settings', color: '#6366f1', activeNav: 3 },
+  { key: 'login', color: '#ec4899', activeNav: -1 },
+];
+
+---
+
+<section class="section showcase" id="showcase">
+  <div class="container">
+    <div class="section-header animate-on-scroll">
+      <h2 class="section-title">{t.showcase.title}</h2>
+      <p class="section-subtitle">{t.showcase.subtitle}</p>
+    </div>
+    <div class="showcase-grid">
+      {screens.map((screen, i) => (
+        <div class="showcase-card glass-card animate-on-scroll" style={`animation-delay: ${i * 0.1}s`}>
+          <div class="sc-phone">
+            <div class="sc-screen">
+              {/* ── Status bar ── */}
+              <div class="sc-statusbar">
+                <span class="sc-time">10:42</span>
+                <div class="sc-notch"></div>
+                <div class="sc-status-right">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3a4.237 4.237 0 00-6 0zm-4-4l2 2a7.074 7.074 0 0110 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><rect x="17" y="4" width="5" height="16" rx="1"/><rect x="11" y="8" width="5" height="12" rx="1"/><rect x="5" y="12" width="5" height="8" rx="1"/></svg>
+                  <span class="sc-batt">87%</span>
+                </div>
+              </div>
+
+              {/* ========== HOME / DASHBOARD ========== */}
+              {screen.key === 'home' && (
+                <div class="sc-body">
+                  <div class="sc-app-header">
+                    <img src="/app-icon.png" alt="" width="16" height="16" class="sc-header-icon" />
+                    <span class="sc-app-title" style={`color: ${screen.color}`}>Dashboard</span>
+                  </div>
+                  <div class="sc-stat-row">
+                    <div class="sc-stat-card">
+                      <span class="sc-stat-val" style={`color: ${screen.color}`}>12</span>
+                      <span class="sc-stat-lbl">reuniones</span>
+                    </div>
+                    <div class="sc-stat-card">
+                      <span class="sc-stat-val" style={`color: ${screen.color}`}>4.2h</span>
+                      <span class="sc-stat-lbl">transcritas</span>
+                    </div>
+                  </div>
+                  <div class="sc-divider-label">Recientes</div>
+                  <div class="sc-list-item">
+                    <div class="sc-avatar" style={`background: ${screen.color}20; color: ${screen.color}`}>
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>
+                    </div>
+                    <div class="sc-list-text">
+                      <span class="sc-list-title">Standup Semanal</span>
+                      <span class="sc-list-sub">12:34 min · 3 speakers</span>
+                    </div>
+                    <span class="sc-list-time">2m</span>
+                  </div>
+                  <div class="sc-list-item">
+                    <div class="sc-avatar" style={`background: #8B5CF620; color: #8B5CF6`}>
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>
+                    </div>
+                    <div class="sc-list-text">
+                      <span class="sc-list-title">Sprint Review</span>
+                      <span class="sc-list-sub">45:12 min · 5 speakers</span>
+                    </div>
+                    <span class="sc-list-time">1h</span>
+                  </div>
+                </div>
+              )}
+
+              {/* ========== LIVE MEETING ========== */}
+              {screen.key === 'meeting' && (
+                <div class="sc-body">
+                  <div class="sc-app-header">
+                    <svg class="sc-back" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                    <div class="sc-header-text">
+                      <span class="sc-app-title">Standup Semanal</span>
+                      <span class="sc-header-sub">12:34</span>
+                    </div>
+                    <span class="sc-badge-live">LIVE</span>
+                  </div>
+                  <div class="sc-waveform">
+                    {[12,24,8,30,14,26,10,32,16,20,28,9,22,18,26].map((h, wi) => (
+                      <div class="sc-wave" style={`--h: ${h}px; --d: ${wi * 0.06}s`}></div>
+                    ))}
+                  </div>
+                  <div class="sc-tabs">
+                    <span class="sc-tab active">Transcripción</span>
+                    <span class="sc-tab">Insights</span>
+                    <span class="sc-tab">Resumen</span>
+                  </div>
+                  <div class="sc-bubble" style={`border-left: 2px solid ${screen.color}`}>
+                    <span class="sc-speaker" style={`color: ${screen.color}`}>SARA</span>
+                    <p class="sc-bubble-text">Revisemos el avance del Q1...</p>
+                    <span class="sc-ts">10:30</span>
+                  </div>
+                  <div class="sc-bubble" style="border-left: 2px solid #8B5CF6">
+                    <span class="sc-speaker" style="color: #8B5CF6">TÚ</span>
+                    <p class="sc-bubble-text">El deploy está completo.</p>
+                    <span class="sc-ts">10:31</span>
+                  </div>
+                </div>
+              )}
+
+              {/* ========== HISTORY ========== */}
+              {screen.key === 'history' && (
+                <div class="sc-body">
+                  <div class="sc-app-header">
+                    <span class="sc-app-title" style={`color: ${screen.color}`}>Historial</span>
+                  </div>
+                  <div class="sc-search">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <span class="sc-search-placeholder">Buscar reuniones...</span>
+                  </div>
+                  <div class="sc-divider-label" style={`color: ${screen.color}`}>Hoy</div>
+                  <div class="sc-list-item">
+                    <div class="sc-avatar" style={`background: ${screen.color}20; color: ${screen.color}`}>
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>
+                    </div>
+                    <div class="sc-list-text">
+                      <span class="sc-list-title">Standup Semanal</span>
+                      <span class="sc-list-sub">12:34 min · 3 speakers</span>
+                    </div>
+                    <span class="sc-list-time">09:00</span>
+                  </div>
+                  <div class="sc-divider-label" style={`color: ${screen.color}99`}>Ayer</div>
+                  <div class="sc-list-item">
+                    <div class="sc-avatar" style="background: rgba(255,255,255,0.04); color: var(--text-muted)">
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>
+                    </div>
+                    <div class="sc-list-text">
+                      <span class="sc-list-title">Sprint Planning</span>
+                      <span class="sc-list-sub">45:12 min · 5 speakers</span>
+                    </div>
+                    <span class="sc-list-time">14:30</span>
+                  </div>
+                </div>
+              )}
+
+              {/* ========== COPILOT / ASK AURA ========== */}
+              {screen.key === 'copilot' && (
+                <div class="sc-body">
+                  <div class="sc-app-header">
+                    <span class="sc-app-title" style={`color: ${screen.color}`}>Ask Aura</span>
+                    <span class="sc-header-sub" style="margin-left: auto">✦</span>
+                  </div>
+                  <div class="sc-chat-bot">
+                    <div class="sc-bot-icon" style={`background: ${screen.color}20; color: ${screen.color}`}>✦</div>
+                    <div class="sc-chat-bubble bot">
+                      <p class="sc-bubble-text">En la reunión de ayer se discutieron 3 temas principales sobre el lanzamiento Q1.</p>
+                    </div>
+                  </div>
+                  <div class="sc-chat-user">
+                    <div class="sc-chat-bubble user">
+                      <p class="sc-bubble-text">¿Quién tiene pendientes?</p>
+                    </div>
+                  </div>
+                  <div class="sc-chat-bot">
+                    <div class="sc-bot-icon" style={`background: ${screen.color}20; color: ${screen.color}`}>✦</div>
+                    <div class="sc-chat-bubble bot">
+                      <p class="sc-bubble-text">Sara tiene 2 action items y David tiene 1 pendiente de diseño.</p>
+                    </div>
+                  </div>
+                  <div class="sc-chat-input">
+                    <div class="sc-input-field">
+                      <span class="sc-input-placeholder">Pregúntale a Aura...</span>
+                    </div>
+                    <div class="sc-send-btn" style={`background: ${screen.color}`}>
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ========== SETTINGS ========== */}
+              {screen.key === 'settings' && (
+                <div class="sc-body">
+                  <div class="sc-app-header">
+                    <span class="sc-app-title" style={`color: ${screen.color}`}>Configuración</span>
+                  </div>
+                  <div class="sc-settings-profile">
+                    <div class="sc-avatar-lg" style={`background: ${screen.color}20; color: ${screen.color}`}>CR</div>
+                    <div class="sc-profile-info">
+                      <span class="sc-list-title">Cristian Reyes</span>
+                      <span class="sc-list-sub">Aura Pro ✦</span>
+                    </div>
+                  </div>
+                  <div class="sc-settings-section">
+                    <div class="sc-settings-row">
+                      <span class="sc-setting-label">Idioma</span>
+                      <span class="sc-setting-value">Español ›</span>
+                    </div>
+                    <div class="sc-settings-row">
+                      <span class="sc-setting-label">Auto-escuchar</span>
+                      <div class="sc-toggle on" style={`background: ${screen.color}`}><div class="sc-toggle-knob"></div></div>
+                    </div>
+                    <div class="sc-settings-row">
+                      <span class="sc-setting-label">Notificaciones</span>
+                      <div class="sc-toggle on" style={`background: ${screen.color}`}><div class="sc-toggle-knob"></div></div>
+                    </div>
+                    <div class="sc-settings-row">
+                      <span class="sc-setting-label">Modo oscuro</span>
+                      <div class="sc-toggle on" style={`background: ${screen.color}`}><div class="sc-toggle-knob"></div></div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ========== LOGIN ========== */}
+              {screen.key === 'login' && (
+                <div class="sc-body sc-login-body">
+                  <div class="sc-login-logo">
+                    <img src="/app-icon.png" alt="Aura Meet" width="36" height="36" style="border-radius: 8px;" />
+                  </div>
+                  <span class="sc-login-brand">Aura Meet</span>
+                  <span class="sc-login-tagline">Tu copiloto de reuniones</span>
+                  <div class="sc-login-btn apple">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M18.7 19.5c-.9 1.3-1.9 2.5-3.4 2.5s-1.9-.8-3.5-.8-2.2.8-3.5.8-2.3-1.1-3.4-2.5C3 16.8 1.5 12.8 3.5 10c.8-1.2 2.3-2 3.8-2 1.3 0 2.1.8 3.2.8s1.7-.8 3.3-.8c1.3 0 2.6.7 3.4 1.8-3 1.8-2.5 6.3.5 7.7z"/></svg>
+                    <span>Continuar con Apple</span>
+                  </div>
+                  <div class="sc-login-btn google">
+                    <svg width="14" height="14" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+                    <span>Continuar con Google</span>
+                  </div>
+                  <span class="sc-login-terms">Al continuar aceptas los<br/>Términos y Política de Privacidad</span>
+                </div>
+              )}
+
+              {/* ── Bottom nav (skip for login) ── */}
+              {screen.key !== 'login' && (
+                <div class="sc-bottomnav">
+                  <div class={`sc-nav-item ${screen.activeNav === 0 ? 'active' : ''}`} style={screen.activeNav === 0 ? `color: ${screen.color}` : ''}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+                  </div>
+                  <div class={`sc-nav-item ${screen.activeNav === 1 ? 'active' : ''}`} style={screen.activeNav === 1 ? `color: ${screen.color}` : ''}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>
+                  </div>
+                  <div class={`sc-nav-item ${screen.activeNav === 2 ? 'active' : ''}`} style={screen.activeNav === 2 ? `color: ${screen.color}` : ''}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  </div>
+                  <div class={`sc-nav-item ${screen.activeNav === 3 ? 'active' : ''}`} style={screen.activeNav === 3 ? `color: ${screen.color}` : ''}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+          <div class="showcase-info">
+            <h3 class="showcase-name">{t.showcase.screens[screen.key].title}</h3>
+            <p class="showcase-desc">{t.showcase.screens[screen.key].description}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .showcase-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--space-lg);
+  }
+  .showcase-card {
+    padding: var(--space-lg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-md);
+    transition: transform var(--transition-medium), box-shadow var(--transition-medium);
+  }
+  .showcase-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+  .showcase-info { text-align: center; }
+  .showcase-name { font-size: var(--fs-h3); font-weight: 700; margin-bottom: var(--space-xs); }
+  .showcase-desc { color: var(--text-secondary); font-size: var(--fs-small); line-height: 1.6; }
+
+  /* ── Phone shell ── */
+  .sc-phone {
+    width: 200px;
+    height: 400px;
+    background: linear-gradient(145deg, #1a1a2e, #0d0d14);
+    border-radius: 32px;
+    padding: 6px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06);
+  }
+  .sc-screen {
+    width: 100%;
+    height: 100%;
+    background: var(--bg-primary);
+    border-radius: 26px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── Status bar ── */
+  .sc-statusbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 12px 0;
+    font-size: 8px;
+    font-weight: 600;
+    color: var(--text-primary);
+    flex-shrink: 0;
+  }
+  .sc-time { letter-spacing: 0.02em; }
+  .sc-notch {
+    width: 60px;
+    height: 16px;
+    background: #000;
+    border-radius: 0 0 12px 12px;
+  }
+  .sc-status-right {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .sc-batt { font-size: 7px; opacity: 0.7; }
+
+  /* ── Body ── */
+  .sc-body {
+    flex: 1;
+    padding: 6px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    overflow: hidden;
+  }
+
+  /* ── App header ── */
+  .sc-app-header {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 0 4px;
+    flex-shrink: 0;
+  }
+  .sc-app-title {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+  .sc-back { flex-shrink: 0; color: var(--primary); }
+  .sc-header-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .sc-header-sub {
+    font-size: 7px;
+    color: var(--text-muted);
+  }
+  .sc-badge-live {
+    margin-left: auto;
+    font-size: 6px;
+    font-weight: 800;
+    background: #EF4444;
+    color: white;
+    padding: 2px 5px;
+    border-radius: 4px;
+    letter-spacing: 0.05em;
+    animation: pulseLive 2s ease-in-out infinite;
+  }
+  @keyframes pulseLive {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+
+  /* ── Stats ── */
+  .sc-stat-row { display: flex; gap: 5px; }
+  .sc-stat-card {
+    flex: 1;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 8px;
+    padding: 6px;
+    text-align: center;
+  }
+  .sc-stat-val { display: block; font-size: 16px; font-weight: 900; line-height: 1.2; }
+  .sc-stat-lbl { font-size: 6px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+
+  /* ── Divider label ── */
+  .sc-divider-label {
+    font-size: 7px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    padding: 3px 0 1px;
+  }
+
+  /* ── List items ── */
+  .sc-list-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.04);
+    border-radius: 8px;
+  }
+  .sc-avatar {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .sc-avatar-lg {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8px;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+  .sc-list-text { flex: 1; min-width: 0; }
+  .sc-list-title {
+    display: block;
+    font-size: 8px;
+    font-weight: 700;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .sc-list-sub {
+    display: block;
+    font-size: 6px;
+    color: var(--text-muted);
+  }
+  .sc-list-time {
+    font-size: 7px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── Search bar ── */
+  .sc-search {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    height: 22px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 6px;
+    padding: 0 8px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+  .sc-search-placeholder { font-size: 7px; }
+
+  /* ── Waveform ── */
+  .sc-waveform {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 5px 0;
+    background: rgba(139, 92, 246, 0.04);
+    border-radius: 6px;
+    flex-shrink: 0;
+  }
+  .sc-wave {
+    width: 2px;
+    height: var(--h);
+    background: linear-gradient(180deg, var(--primary), #EC4899);
+    border-radius: 1px;
+    animation: scWaveAnim 0.8s ease-in-out infinite;
+    animation-delay: var(--d);
+  }
+  @keyframes scWaveAnim {
+    0%, 100% { transform: scaleY(0.3); opacity: 0.4; }
+    50% { transform: scaleY(1); opacity: 1; }
+  }
+
+  /* ── Tabs ── */
+  .sc-tabs {
+    display: flex;
+    gap: 2px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    padding-bottom: 4px;
+    flex-shrink: 0;
+  }
+  .sc-tab {
+    font-size: 7px;
+    color: var(--text-muted);
+    padding: 2px 0;
+    font-weight: 500;
+  }
+  .sc-tab.active {
+    color: var(--primary);
+    border-bottom: 1px solid var(--primary);
+    font-weight: 700;
+  }
+
+  /* ── Transcript bubbles ── */
+  .sc-bubble {
+    padding: 5px 7px;
+    background: rgba(255,255,255,0.02);
+    border-radius: 6px;
+    position: relative;
+  }
+  .sc-speaker {
+    font-size: 6px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: block;
+    margin-bottom: 2px;
+  }
+  .sc-bubble-text {
+    font-size: 7px;
+    color: var(--text-secondary);
+    line-height: 1.4;
+    margin: 0;
+  }
+  .sc-ts {
+    font-size: 6px;
+    color: var(--text-muted);
+    position: absolute;
+    bottom: 4px;
+    right: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── Chat / Copilot ── */
+  .sc-chat-bot {
+    display: flex;
+    gap: 4px;
+    align-items: flex-start;
+  }
+  .sc-chat-user {
+    display: flex;
+    justify-content: flex-end;
+  }
+  .sc-bot-icon {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8px;
+    flex-shrink: 0;
+  }
+  .sc-chat-bubble {
+    border-radius: 8px;
+    padding: 5px 7px;
+    max-width: 85%;
+  }
+  .sc-chat-bubble.bot {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .sc-chat-bubble.user {
+    background: rgba(139, 92, 246, 0.1);
+    border: 1px solid rgba(139, 92, 246, 0.15);
+  }
+  .sc-chat-input {
+    margin-top: auto;
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  .sc-input-field {
+    flex: 1;
+    height: 22px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+  }
+  .sc-input-placeholder {
+    font-size: 7px;
+    color: var(--text-muted);
+  }
+  .sc-send-btn {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  /* ── Settings ── */
+  .sc-settings-profile {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.04);
+    border-radius: 8px;
+    flex-shrink: 0;
+  }
+  .sc-profile-info { flex: 1; }
+  .sc-settings-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .sc-settings-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+  }
+  .sc-settings-row:last-child { border-bottom: none; }
+  .sc-setting-label { font-size: 8px; color: var(--text-primary); }
+  .sc-setting-value { font-size: 7px; color: var(--text-muted); }
+  .sc-toggle {
+    width: 22px;
+    height: 12px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.1);
+    position: relative;
+    flex-shrink: 0;
+  }
+  .sc-toggle.on .sc-toggle-knob { left: auto; right: 2px; }
+  .sc-toggle-knob {
+    width: 8px;
+    height: 8px;
+    background: white;
+    border-radius: 50%;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+  }
+
+  /* ── Login ── */
+  .sc-login-body {
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    padding-top: 24px;
+  }
+  .sc-login-logo {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .sc-login-brand {
+    font-size: 12px;
+    font-weight: 900;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+  }
+  .sc-login-tagline {
+    font-size: 7px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+  .sc-login-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    max-width: 140px;
+    padding: 7px 10px;
+    border-radius: 8px;
+    font-size: 8px;
+    font-weight: 600;
+  }
+  .sc-login-btn.apple { background: white; color: #000; }
+  .sc-login-btn.apple svg { fill: #000; }
+  .sc-login-btn.google {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: var(--text-primary);
+  }
+  .sc-login-terms {
+    font-size: 5.5px;
+    color: var(--text-muted);
+    text-align: center;
+    line-height: 1.4;
+    margin-top: 4px;
+  }
+
+  /* ── Bottom nav ── */
+  .sc-bottomnav {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 6px 0 8px;
+    border-top: 1px solid rgba(255,255,255,0.04);
+    flex-shrink: 0;
+  }
+  .sc-nav-item {
+    color: rgba(255,255,255,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .sc-nav-item.active { opacity: 1; }
+</style>

@@ -1,0 +1,86 @@
+---
+const { t } = Astro.props;
+---
+
+<section class="section cta-section" id="download">
+  <div class="container">
+    <div class="cta-card glass-card animate-on-scroll">
+      <div class="cta-bg-glow" aria-hidden="true"></div>
+      <h2 class="cta-title">{t.cta.title}</h2>
+      <p class="cta-subtitle">{t.cta.subtitle}</p>
+      <a href="#" class="btn btn-primary cta-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        {t.cta.button}
+      </a>
+      <p class="cta-trust-text">{t.cta.noCreditCard}</p>
+      <div class="cta-badges">
+        <a href="#" aria-label="Download on the App Store">
+          <img src="/app-store-badge.svg" alt="App Store" width="140" height="42" loading="lazy" />
+        </a>
+        <a href="#" aria-label="Get it on Google Play">
+          <img src="/google-play-badge.svg" alt="Google Play" width="140" height="42" loading="lazy" />
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .cta-card {
+    text-align: center;
+    padding: var(--space-3xl) var(--space-xl);
+    position: relative;
+    overflow: hidden;
+    border-color: rgba(139, 92, 246, 0.15);
+  }
+  .cta-bg-glow {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, rgba(139,92,246,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .cta-title {
+    font-size: var(--fs-h1);
+    font-weight: 800;
+    margin-bottom: var(--space-sm);
+    position: relative;
+    z-index: 1;
+    letter-spacing: -0.03em;
+  }
+  .cta-subtitle {
+    color: var(--text-secondary);
+    font-size: var(--fs-h3);
+    margin-bottom: var(--space-lg);
+    max-width: 500px;
+    margin-inline: auto;
+    position: relative;
+    z-index: 1;
+  }
+  .cta-btn {
+    position: relative;
+    z-index: 1;
+    margin-bottom: var(--space-xs);
+    font-size: 1.125rem;
+    padding: 1rem 2.5rem;
+    animation: ctaPulse 3s ease-in-out infinite;
+  }
+  @keyframes ctaPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.3); }
+    50% { box-shadow: 0 0 20px 4px rgba(139, 92, 246, 0.15); }
+  }
+  .cta-trust-text {
+    font-size: var(--fs-caption);
+    color: var(--text-muted);
+    margin-bottom: var(--space-lg);
+    position: relative;
+    z-index: 1;
+  }
+  .cta-badges {
+    display: flex;
+    gap: var(--space-sm);
+    justify-content: center;
+    position: relative;
+    z-index: 1;
+  }
+  .cta-badges img { border-radius: 8px; }
+</style>

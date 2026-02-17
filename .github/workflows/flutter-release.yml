@@ -49,7 +49,8 @@ jobs:
           flutter build apk \
             --release \
             --obfuscate \
-            --split-debug-info=build/debug-info
+            --split-debug-info=build/debug-info \
+            --dart-define=REVENUECAT_ANDROID_KEY=${{ secrets.REVENUECAT_ANDROID_KEY }}
 
       - name: 📤 Upload APK
         uses: actions/upload-artifact@v4
@@ -115,7 +116,8 @@ jobs:
 
       - name: 🏗️ Build & Archive
         run: |
-          flutter build ios --release --no-codesign
+          flutter build ios --release --no-codesign \
+            --dart-define=REVENUECAT_IOS_KEY=${{ secrets.REVENUECAT_IOS_KEY }}
 
       - name: 📦 Archive & Export IPA
         env:

@@ -353,9 +353,9 @@ class _TranscriptTab extends StatelessWidget {
             ],
           ),
         ).animate().fadeIn(
-          delay: Duration(milliseconds: index * 30),
-          duration: 300.ms,
-        );
+              delay: Duration(milliseconds: index * 30),
+              duration: 300.ms,
+            );
       },
     );
   }
@@ -623,9 +623,9 @@ class _InsightsTab extends StatelessWidget {
             ],
           ),
         ).animate().fadeIn(
-          delay: Duration(milliseconds: index * 50),
-          duration: 300.ms,
-        );
+              delay: Duration(milliseconds: index * 50),
+              duration: 300.ms,
+            );
       },
     );
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:meetmind/config/theme.dart';
 import 'package:meetmind/features/subscription/widgets/free_limit_banner.dart';
 import 'package:meetmind/l10n/generated/app_localizations.dart';
@@ -9,6 +10,36 @@ import 'package:meetmind/models/meeting_models.dart';
 import 'package:meetmind/providers/auth_provider.dart';
 import 'package:meetmind/providers/meeting_provider.dart';
 import 'package:meetmind/providers/subscription_provider.dart';
+import 'package:meetmind/services/meeting_api_service.dart';
+
+/// Provider that fetches recent meetings from the backend.
+final _recentMeetingsProvider =
+    FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  // Re-fetch whenever auth state changes
+  ref.watch(authProvider);
+  final api = MeetingApiService();
+  try {
+    return await api.listMeetings(limit: 5);
+  } catch (_) {
+    return [];
+  } finally {
+    api.dispose();
+  }
+});
+
+/// Provider that fetches pending action items count.
+final _pendingActionsCountProvider = FutureProvider<int>((ref) async {
+  ref.watch(authProvider);
+  final api = MeetingApiService();
+  try {
+    final items = await api.getPendingActions(limit: 100);
+    return items.length;
+  } catch (_) {
+    return 0;
+  } finally {
+    api.dispose();
+  }
+});
 
 /// Home screen — meeting hub with quick-start action.
 class HomeScreen extends ConsumerWidget {
@@ -26,8 +57,8 @@ class HomeScreen extends ConsumerWidget {
     final greeting = hour < 12
         ? 'Good morning'
         : hour < 18
-        ? 'Good afternoon'
-        : 'Good evening';
+            ? 'Good afternoon'
+            : 'Good evening';
 
     return Scaffold(
       body: SafeArea(
@@ -93,11 +124,11 @@ class HomeScreen extends ConsumerWidget {
                           userName.isNotEmpty
                               ? '$greeting, $userName'
                               : greeting,
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
+                                  ),
                         ),
                         const SizedBox(height: 2),
                         Text(
@@ -123,14 +154,24 @@ class HomeScreen extends ConsumerWidget {
 
               const SizedBox(height: 40),
 
-              // Quick Start Card
-              _QuickStartCard(
-                    isActive:
-                        meeting != null && meeting.status.name == 'recording',
-                  )
-                  .animate()
-                  .fadeIn(delay: 200.ms, duration: 500.ms)
-                  .slideY(begin: 0.1),
+              // Quick Start Card — tappable to start meeting
+              GestureDetector(
+                onTap: () {
+                  final canStart = ref.read(canStartMeetingProvider);
+                  if (canStart) {
+                    context.push('/meeting');
+                  } else {
+                    context.push('/paywall');
+                  }
+                },
+                child: _QuickStartCard(
+                  isActive:
+                      meeting != null && meeting.status.name == 'recording',
+                )
+                    .animate()
+                    .fadeIn(delay: 200.ms, duration: 500.ms)
+                    .slideY(begin: 0.1),
+              ),
 
               // Free tier usage banner
               const FreeLimitBanner(),
@@ -140,46 +181,51 @@ class HomeScreen extends ConsumerWidget {
               // Stats Row — derive from current session
               Builder(
                 builder: (context) {
-                  final isActive =
-                      meeting != null && meeting.status.name == 'recording';
-                  final todayCount = isActive ? '1' : '0';
+                  final remaining = ref.watch(meetingsRemainingProvider);
+                  // Show meetings remaining this week (Pro = ∞)
+                  final todayCount =
+                      remaining == -1 ? '∞' : remaining.toString();
                   final insightCount =
                       meeting?.insights.length.toString() ?? '0';
-                  const actionCount =
-                      '0'; // TODO: connect to action items provider
+                  final pendingActions =
+                      ref.watch(_pendingActionsCountProvider);
+                  final actionCount = pendingActions.when(
+                    data: (count) => count.toString(),
+                    loading: () => '…',
+                    error: (_, _) => '0',
+                  );
                   return Row(
-                    children:
-                        [
-                              Expanded(
-                                child: _StatCard(
-                                  icon: Icons.mic,
-                                  label: l10n.homeToday,
-                                  value: todayCount,
-                                  color: MeetMindTheme.accent,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: _StatCard(
-                                  icon: Icons.insights,
-                                  label: l10n.homeInsights,
-                                  value: insightCount,
-                                  color: MeetMindTheme.success,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: _StatCard(
-                                  icon: Icons.task_alt,
-                                  label: l10n.homeActions,
-                                  value: actionCount,
-                                  color: MeetMindTheme.warning,
-                                ),
-                              ),
-                            ]
-                            .animate(interval: 100.ms)
-                            .fadeIn(delay: 300.ms)
-                            .slideY(begin: 0.1),
+                    children: [
+                      Expanded(
+                        child: _StatCard(
+                          icon: Icons.mic,
+                          label: l10n.homeToday,
+                          value: todayCount,
+                          color: MeetMindTheme.accent,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _StatCard(
+                          icon: Icons.insights,
+                          label: l10n.homeInsights,
+                          value: insightCount,
+                          color: MeetMindTheme.success,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _StatCard(
+                          icon: Icons.task_alt,
+                          label: l10n.homeActions,
+                          value: actionCount,
+                          color: MeetMindTheme.warning,
+                        ),
+                      ),
+                    ]
+                        .animate(interval: 100.ms)
+                        .fadeIn(delay: 300.ms)
+                        .slideY(begin: 0.1),
                   );
                 },
               ),
@@ -190,44 +236,109 @@ class HomeScreen extends ConsumerWidget {
               Text(
                 l10n.homeRecentMeetings,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
               ),
 
               const SizedBox(height: 12),
 
-              // Empty state
+              // Recent meetings from API
               Expanded(
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: Image.asset(
-                          'assets/images/app_logo.png',
-                          width: 64,
-                          height: 64,
-                          opacity: const AlwaysStoppedAnimation(0.4),
+                child: Consumer(
+                  builder: (context, ref, _) {
+                    final asyncMeetings = ref.watch(_recentMeetingsProvider);
+                    return asyncMeetings.when(
+                      loading: () => const Center(
+                        child: CircularProgressIndicator(
+                          color: MeetMindTheme.primary,
+                          strokeWidth: 2,
                         ),
                       ),
-                      const SizedBox(height: 16),
-                      Text(
-                        l10n.homeNoMeetings,
-                        style: Theme.of(
-                          context,
-                        ).textTheme.bodyLarge?.copyWith(color: Colors.white38),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        l10n.homeNoMeetingsHint,
-                        style: Theme.of(
-                          context,
-                        ).textTheme.bodySmall?.copyWith(color: Colors.white24),
-                      ),
-                    ],
-                  ).animate().fadeIn(delay: 500.ms),
+                      error: (_, _) => _buildEmptyState(context, l10n),
+                      data: (meetings) {
+                        if (meetings.isEmpty) {
+                          return _buildEmptyState(context, l10n);
+                        }
+                        return ListView.builder(
+                          padding: EdgeInsets.zero,
+                          itemCount: meetings.length,
+                          itemBuilder: (context, index) {
+                            final m = meetings[index];
+                            final title =
+                                m['title'] as String? ?? 'Untitled Meeting';
+                            final startedAt = m['started_at'] as String?;
+                            final durationSecs =
+                                m['duration_secs'] as int? ?? 0;
+
+                            String subtitle = '';
+                            if (startedAt != null) {
+                              try {
+                                final dt = DateTime.parse(startedAt).toLocal();
+                                subtitle =
+                                    DateFormat('MMM d · h:mm a').format(dt);
+                              } catch (_) {
+                                subtitle = '';
+                              }
+                            }
+                            if (durationSecs > 0) {
+                              final d = Duration(seconds: durationSecs);
+                              subtitle +=
+                                  ' · ${d.inMinutes}m ${d.inSeconds % 60}s';
+                            }
+
+                            return ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              leading: Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: MeetMindTheme.primaryDim,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: const Icon(
+                                  Icons.mic_rounded,
+                                  color: MeetMindTheme.primary,
+                                  size: 20,
+                                ),
+                              ),
+                              title: Text(
+                                title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              subtitle: Text(
+                                subtitle,
+                                style: const TextStyle(
+                                  color: Colors.white38,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              trailing: const Icon(
+                                Icons.chevron_right_rounded,
+                                color: Colors.white24,
+                                size: 20,
+                              ),
+                              onTap: () => context.push('/meeting/${m['id']}'),
+                            )
+                                .animate()
+                                .fadeIn(
+                                  delay: Duration(
+                                    milliseconds: 400 + index * 80,
+                                  ),
+                                  duration: 300.ms,
+                                )
+                                .slideX(begin: 0.05);
+                          },
+                        );
+                      },
+                    );
+                  },
                 ),
               ),
             ],
@@ -284,6 +395,45 @@ class HomeScreen extends ConsumerWidget {
         },
         child: const Icon(Icons.mic, size: 36),
       ).animate().scale(delay: 600.ms, duration: 400.ms),
+    );
+  }
+
+  /// Empty state fallback for the recent meetings section.
+  static Widget _buildEmptyState(
+    BuildContext context,
+    AppLocalizations l10n,
+  ) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Image.asset(
+              'assets/images/app_logo.png',
+              width: 64,
+              height: 64,
+              opacity: const AlwaysStoppedAnimation(0.4),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            l10n.homeNoMeetings,
+            style: Theme.of(context)
+                .textTheme
+                .bodyLarge
+                ?.copyWith(color: Colors.white38),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.homeNoMeetingsHint,
+            style: Theme.of(context)
+                .textTheme
+                .bodySmall
+                ?.copyWith(color: Colors.white24),
+          ),
+        ],
+      ).animate().fadeIn(delay: 500.ms),
     );
   }
 }

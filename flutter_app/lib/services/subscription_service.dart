@@ -107,9 +107,12 @@ class SubscriptionService {
   SubscriptionService._();
   static final instance = SubscriptionService._();
 
-  // RevenueCat SDK API keys (from dashboard)
-  static const _iosApiKey = 'test_mBFQFdOodjgLwpaNrnHsabaMUFn';
-  static const _androidApiKey = 'goog_REPLACE_WITH_YOUR_KEY';
+  // RevenueCat SDK API keys — injected via --dart-define at build time.
+  // In CI: --dart-define=REVENUECAT_IOS_KEY=${{ secrets.REVENUECAT_IOS_KEY }}
+  // Locally: app runs in free mode if keys are empty.
+  static const _iosApiKey = String.fromEnvironment('REVENUECAT_IOS_KEY');
+  static const _androidApiKey =
+      String.fromEnvironment('REVENUECAT_ANDROID_KEY');
 
   // RevenueCat entitlement ID (configured in dashboard)
   static const _proEntitlement = 'pro';
@@ -138,6 +141,14 @@ class SubscriptionService {
 
     try {
       final apiKey = Platform.isIOS ? _iosApiKey : _androidApiKey;
+
+      if (apiKey.isEmpty) {
+        debugPrint('⚠️ RevenueCat key not set — running in free mode');
+        _updateState(_state.copyWith(tier: SubscriptionTier.free));
+        await _loadWeeklyUsage();
+        _initialized = true;
+        return;
+      }
 
       await Purchases.configure(
         PurchasesConfiguration(apiKey)..appUserID = null, // Anonymous until

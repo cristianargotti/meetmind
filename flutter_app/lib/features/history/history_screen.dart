@@ -165,10 +165,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     ),
                   )
                 : _error != null
-                ? _buildError()
-                : _filteredMeetings.isEmpty
-                ? _buildEmpty()
-                : _buildMeetingList(),
+                    ? _buildError()
+                    : _filteredMeetings.isEmpty
+                        ? _buildEmpty()
+                        : _buildMeetingList(),
           ),
         ],
       ),
@@ -186,13 +186,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
         itemBuilder: (context, index) {
           final meeting = _filteredMeetings[index];
           return _MeetingCard(
-                meeting: meeting,
-                onTap: () => context.push('/meeting/${meeting['id']}'),
-                onDelete: () => _deleteMeeting(
-                  meeting['id'] as String,
-                  _meetings.indexOf(meeting),
-                ),
-              )
+            meeting: meeting,
+            onTap: () => context.push('/meeting/${meeting['id']}'),
+            onDelete: () => _deleteMeeting(
+              meeting['id'] as String,
+              _meetings.indexOf(meeting),
+            ),
+          )
               .animate()
               .fadeIn(
                 delay: Duration(milliseconds: index * 60),
@@ -231,8 +231,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
           Text(
             _searchQuery.isEmpty ? 'No meetings yet' : 'No matches found',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: MeetMindTheme.textSecondary,
-            ),
+                  color: MeetMindTheme.textSecondary,
+                ),
           ),
           const SizedBox(height: 8),
           Text(
@@ -263,8 +263,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
           Text(
             _error ?? 'Something went wrong',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: MeetMindTheme.textSecondary,
-            ),
+                  color: MeetMindTheme.textSecondary,
+                ),
           ),
           const SizedBox(height: 16),
           ElevatedButton.icon(

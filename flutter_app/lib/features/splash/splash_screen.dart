@@ -75,29 +75,28 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
           children: [
             // Ambient glow behind logo
             Center(
-              child:
-                  Container(
-                        width: 200,
-                        height: 200,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: RadialGradient(
-                            colors: [
-                              MeetMindTheme.primary.withValues(alpha: 0.15),
-                              MeetMindTheme.primary.withValues(alpha: 0.05),
-                              Colors.transparent,
-                            ],
-                          ),
-                        ),
-                      )
-                      .animate()
-                      .scaleXY(
-                        begin: 0.5,
-                        end: 1.2,
-                        duration: 2000.ms,
-                        curve: Curves.easeOut,
-                      )
-                      .fadeIn(duration: 800.ms),
+              child: Container(
+                width: 200,
+                height: 200,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      MeetMindTheme.primary.withValues(alpha: 0.15),
+                      MeetMindTheme.primary.withValues(alpha: 0.05),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              )
+                  .animate()
+                  .scaleXY(
+                    begin: 0.5,
+                    end: 1.2,
+                    duration: 2000.ms,
+                    curve: Curves.easeOut,
+                  )
+                  .fadeIn(duration: 800.ms),
             ),
 
             // Logo + text
@@ -107,13 +106,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                 children: [
                   // App logo
                   ClipRRect(
-                        borderRadius: BorderRadius.circular(28),
-                        child: Image.asset(
-                          'assets/images/app_logo.png',
-                          width: 100,
-                          height: 100,
-                        ),
-                      )
+                    borderRadius: BorderRadius.circular(28),
+                    child: Image.asset(
+                      'assets/images/app_logo.png',
+                      width: 100,
+                      height: 100,
+                    ),
+                  )
                       .animate()
                       .scaleXY(
                         begin: 0.3,
@@ -127,14 +126,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
                   // App name
                   const Text(
-                        'Aura Meet',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 32,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.5,
-                        ),
-                      )
+                    'Aura Meet',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 32,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.5,
+                    ),
+                  )
                       .animate()
                       .fadeIn(delay: 400.ms, duration: 600.ms)
                       .slideY(begin: 0.3, end: 0, curve: Curves.easeOut),
@@ -143,23 +142,23 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
                   // Tagline with shimmer
                   ShaderMask(
-                        shaderCallback: (bounds) => const LinearGradient(
-                          colors: [
-                            MeetMindTheme.primaryLight,
-                            MeetMindTheme.accent,
-                            MeetMindTheme.primaryLight,
-                          ],
-                        ).createShader(bounds),
-                        child: const Text(
-                          'Your AI meeting copilot',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      )
+                    shaderCallback: (bounds) => const LinearGradient(
+                      colors: [
+                        MeetMindTheme.primaryLight,
+                        MeetMindTheme.accent,
+                        MeetMindTheme.primaryLight,
+                      ],
+                    ).createShader(bounds),
+                    child: const Text(
+                      'Your AI meeting copilot',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  )
                       .animate()
                       .fadeIn(delay: 700.ms, duration: 600.ms)
                       .slideY(begin: 0.5, end: 0, curve: Curves.easeOut),

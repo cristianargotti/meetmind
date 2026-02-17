@@ -114,8 +114,8 @@ class _ModelDownloadScreenState extends ConsumerState<ModelDownloadScreen> {
                   onPressed: _downloading
                       ? null
                       : sttStatus == WhisperModelStatus.loaded
-                      ? () => Navigator.pop(context)
-                      : _startDownload,
+                          ? () => Navigator.pop(context)
+                          : _startDownload,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: MeetMindTheme.primary,
                     foregroundColor: Colors.white,
@@ -130,8 +130,8 @@ class _ModelDownloadScreenState extends ConsumerState<ModelDownloadScreen> {
                     _downloading
                         ? 'Downloading...'
                         : sttStatus == WhisperModelStatus.loaded
-                        ? 'Continue ✓'
-                        : 'Download & Initialize',
+                            ? 'Continue ✓'
+                            : 'Download & Initialize',
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -144,9 +144,8 @@ class _ModelDownloadScreenState extends ConsumerState<ModelDownloadScreen> {
               if (sttStatus != WhisperModelStatus.loaded)
                 Center(
                   child: TextButton(
-                    onPressed: _downloading
-                        ? null
-                        : () => Navigator.pop(context),
+                    onPressed:
+                        _downloading ? null : () => Navigator.pop(context),
                     child: const Text(
                       'Skip for now (manual input only)',
                       style: TextStyle(color: Colors.white38, fontSize: 13),
@@ -250,9 +249,8 @@ class _ModelCard extends StatelessWidget {
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 15,
-                            fontWeight: isSelected
-                                ? FontWeight.w700
-                                : FontWeight.w500,
+                            fontWeight:
+                                isSelected ? FontWeight.w700 : FontWeight.w500,
                           ),
                         ),
                         if (info.name == 'base') ...[

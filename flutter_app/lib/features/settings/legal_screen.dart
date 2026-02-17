@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:meetmind/config/theme.dart';
 import 'package:meetmind/l10n/generated/app_localizations.dart';
+import 'package:meetmind/services/auth_service.dart';
 
 /// Legal documents screen — Privacy Policy & Terms of Service.
 ///
@@ -29,9 +31,8 @@ class LegalScreen extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: isPrivacy
-              ? _privacyContent(context, l10n)
-              : _termsContent(l10n),
+          children:
+              isPrivacy ? _privacyContent(context, l10n) : _termsContent(l10n),
         ),
       ),
     );
@@ -135,7 +136,7 @@ class LegalScreen extends StatelessWidget {
   void _showDeleteConfirmation(BuildContext context, AppLocalizations l10n) {
     showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogCtx) => AlertDialog(
         backgroundColor: MeetMindTheme.darkCard,
         title: Text(
           l10n.privacyDeleteAccount,
@@ -147,13 +148,27 @@ class LegalScreen extends StatelessWidget {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => Navigator.of(dialogCtx).pop(),
             child: Text(l10n.commonCancel),
           ),
           ElevatedButton(
-            onPressed: () {
-              // TODO: Call DELETE /api/auth/account when auth is connected
-              Navigator.of(context).pop();
+            onPressed: () async {
+              Navigator.of(dialogCtx).pop();
+              try {
+                await AuthService.instance.deleteAccount();
+                if (context.mounted) {
+                  GoRouter.of(context).go('/login');
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to delete account: $e'),
+                      backgroundColor: Colors.redAccent,
+                    ),
+                  );
+                }
+              }
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
             child: Text(l10n.privacyDeleteButton),

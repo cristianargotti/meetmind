@@ -1,0 +1,107 @@
+---
+const { t } = Astro.props;
+const check = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#06D6A0" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>';
+const cross = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+const partial = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FBBF24" stroke-width="2"><circle cx="12" cy="12" r="1"/></svg>';
+
+const competitors = t.compare.competitors;
+const features = t.compare.features;
+---
+
+<section class="section compare-section" id="comparison">
+  <div class="container">
+    <div class="section-header animate-on-scroll">
+      <span class="badge">{t.compare.badge}</span>
+      <h2 class="section-title" style="margin-top: var(--space-md);">{t.compare.title}</h2>
+      <p class="section-subtitle">{t.compare.subtitle}</p>
+    </div>
+
+    <div class="compare-table-wrap animate-on-scroll">
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th class="feature-col">{t.compare.featureLabel}</th>
+            {competitors.map((comp: any, i: number) => (
+              <th class={i === 0 ? 'brand-col' : 'comp-col'}>{comp}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {features.map((row: any) => (
+            <tr>
+              <td class="feature-name">{row.name}</td>
+              {row.values.map((val: string, i: number) => (
+                <td class={i === 0 ? 'brand-val' : 'comp-val'}>
+                  <span set:html={val === 'yes' ? check : val === 'no' ? cross : val === 'partial' ? partial : val} />
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<style>
+  .compare-section { position: relative; overflow: hidden; }
+  .compare-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: var(--card-radius);
+    border: 1px solid var(--border-dark);
+    background: var(--bg-card);
+  }
+  .compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 600px;
+  }
+  .compare-table th,
+  .compare-table td {
+    padding: var(--space-sm) var(--space-md);
+    text-align: center;
+    border-bottom: 1px solid var(--border-dark);
+    font-size: var(--fs-small);
+  }
+  .compare-table th {
+    font-weight: 700;
+    font-size: var(--fs-small);
+    color: var(--text-secondary);
+    padding: var(--space-md);
+    background: rgba(22, 25, 34, 0.8);
+    position: sticky;
+    top: 0;
+  }
+  .feature-col {
+    text-align: left !important;
+    min-width: 180px;
+  }
+  .brand-col {
+    color: var(--primary) !important;
+    font-size: var(--fs-body) !important;
+    background: rgba(139, 92, 246, 0.08) !important;
+  }
+  .feature-name {
+    text-align: left;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+  .brand-val {
+    background: rgba(139, 92, 246, 0.04);
+  }
+  .comp-val {
+    color: var(--text-muted);
+  }
+  .compare-table tbody tr:last-child td,
+  .compare-table tbody tr:last-child th {
+    border-bottom: none;
+  }
+  .compare-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.02);
+  }
+  :global(.compare-table td svg) {
+    display: inline-block;
+    vertical-align: middle;
+  }
+</style>

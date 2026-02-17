@@ -1,0 +1,405 @@
+{
+    "meta": {
+        "title": "Aura Meet — Your AI Meeting Copilot",
+        "description": "Real-time transcription, AI-powered insights, and automatic summaries. The ultimate tool for productive meetings. Available on iOS and Android."
+    },
+    "nav": {
+        "features": "Features",
+        "howItWorks": "How It Works",
+        "pricing": "Pricing",
+        "support": "Support",
+        "download": "Download"
+    },
+    "hero": {
+        "tagline": "Your meeting, your edge",
+        "title": "Your AI meeting copilot",
+        "subtitle": "Real-time transcription, intelligent analysis, and automatic summaries. Never miss an important detail from your meetings again.",
+        "cta": "Download Free",
+        "ctaSecondary": "See Demo",
+        "phone": {
+            "meetingTitle": "Weekly Standup",
+            "tabTranscript": "Transcript",
+            "tabInsights": "Insights",
+            "tabSummary": "Summary",
+            "tabCopilot": "Copilot",
+            "speaker1": "Sarah",
+            "text1": "Let's review the progress on the Q1 launch...",
+            "speaker2": "You",
+            "text2": "The backend deployment is complete. We're now at 99.9% uptime.",
+            "speaker3": "David",
+            "text3": "I'll share the updated design mockups by",
+            "notifTitle": "New Insight Detected",
+            "notifDesc": "Action item: Update design mockups"
+        }
+    },
+    "showcase": {
+        "title": "Experience Aura Meet",
+        "subtitle": "Every screen designed to supercharge your meetings",
+        "screens": {
+            "home": {
+                "title": "Dashboard",
+                "description": "Your command center: meeting stats, quick actions, and recent activity at a glance."
+            },
+            "meeting": {
+                "title": "Live Meeting",
+                "description": "Word-by-word real-time transcription with audio waveform and AI copilot panel."
+            },
+            "history": {
+                "title": "Full History",
+                "description": "All your meetings organized chronologically with search, filters, and export options."
+            },
+            "copilot": {
+                "title": "Ask Aura",
+                "description": "Your conversational assistant: ask anything about your past meetings and get instant answers."
+            },
+            "settings": {
+                "title": "Settings",
+                "description": "Complete account management, subscription, language preferences, and customization."
+            },
+            "login": {
+                "title": "Secure Access",
+                "description": "Sign in with Google, Apple, or email. Secure and frictionless authentication."
+            }
+        }
+    },
+    "features": {
+        "title": "Powerful Features",
+        "subtitle": "AI tools designed to maximize every meeting",
+        "items": {
+            "transcription": {
+                "title": "Real-Time Transcription",
+                "description": "On-device AI engine that transcribes every word with professional accuracy. Works even without an internet connection."
+            },
+            "insights": {
+                "title": "Smart Insights",
+                "description": "Automatic analysis that identifies key topics, sentiments, action items, and important decisions."
+            },
+            "summaries": {
+                "title": "Executive Summaries",
+                "description": "Generate professional summaries, action lists, and follow-ups with a single tap after each meeting."
+            },
+            "languages": {
+                "title": "99 Languages",
+                "description": "Multilingual support powered by OpenAI's Whisper. Your meeting is transcribed in the world's most spoken languages."
+            }
+        }
+    },
+    "howItWorks": {
+        "title": "How It Works",
+        "subtitle": "Three steps to more productive meetings",
+        "steps": {
+            "record": {
+                "number": "01",
+                "title": "Listen",
+                "description": "With a single tap, Aura Meet listens and transcribes your meeting in real time. Everything is processed on your device — no audio is recorded or stored."
+            },
+            "analyze": {
+                "number": "02",
+                "title": "Analyze",
+                "description": "AI analyzes your meeting in real time, identifying key topics and generating actionable insights."
+            },
+            "act": {
+                "number": "03",
+                "title": "Act",
+                "description": "Receive executive summaries, action items, and automatic follow-ups ready to share."
+            }
+        }
+    },
+    "faq": {
+        "title": "Frequently Asked Questions",
+        "items": [
+            {
+                "question": "Is it really free?",
+                "answer": "Yes. The free plan includes 3 meetings per week with real-time transcription and AI summaries. The Pro plan unlocks unlimited meetings, permanent history, and advanced features like Ask Aura."
+            },
+            {
+                "question": "Is my data secure?",
+                "answer": "Yes. Transcription is processed directly on your device and audio is never sent to servers. When you use features like Ask Aura, text data is sent encrypted with TLS 1.3. We comply with Apple and Google privacy policies."
+            },
+            {
+                "question": "Does it work offline?",
+                "answer": "Transcription works 100% offline thanks to the on-device AI engine. Advanced features like insights, Ask Aura, and Weekly Digest require an internet connection."
+            },
+            {
+                "question": "What languages are supported?",
+                "answer": "We support 99 languages for transcription, including English, Spanish, Portuguese, French, German, Japanese, Mandarin Chinese, and many more."
+            },
+            {
+                "question": "How do I cancel my subscription?",
+                "answer": "You can cancel anytime from the App Store or Google Play. No penalties, hidden fees, or lock-in periods."
+            }
+        ]
+    },
+    "pricing": {
+        "title": "Plans & Pricing",
+        "subtitle": "Choose the plan that fits you",
+        "free": {
+            "name": "Free",
+            "price": "$0",
+            "period": "forever",
+            "features": [
+                "3 meetings per week",
+                "7-day history",
+                "1 insight per meeting",
+                "Real-time transcription",
+                "Email support"
+            ],
+            "cta": "Get Started Free"
+        },
+        "pro": {
+            "name": "Aura Pro",
+            "price": "$14.99",
+            "period": "/month",
+            "yearlyNote": "or $9.99/mo billed annually — Save 33%",
+            "features": [
+                "Unlimited meetings",
+                "Permanent history",
+                "All insights",
+                "Ask Aura (AI copilot)",
+                "Weekly Digest",
+                "Export & share"
+            ],
+            "cta": "Start with Pro",
+            "badge": "Recommended"
+        }
+    },
+    "cta": {
+        "title": "Supercharge your meetings with AI",
+        "subtitle": "Download Aura Meet and turn every conversation into action",
+        "button": "Download Free",
+        "noCreditCard": "No credit card required. No commitments."
+    },
+    "trustBar": {
+        "stats": [
+            {
+                "value": "99",
+                "label": "Languages supported"
+            },
+            {
+                "value": "100%",
+                "label": "On-device transcription"
+            },
+            {
+                "value": "<1s",
+                "label": "Real-time latency"
+            },
+            {
+                "value": "0",
+                "label": "Audio sent to servers"
+            }
+        ]
+    },
+    "privacyFirst": {
+        "title": "Designed for your privacy",
+        "subtitle": "Your audio never leaves your device",
+        "features": [
+            {
+                "title": "On-Device Transcription",
+                "description": "The transcription engine runs directly on your phone. Your audio is processed locally and never sent to external servers."
+            },
+            {
+                "title": "Real-Time Performance",
+                "description": "Instant word-by-word transcription as you speak. No waiting, no buffering, no delays."
+            },
+            {
+                "title": "Optimized Whisper Model",
+                "description": "We use OpenAI's Whisper optimized for mobile. Professional accuracy with a compact model that runs on your device."
+            },
+            {
+                "title": "Encrypted Data in Transit",
+                "description": "When you use cloud features like Ask Aura, your text data travels protected with TLS 1.3. Audio is never sent."
+            }
+        ]
+    },
+    "socialProof": {
+        "badge": "What our users say",
+        "title": "Trusted by real teams",
+        "subtitle": "Professionals who transformed their meetings with Aura Meet",
+        "testimonials": [
+            {
+                "name": "Laura M.",
+                "role": "Product Manager",
+                "text": "Aura Meet changed how I document my meetings. On-device privacy gives me total peace of mind."
+            },
+            {
+                "name": "Carlos R.",
+                "role": "Tech Lead",
+                "text": "The automatic summaries are incredibly accurate. I save at least 30 minutes per meeting."
+            },
+            {
+                "name": "Ana P.",
+                "role": "UX Researcher",
+                "text": "Transcription works without internet — perfect for my field interviews."
+            }
+        ],
+        "ratingText": "4.9 on App Store"
+    },
+    "compare": {
+        "badge": "Why Aura Meet?",
+        "title": "Compare and decide",
+        "subtitle": "Key features against the competition",
+        "featureLabel": "Feature",
+        "competitors": [
+            "Aura Meet",
+            "Otter.ai",
+            "Fireflies.ai",
+            "Krisp"
+        ],
+        "features": [
+            {
+                "name": "On-device transcription",
+                "values": [
+                    "yes",
+                    "no",
+                    "no",
+                    "no"
+                ]
+            },
+            {
+                "name": "Zero audio to server",
+                "values": [
+                    "yes",
+                    "no",
+                    "no",
+                    "partial"
+                ]
+            },
+            {
+                "name": "Works offline",
+                "values": [
+                    "yes",
+                    "no",
+                    "no",
+                    "yes"
+                ]
+            },
+            {
+                "name": "AI-powered summaries",
+                "values": [
+                    "yes",
+                    "yes",
+                    "yes",
+                    "no"
+                ]
+            },
+            {
+                "name": "Action item detection",
+                "values": [
+                    "yes",
+                    "yes",
+                    "yes",
+                    "no"
+                ]
+            },
+            {
+                "name": "99+ language support",
+                "values": [
+                    "yes",
+                    "yes",
+                    "partial",
+                    "no"
+                ]
+            },
+            {
+                "name": "Real free plan",
+                "values": [
+                    "yes",
+                    "partial",
+                    "partial",
+                    "yes"
+                ]
+            },
+            {
+                "name": "No mandatory subscription",
+                "values": [
+                    "yes",
+                    "no",
+                    "no",
+                    "no"
+                ]
+            }
+        ]
+    },
+    "animatedDemo": {
+        "badge": "See the app in action",
+        "title": "Experience Aura Meet",
+        "subtitle": "An interactive demo of the real app — no download needed",
+        "homeSubtitle": "Your intelligent meeting hub",
+        "startMeeting": "Start Meeting",
+        "transcribeRealtime": "Transcribe and analyze in real time",
+        "statToday": "TODAY",
+        "statInsights": "INSIGHTS",
+        "statActions": "ACTIONS",
+        "recentMeetings": "Recent Meetings",
+        "navHistory": "History",
+        "navSettings": "Settings",
+        "tabTranscript": "Transcript",
+        "tabInsights": "Insights",
+        "tabSummary": "Summary",
+        "addNote": "Add manual note...",
+        "summaryTitle": "Sprint Planning Q1 — Summary",
+        "summaryOverview": "The team reviewed Q1 objectives, prioritized the API backlog, and defined deliverables for the next 2 weeks.",
+        "summaryLatency": "Generated in 1.2s",
+        "decisions": "Decisions",
+        "decision1": "Migrate REST endpoints to GraphQL for Q2",
+        "decision2": "Prioritize the authentication module this week",
+        "actionItems": "Action Items",
+        "action1": "Cristian: Prepare GraphQL RFC by Friday",
+        "action2": "Ana: Review integration tests for auth module",
+        "keyTopics": "Key Topics",
+        "topic1": "API Performance — p99 latency reduced to 120ms",
+        "topic2": "Tech debt — 3 refactoring tickets prioritized",
+        "askAuraTitle": "Ask Aura",
+        "askAuraSubtitle": "Ask about your past meetings using AI",
+        "suggestion1": "What are the action items from sprint planning?",
+        "suggestion2": "Summarize the decisions from the last meeting",
+        "suggestion3": "What topics were discussed this week?",
+        "askPlaceholder": "Ask anything...",
+        "askQuestion": "What are the action items from sprint planning?",
+        "askAnswer": "From Sprint Planning Q1 there are 2 action items: 1) Cristian needs to prepare the GraphQL RFC by Friday, and 2) Ana needs to review the integration tests for the auth module before Wednesday.",
+        "privacyTitle": "Your audio never leaves the phone",
+        "privacyDesc": "Aura Meet processes everything locally using on-device Whisper. No servers, no clouds, no compromises.",
+        "privFeat1": "100% on-device transcription",
+        "privFeat2": "Audio deleted after processing",
+        "privFeat3": "No third-party servers",
+        "sceneLabels": [
+            "Home Screen",
+            "Live Transcription",
+            "Smart Summary",
+            "Ask Aura — AI Chat",
+            "On-Device Privacy"
+        ],
+        "transcriptLines": [
+            {
+                "speaker": "Cristian",
+                "text": "Good morning team. Let's start with the Q1 sprint planning."
+            },
+            {
+                "speaker": "Ana",
+                "text": "I have the performance review results. The p99 latency dropped to 120ms."
+            },
+            {
+                "speaker": "Cristian",
+                "text": "Excellent. So we prioritize the GraphQL migration for Q2."
+            },
+            {
+                "speaker": "Carlos",
+                "text": "Agreed. I can prepare the GraphQL RFC by Friday."
+            },
+            {
+                "speaker": "Ana",
+                "text": "Perfect. I'll handle reviewing the integration tests for the auth module."
+            }
+        ]
+    },
+    "footer": {
+        "product": "Product",
+        "legal": "Legal",
+        "connect": "Contact",
+        "privacy": "Privacy Policy",
+        "terms": "Terms of Service",
+        "support": "Support",
+        "deleteAccount": "Delete Account",
+        "copyright": "© 2026 Aura Meet. All rights reserved."
+    }
+}

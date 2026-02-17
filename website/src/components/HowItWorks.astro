@@ -1,0 +1,126 @@
+---
+const { t } = Astro.props;
+const steps = ['record', 'analyze', 'act'];
+const stepIcons = [
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>',
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/><line x1="6" y1="8" x2="6" y2="12"/><line x1="18" y1="8" x2="18" y2="12"/></svg>',
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>'
+];
+---
+
+<section class="section how-it-works" id="how-it-works">
+  <div class="container">
+    <div class="section-header animate-on-scroll">
+      <h2 class="section-title">{t.howItWorks.title}</h2>
+      <p class="section-subtitle">{t.howItWorks.subtitle}</p>
+    </div>
+    <div class="steps-grid">
+      {steps.map((step, i) => (
+        <div class="step-card animate-on-scroll" style={`animation-delay: ${i * 0.15}s`}>
+          <div class="step-line-container">
+            <div class="step-number-ring">
+              <span class="step-num">{t.howItWorks.steps[step].number}</span>
+            </div>
+            {i < 2 && <div class="step-connector-line" aria-hidden="true"></div>}
+          </div>
+          <div class="step-icon-wrap" set:html={stepIcons[i]} />
+          <h3 class="step-title">{t.howItWorks.steps[step].title}</h3>
+          <p class="step-desc">{t.howItWorks.steps[step].description}</p>
+        </div>
+      ))}
+    </div>
+  </div>
+
+  <!-- Schema.org HowTo -->
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "name": t.howItWorks.title,
+    "step": steps.map((step, i) => ({
+      "@type": "HowToStep",
+      "position": i + 1,
+      "name": t.howItWorks.steps[step].title,
+      "text": t.howItWorks.steps[step].description
+    }))
+  })} />
+</section>
+
+<style>
+  .steps-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-xl);
+    position: relative;
+  }
+  .step-card {
+    text-align: center;
+    padding: var(--space-lg);
+    position: relative;
+  }
+  .step-line-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: var(--space-md);
+    position: relative;
+  }
+  .step-number-ring {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--accent-gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 2;
+    box-shadow: 0 0 30px rgba(0, 212, 255, 0.2);
+  }
+  .step-num {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: #fff;
+  }
+  .step-icon-wrap {
+    width: 40px;
+    height: 40px;
+    margin: var(--space-md) auto var(--space-sm);
+    color: var(--primary);
+    opacity: 0.7;
+  }
+  .step-icon-wrap :global(svg) {
+    width: 100%;
+    height: 100%;
+  }
+  .step-title {
+    font-size: var(--fs-h2);
+    font-weight: 800;
+    margin-bottom: var(--space-xs);
+  }
+  .step-desc {
+    color: var(--text-secondary);
+    max-width: 350px;
+    margin: 0 auto;
+    font-size: var(--fs-small);
+    line-height: 1.7;
+  }
+  .step-connector-line { display: none; }
+
+  @media (min-width: 1024px) {
+    .steps-grid {
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-xl);
+    }
+    .step-connector-line {
+      display: block;
+      position: absolute;
+      top: 50%;
+      right: -50%;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      opacity: 0.2;
+      z-index: 1;
+    }
+  }
+</style>

@@ -81,11 +81,13 @@ class ConnectionManager:
         """Check if AI agents are initialized."""
         return self._screening_agent is not None
 
-    async def connect(self, websocket: WebSocket) -> str:
+    async def connect(self, websocket: WebSocket, *, language: str = "") -> str:
         """Accept a WebSocket connection and assign an ID.
 
         Args:
             websocket: The WebSocket connection to accept.
+            language: Optional language code from client (e.g., 'es', 'en', 'pt').
+                     Falls back to server default if empty or 'auto'.
 
         Returns:
             Unique connection ID.
@@ -105,8 +107,11 @@ class ConnectionManager:
         self._transcripts[connection_id] = transcript
         self._start_times[connection_id] = time.monotonic()
 
+        # Resolve language: client preference → server default
+        language_code = language if language and language != "auto" else settings.moonshine_language
+        stt_language = language if language and language != "auto" else settings.whisper_language
+
         # Persist meeting in DB (non-blocking, graceful fallback)
-        language_code = settings.moonshine_language
         try:
             await storage.create_meeting(
                 meeting_id=connection_id,
@@ -149,7 +154,7 @@ class ConnectionManager:
                 )
 
                 streamer = MoonshineTranscriber(
-                    language=settings.moonshine_language,
+                    language=stt_language,
                     on_transcript=self._make_stream_callback(connection_id),
                 )
             elif settings.stt_engine == "qwen":
@@ -158,7 +163,7 @@ class ConnectionManager:
                 )
 
                 streamer = QwenTranscriber(
-                    language=settings.whisper_language,
+                    language=stt_language,
                     on_transcript=self._make_stream_callback(connection_id),
                     min_transcribe_interval=0.3,
                 )
@@ -168,13 +173,13 @@ class ConnectionManager:
                 )
 
                 streamer = ParakeetTranscriber(
-                    language=settings.whisper_language,
+                    language=stt_language,
                     on_transcript=self._make_stream_callback(connection_id),
                     min_transcribe_interval=0.1,
                 )
             else:
                 streamer = WhisperTranscriber(
-                    language=settings.whisper_language,
+                    language=stt_language,
                     on_transcript=self._make_stream_callback(connection_id),
                     min_transcribe_interval=0.5,
                 )
@@ -185,6 +190,7 @@ class ConnectionManager:
             "ws_connected",
             connection_id=connection_id,
             stt_mode=settings.stt_mode,
+            language=language_code,
             active_connections=len(self._active),
         )
         return connection_id
@@ -405,7 +411,10 @@ async def websocket_transcription(websocket: WebSocket) -> None:
     Args:
         websocket: The WebSocket connection.
     """
-    connection_id = await manager.connect(websocket)
+    connection_id = await manager.connect(
+        websocket,
+        language=websocket.query_params.get("lang", ""),
+    )
 
     try:
         # Send welcome message

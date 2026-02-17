@@ -82,6 +82,9 @@ class Settings(BaseSettings):
     host: str = "0.0.0.0"
     port: int = 8000
 
+    # CORS — comma-separated origins, or "*" for dev
+    cors_origins: str = "https://aurameet.live"
+
     # Logging
     log_level: str = "INFO"
 

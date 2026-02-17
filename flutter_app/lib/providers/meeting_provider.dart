@@ -9,6 +9,8 @@ import 'package:meetmind/services/audio_service.dart';
 import 'package:meetmind/services/model_manager.dart';
 import 'package:meetmind/services/notification_service.dart';
 import 'package:meetmind/services/permission_service.dart';
+import 'package:meetmind/services/subscription_service.dart';
+import 'package:meetmind/services/user_preferences.dart';
 import 'package:meetmind/services/websocket_service.dart';
 import 'package:meetmind/services/whisper_stt_service.dart';
 import 'package:uuid/uuid.dart';
@@ -54,14 +56,14 @@ final StateProvider<WhisperModelStatus> sttStatusProvider =
 /// Provider for the current meeting session.
 final StateNotifierProvider<MeetingNotifier, MeetingSession?> meetingProvider =
     StateNotifierProvider<MeetingNotifier, MeetingSession?>((Ref ref) {
-      return MeetingNotifier(ref);
-    });
+  return MeetingNotifier(ref);
+});
 
 /// Provider for connection status.
 final StateProvider<ConnectionStatus> connectionStatusProvider =
     StateProvider<ConnectionStatus>((Ref ref) {
-      return ConnectionStatus.disconnected;
-    });
+  return ConnectionStatus.disconnected;
+});
 
 /// Provider for whether AI agents are available on the backend.
 final StateProvider<bool> agentsReadyProvider = StateProvider<bool>((Ref ref) {
@@ -87,8 +89,8 @@ class MeetingNotifier extends StateNotifier<MeetingSession?> {
   Future<void> startMeeting({String title = 'New Meeting'}) async {
     // Check microphone permission first
     final PermissionService permissions = _ref.read(permissionProvider);
-    final PermissionResult permResult = await permissions
-        .requestMicPermission();
+    final PermissionResult permResult =
+        await permissions.requestMicPermission();
 
     if (permResult != PermissionResult.granted) {
       debugPrint('[MeetingNotifier] Mic permission: ${permResult.name}');
@@ -102,7 +104,11 @@ class MeetingNotifier extends StateNotifier<MeetingSession?> {
         ConnectionStatus.connecting;
 
     try {
-      await ws.connect(wsUrl: _ref.read(appConfigProvider).wsUrl);
+      // Include user's transcription language preference in WS URL
+      final langCode = UserPreferences.instance.transcriptionLanguage.code;
+      final baseWsUrl = _ref.read(appConfigProvider).wsUrl;
+      final wsUrlWithLang = '$baseWsUrl?lang=$langCode';
+      await ws.connect(wsUrl: wsUrlWithLang);
       _ref.read(connectionStatusProvider.notifier).state =
           ConnectionStatus.connected;
       // Server-side STT (Moonshine) — mark STT as ready immediately
@@ -158,6 +164,13 @@ class MeetingNotifier extends StateNotifier<MeetingSession?> {
       status: MeetingStatus.stopped,
       endTime: DateTime.now(),
     );
+
+    // Track meeting usage for free-tier limits
+    try {
+      await SubscriptionService.instance.recordMeetingUsage();
+    } catch (_) {
+      // Non-critical — don't block meeting end
+    }
   }
 
   /// Pause recording.
@@ -359,8 +372,7 @@ class MeetingNotifier extends StateNotifier<MeetingSession?> {
   /// Handle budget exceeded notification.
   void _handleBudgetExceeded() {
     if (state == null) return;
-    final CostData current =
-        state!.costData ??
+    final CostData current = state!.costData ??
         const CostData(
           totalCostUsd: 0,
           budgetUsd: 0.50,

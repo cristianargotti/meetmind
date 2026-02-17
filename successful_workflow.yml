@@ -1,0 +1,200 @@
+# =============================================================================
+# MeetMind — Flutter Release (APK + IPA)
+# =============================================================================
+# Triggered on version tags (v*.*.*).
+# Android: builds on self-hosted (free).
+# iOS: builds on macos-latest (GitHub-hosted, ~15 min macOS runner).
+# =============================================================================
+name: 📦 Flutter Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  android:
+    name: 🤖 Android APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: flutter_app
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: ☕ Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: 📱 Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.41.x"
+          channel: stable
+          cache: true
+
+      - name: 📦 Get dependencies
+        run: flutter pub get
+
+      - name: 🌐 Generate localizations
+        run: flutter gen-l10n
+
+      - name: 🏗️ Build APK (release)
+        run: |
+          flutter build apk \
+            --release \
+            --obfuscate \
+            --split-debug-info=build/debug-info
+
+      - name: 📤 Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: meetmind-android-${{ github.ref_name }}
+          path: flutter_app/build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 90
+
+  ios:
+    name: 🍎 iOS IPA
+    runs-on: macos-latest # GitHub-hosted (only on tags to conserve minutes)
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: flutter_app
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 📱 Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.41.x"
+          channel: stable
+          cache: true
+
+      - name: 📦 Get dependencies
+        run: flutter pub get
+
+      - name: 🌐 Generate localizations
+        run: flutter gen-l10n
+
+      - name: 🔑 Install certificate & API key
+        env:
+          CERT_BASE64: ${{ secrets.IOS_DISTRIBUTION_CERT_BASE64 }}
+          CERT_PASSWORD: ${{ secrets.IOS_CERT_PASSWORD }}
+          API_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+          API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+        run: |
+          # --- Create temporary keychain ---
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          KEYCHAIN_PASSWORD=$(openssl rand -hex 16)
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          # Import distribution certificate
+          CERT_PATH=$RUNNER_TEMP/certificate.p12
+          echo "$CERT_BASE64" | base64 --decode > "$CERT_PATH"
+          security import "$CERT_PATH" \
+            -P "$CERT_PASSWORD" \
+            -A -t cert -f pkcs12 \
+            -k "$KEYCHAIN_PATH"
+          security list-keychains -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | tr -d '"')
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          rm -f "$CERT_PATH"
+
+          # --- Write API key for xcodebuild auth ---
+          mkdir -p ~/private_keys
+          echo "$API_KEY" > ~/private_keys/AuthKey_${API_KEY_ID}.p8
+          echo "✅ Certificate + API key installed"
+
+      - name: 🏗️ Build & Archive
+        run: |
+          flutter build ios --release --no-codesign
+
+      - name: 📦 Archive & Export IPA
+        env:
+          API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          # Generate ExportOptions.plist
+          cat > ios/ExportOptions.plist << 'PLIST'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store-connect</string>
+            <key>destination</key>
+            <string>upload</string>
+            <key>signingStyle</key>
+            <string>automatic</string>
+            <key>teamID</key>
+            <string>9L6258YNVJ</string>
+            <key>uploadSymbols</key>
+            <true/>
+          </dict>
+          </plist>
+          PLIST
+
+          # Archive with xcodebuild (with API key auth for provisioning)
+          xcodebuild -workspace ios/Runner.xcworkspace \
+            -scheme Runner \
+            -configuration Release \
+            -archivePath build/ios/archive/Runner.xcarchive \
+            -destination 'generic/platform=iOS' \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath ~/private_keys/AuthKey_${API_KEY_ID}.p8 \
+            -authenticationKeyID "$API_KEY_ID" \
+            -authenticationKeyIssuerID "$API_ISSUER_ID" \
+            archive
+
+          # Export IPA
+          xcodebuild -exportArchive \
+            -archivePath build/ios/archive/Runner.xcarchive \
+            -exportOptionsPlist ios/ExportOptions.plist \
+            -exportPath build/ios/ipa \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath ~/private_keys/AuthKey_${API_KEY_ID}.p8 \
+            -authenticationKeyID "$API_KEY_ID" \
+            -authenticationKeyIssuerID "$API_ISSUER_ID"
+
+          echo "✅ IPA exported successfully"
+
+      - name: 📤 Upload IPA (artifact backup)
+        uses: actions/upload-artifact@v4
+        with:
+          name: meetmind-ios-${{ github.ref_name }}
+          path: flutter_app/build/ios/ipa/*.ipa
+          retention-days: 90
+
+      - name: 🧹 Cleanup
+        if: always()
+        run: |
+          rm -rf ~/private_keys
+          security delete-keychain $RUNNER_TEMP/app-signing.keychain-db 2>/dev/null || true
+
+  notify:
+    name: 🔔 Release Notification
+    needs: [android, ios]
+    runs-on: [self-hosted, linux, meetmind]
+    if: always()
+    steps:
+      - name: Notify Slack
+        if: env.SLACK_WEBHOOK_URL != ''
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          ANDROID="${{ needs.android.result }}"
+          IOS="${{ needs.ios.result }}"
+          curl -s -X POST "$SLACK_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"text\": \"📦 *MeetMind Release ${{ github.ref_name }}*\n• Android: $ANDROID\n• iOS + TestFlight: $IOS\n• <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Pipeline>\"
+            }"

@@ -1,0 +1,131 @@
+---
+const { title, description, locale = 'es', canonical, faqItems = [] } = Astro.props;
+const siteUrl = 'https://aurameet.live';
+const ogImage = `${siteUrl}/og-image.png`;
+const localeMap = { es: 'es_ES', en: 'en_US', pt: 'pt_BR' };
+const alternates = [
+  { locale: 'es', href: siteUrl },
+  { locale: 'en', href: `${siteUrl}/en` },
+  { locale: 'pt', href: `${siteUrl}/pt` },
+];
+---
+<!DOCTYPE html>
+<html lang={locale} dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="generator" content={Astro.generator} />
+
+  <!-- SEO -->
+  <title>{title}</title>
+  <meta name="description" content={description} />
+  <link rel="canonical" href={canonical || Astro.url.href} />
+  <meta name="robots" content="index, follow" />
+  <meta name="author" content="Aura Meet" />
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+  <!-- hreflang for multi-language SEO -->
+  {alternates.map(alt => (
+    <link rel="alternate" hreflang={alt.locale} href={alt.href} />
+  ))}
+  <link rel="alternate" hreflang="x-default" href={siteUrl} />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content={title} />
+  <meta property="og:description" content={description} />
+  <meta property="og:image" content={ogImage} />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:url" content={Astro.url.href} />
+  <meta property="og:locale" content={localeMap[locale]} />
+  {alternates.filter(a => a.locale !== locale).map(alt => (
+    <meta property="og:locale:alternate" content={localeMap[alt.locale]} />
+  ))}
+
+  <!-- Twitter Cards -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={title} />
+  <meta name="twitter:description" content={description} />
+  <meta name="twitter:image" content={ogImage} />
+
+  <!-- Google Fonts: Inter (non-blocking) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" /></noscript>
+
+  <!-- Global CSS -->
+  <style is:global>
+    @import '../styles/global.css';
+  </style>
+
+  <!-- Schema.org - Organization -->
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Aura Meet",
+    "url": siteUrl,
+    "logo": `${siteUrl}/favicon.svg`,
+    "sameAs": [
+      "https://www.instagram.com/aurameet.app"
+    ]
+  })} />
+
+  <!-- Schema.org - SoftwareApplication -->
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Aura Meet",
+    "operatingSystem": "iOS",
+    "applicationCategory": "BusinessApplication",
+    "description": description,
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    }
+  })} />
+
+  {/* Schema.org - FAQPage (improves Google rich snippets) */}
+  {faqItems.length > 0 && (
+    <script type="application/ld+json" set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": faqItems.map((faq: any) => ({
+        "@type": "Question",
+        "name": faq.question,
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": faq.answer
+        }
+      }))
+    })} />
+  )}
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to content</a>
+  <div class="gradient-mesh" aria-hidden="true"></div>
+  <noscript><style>.animate-on-scroll { opacity: 1 !important; transform: none !important; }</style></noscript>
+  <slot />
+
+  <!-- Scroll animation observer -->
+  <script>
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: '0px 0px -50px 0px' }
+    );
+    document.querySelectorAll('.animate-on-scroll').forEach(el => observer.observe(el));
+  </script>
+</body>
+</html>

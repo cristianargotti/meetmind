@@ -1,0 +1,150 @@
+---
+const { t } = Astro.props;
+// Features matching RevenueCat paywall_screen.dart exactly
+const freeFeatures = [
+  { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>', text: t.pricing.free.features[0] },
+  { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>', text: t.pricing.free.features[1] },
+  { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>', text: t.pricing.free.features[2] },
+];
+const proFeatures = [
+  { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>', text: t.pricing.pro.features[0] },
+  { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>', text: t.pricing.pro.features[1] },
+  { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>', text: t.pricing.pro.features[2] },
+  { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>', text: t.pricing.pro.features[3] },
+  { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>', text: t.pricing.pro.features[4] },
+  { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>', text: t.pricing.pro.features[5] },
+];
+---
+
+<section class="section pricing-section" id="pricing">
+  <div class="container">
+    <div class="section-header animate-on-scroll">
+      <h2 class="section-title">{t.pricing.title}</h2>
+      <p class="section-subtitle">{t.pricing.subtitle}</p>
+    </div>
+    <div class="pricing-grid">
+      <!-- Free Plan -->
+      <div class="pricing-card glass-card animate-on-scroll">
+        <div class="pricing-header">
+          <h3 class="pricing-name">{t.pricing.free.name}</h3>
+          <div class="pricing-price">
+            <span class="price-amount">{t.pricing.free.price}</span>
+            <span class="price-period">{t.pricing.free.period}</span>
+          </div>
+        </div>
+        <ul class="pricing-features">
+          {freeFeatures.map(f => (
+            <li>
+              <span class="pricing-feature-icon" set:html={f.icon} />
+              {f.text}
+            </li>
+          ))}
+        </ul>
+        <a href="#download" class="btn btn-secondary pricing-btn">{t.pricing.free.cta}</a>
+      </div>
+
+      <!-- Pro Plan -->
+      <div class="pricing-card glass-card pro animate-on-scroll" style="animation-delay: 0.1s">
+        <span class="badge pricing-badge">{t.pricing.pro.badge}</span>
+        <div class="pricing-header">
+          <h3 class="pricing-name">{t.pricing.pro.name}</h3>
+          <div class="pricing-price">
+            <span class="price-amount">{t.pricing.pro.price}</span>
+            <span class="price-period">{t.pricing.pro.period}</span>
+          </div>
+          <p class="pricing-yearly">{t.pricing.pro.yearlyNote}</p>
+        </div>
+        <ul class="pricing-features">
+          {proFeatures.map(f => (
+            <li>
+              <span class="pricing-feature-icon" set:html={f.icon} />
+              {f.text}
+            </li>
+          ))}
+        </ul>
+        <a href="#download" class="btn btn-primary pricing-btn">{t.pricing.pro.cta}</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-lg);
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  .pricing-card {
+    padding: var(--space-xl) var(--space-lg);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    transition: transform var(--transition-medium);
+  }
+  .pricing-card:hover { transform: translateY(-4px); }
+  .pricing-card.pro {
+    border-color: rgba(139, 92, 246, 0.25);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 60px rgba(139, 92, 246, 0.08);
+  }
+  .pricing-badge {
+    position: absolute;
+    top: -12px;
+    right: var(--space-lg);
+  }
+  .pricing-header { margin-bottom: var(--space-lg); }
+  .pricing-name {
+    font-size: var(--fs-h3);
+    font-weight: 700;
+    margin-bottom: var(--space-xs);
+  }
+  .price-amount {
+    font-size: 3rem;
+    font-weight: 900;
+    background: var(--accent-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .price-period {
+    color: var(--text-muted);
+    font-size: var(--fs-small);
+    margin-left: 0.25rem;
+  }
+  .pricing-yearly {
+    color: var(--primary);
+    font-size: var(--fs-caption);
+    margin-top: var(--space-xs);
+    opacity: 0.8;
+  }
+  .pricing-features {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-lg);
+    flex: 1;
+  }
+  .pricing-features li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--text-secondary);
+    font-size: var(--fs-small);
+  }
+  .pricing-feature-icon {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    color: var(--primary);
+  }
+  .pricing-feature-icon :global(svg) { width: 100%; height: 100%; }
+  .pricing-btn {
+    width: 100%;
+    text-align: center;
+  }
+
+  @media (min-width: 640px) {
+    .pricing-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>

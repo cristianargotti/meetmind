@@ -1,0 +1,40 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Nav from '../../components/Nav.astro';
+import Hero from '../../components/Hero.astro';
+import TrustBar from '../../components/TrustBar.astro';
+import AppShowcase from '../../components/AppShowcase.astro';
+import Features from '../../components/Features.astro';
+import PrivacyFirst from '../../components/PrivacyFirst.astro';
+import SocialProof from '../../components/SocialProof.astro';
+import AnimatedDemo from '../../components/AnimatedDemo.astro';
+import HowItWorks from '../../components/HowItWorks.astro';
+import CompareTable from '../../components/CompareTable.astro';
+import FAQ from '../../components/FAQ.astro';
+import Pricing from '../../components/Pricing.astro';
+import CTA from '../../components/CTA.astro';
+import Footer from '../../components/Footer.astro';
+import pt from '../../i18n/pt.json';
+
+const t = pt;
+const locale = 'pt';
+---
+
+<Layout title={t.meta.title} description={t.meta.description} locale={locale} faqItems={t.faq.items}>
+  <Nav t={t} locale={locale} />
+  <main id="main-content">
+    <Hero t={t} />
+    <TrustBar t={t} />
+    <AppShowcase t={t} />
+    <AnimatedDemo t={t} />
+    <Features t={t} />
+    <PrivacyFirst t={t} />
+    <SocialProof t={t} />
+    <HowItWorks t={t} />
+    <CompareTable t={t} />
+    <FAQ t={t} />
+    <Pricing t={t} />
+    <CTA t={t} />
+  </main>
+  <Footer t={t} locale={locale} />
+</Layout>

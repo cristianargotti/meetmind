@@ -1,0 +1,96 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import es from '../i18n/es.json';
+const t = es;
+---
+
+<Layout title="Terms of Service — Aura Meet" description="Aura Meet Terms of Service. Read our terms and conditions." locale="en">
+  <Nav t={t} locale="es" />
+  <main class="legal-page">
+    <div class="container">
+      <article class="legal-content glass-card">
+        <h1>Terms of Service</h1>
+        <p class="legal-date">Last updated: February 17, 2026</p>
+
+        <h2>1. Acceptance of Terms</h2>
+        <p>By downloading, installing, or using the Aura Meet application ("App"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, do not use the App.</p>
+
+        <h2>2. Description of Service</h2>
+        <p>Aura Meet is an AI-powered meeting assistant that provides real-time audio transcription, AI-generated insights, smart summaries, and a conversational AI copilot. The App is available on iOS and Android platforms.</p>
+
+        <h2>3. User Accounts</h2>
+        <p>You may create an account using Google Sign-In, Apple Sign-In, or email/password. You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account.</p>
+
+        <h2>4. Acceptable Use</h2>
+        <p>You agree not to:</p>
+        <ul>
+          <li>Use the App for any unlawful purpose</li>
+          <li>Record conversations without the consent of all participants where required by law</li>
+          <li>Attempt to reverse-engineer, decompile, or disassemble the App</li>
+          <li>Circumvent any technical limitations or access restrictions</li>
+          <li>Use the App to store or transmit malicious code</li>
+          <li>Resell, redistribute, or sublicense the App or its outputs</li>
+        </ul>
+
+        <h2>5. Intellectual Property</h2>
+        <p>The App, including its code, design, features, and content, is owned by Aura Meet and protected by intellectual property laws. Your meeting transcriptions and data remain your property.</p>
+
+        <h2>6. Subscriptions & Billing</h2>
+        <ul>
+          <li><strong>Free Plan:</strong> Basic features at no charge, subject to usage limits.</li>
+          <li><strong>Pro Plan:</strong> Premium features available via subscription through the Apple App Store or Google Play Store.</li>
+          <li>Subscriptions auto-renew unless cancelled at least 24 hours before the end of the current period.</li>
+          <li>Refunds are handled by Apple or Google per their respective refund policies.</li>
+          <li>Prices may change with reasonable notice; existing subscriptions are honored until renewal.</li>
+        </ul>
+
+        <h2>7. AI-Generated Content</h2>
+        <p>AI-generated summaries, insights, and copilot responses are provided for informational purposes only. They may contain errors or inaccuracies. You should not rely solely on AI-generated content for critical decisions.</p>
+
+        <h2>8. Disclaimer of Warranties</h2>
+        <p>The App is provided "as is" and "as available" without warranties of any kind, either express or implied. We do not warrant that the App will be uninterrupted, error-free, or free of harmful components.</p>
+
+        <h2>9. Limitation of Liability</h2>
+        <p>To the maximum extent permitted by law, Aura Meet shall not be liable for any indirect, incidental, special, consequential, or punitive damages, including loss of data, profits, or business opportunities.</p>
+
+        <h2>10. Termination</h2>
+        <p>We may suspend or terminate your account if you violate these Terms. You may delete your account at any time through the App's settings or at <a href="/delete-account">aurameet.live/delete-account</a>.</p>
+
+        <h2>11. Changes to Terms</h2>
+        <p>We reserve the right to modify these Terms at any time. We will notify you of material changes via the App or email. Continued use after changes constitutes acceptance.</p>
+
+        <h2>12. Governing Law</h2>
+        <p>These Terms shall be governed by and construed in accordance with the laws of the Republic of Colombia, without regard to its conflict of law provisions.</p>
+
+        <h2>13. Contact</h2>
+        <p>For questions about these Terms, contact us at: <a href="mailto:legal@aurameet.live">legal@aurameet.live</a></p>
+      </article>
+    </div>
+  </main>
+  <Footer t={t} locale="es" />
+</Layout>
+
+<style>
+  .legal-page { padding: calc(var(--nav-height) + var(--space-xl)) 0 var(--space-3xl); }
+  .legal-content {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: var(--space-xl);
+  }
+  .legal-content h1 {
+    font-size: var(--fs-h1);
+    font-weight: 900;
+    margin-bottom: var(--space-xs);
+    background: var(--accent-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .legal-date { color: var(--text-muted); font-size: var(--fs-small); margin-bottom: var(--space-xl); }
+  .legal-content h2 { font-size: var(--fs-h2); font-weight: 700; margin-top: var(--space-lg); margin-bottom: var(--space-sm); }
+  .legal-content p, .legal-content li { color: var(--text-secondary); line-height: 1.8; margin-bottom: var(--space-sm); }
+  .legal-content ul { padding-left: var(--space-md); margin-bottom: var(--space-sm); }
+  .legal-content li { margin-bottom: var(--space-xs); }
+  .legal-content a { color: var(--accent-cyan); }
+</style>

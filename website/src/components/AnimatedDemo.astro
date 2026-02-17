@@ -1,0 +1,1263 @@
+---
+const { t } = Astro.props;
+const demo = t.animatedDemo;
+---
+
+<section class="section demo-section" id="demo">
+  <div class="container">
+    <div class="section-header animate-on-scroll">
+      <span class="badge">{demo.badge}</span>
+      <h2 class="section-title" style="margin-top: var(--space-md);">{demo.title}</h2>
+      <p class="section-subtitle">{demo.subtitle}</p>
+    </div>
+
+    <div class="demo-stage animate-on-scroll">
+      <!-- iPhone frame -->
+      <div class="iphone-frame">
+        <div class="iphone-notch"></div>
+        <div class="iphone-screen" id="demoScreen">
+
+          <!-- ===== SCENE 1: Home Screen ===== -->
+          <div class="scene scene-home active" data-scene="1">
+            <div class="app-safe-area">
+              <!-- Header -->
+              <div class="app-header">
+                <div class="app-avatar">C</div>
+                <div class="app-greeting">
+                  <span class="greeting-text">Good morning, Cristian</span>
+                  <span class="greeting-sub">{demo.homeSubtitle}</span>
+                </div>
+                <div class="app-settings-icon">⚙</div>
+              </div>
+
+              <!-- Quick Start Card -->
+              <div class="quick-start-card">
+                <div class="qs-top-row">
+                  <div class="qs-icon-box">▶</div>
+                </div>
+                <div class="qs-title">{demo.startMeeting}</div>
+                <div class="qs-subtitle">{demo.transcribeRealtime}</div>
+              </div>
+
+              <!-- Stats Row -->
+              <div class="stats-row">
+                <div class="stat-card stat-accent">
+                  <span class="stat-icon">🎤</span>
+                  <span class="stat-value">3</span>
+                  <span class="stat-label">{demo.statToday}</span>
+                </div>
+                <div class="stat-card stat-success">
+                  <span class="stat-icon">💡</span>
+                  <span class="stat-value">12</span>
+                  <span class="stat-label">{demo.statInsights}</span>
+                </div>
+                <div class="stat-card stat-warning">
+                  <span class="stat-icon">✅</span>
+                  <span class="stat-value">5</span>
+                  <span class="stat-label">{demo.statActions}</span>
+                </div>
+              </div>
+
+              <!-- Recent Meetings -->
+              <div class="recent-section">
+                <span class="recent-title">{demo.recentMeetings}</span>
+                <div class="recent-item">
+                  <div class="recent-icon">🎤</div>
+                  <div class="recent-info">
+                    <span class="recent-name">Sprint Planning Q1</span>
+                    <span class="recent-date">Feb 17 · 2:30 PM · 45m 12s</span>
+                  </div>
+                  <span class="recent-arrow">›</span>
+                </div>
+                <div class="recent-item">
+                  <div class="recent-icon">🎤</div>
+                  <div class="recent-info">
+                    <span class="recent-name">Product Review</span>
+                    <span class="recent-date">Feb 16 · 10:00 AM · 32m 5s</span>
+                  </div>
+                  <span class="recent-arrow">›</span>
+                </div>
+                <div class="recent-item">
+                  <div class="recent-icon">🎤</div>
+                  <div class="recent-info">
+                    <span class="recent-name">Design Sync</span>
+                    <span class="recent-date">Feb 15 · 4:15 PM · 18m 34s</span>
+                  </div>
+                  <span class="recent-arrow">›</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bottom Nav -->
+            <div class="bottom-nav">
+              <div class="nav-item active"><span class="nav-icon">🏠</span><span>Home</span></div>
+              <div class="nav-item"><span class="nav-icon">✨</span><span>Ask Aura</span></div>
+              <div class="nav-item"><span class="nav-icon">📋</span><span>{demo.navHistory}</span></div>
+              <div class="nav-item"><span class="nav-icon">⚙</span><span>{demo.navSettings}</span></div>
+            </div>
+
+            <!-- FAB -->
+            <div class="fab-button" id="demoFab">
+              <span>🎤</span>
+            </div>
+          </div>
+
+          <!-- ===== SCENE 2: Meeting Recording ===== -->
+          <div class="scene scene-meeting" data-scene="2">
+            <div class="meeting-appbar">
+              <span class="meeting-back">←</span>
+              <span class="meeting-title">Sprint Planning Q1</span>
+              <span class="meeting-timer" id="demoTimer">00:00</span>
+            </div>
+
+            <!-- Status Bar -->
+            <div class="meeting-status-bar">
+              <div class="recording-dot"></div>
+              <span class="status-text">Recording</span>
+              <span class="status-spacer"></span>
+              <span class="segment-indicator">≡ <span id="segCount">0</span></span>
+              <span class="ai-indicator"><span class="ai-spinner"></span> AI</span>
+            </div>
+
+            <!-- Tabs -->
+            <div class="meeting-tabs">
+              <div class="tab active">{demo.tabTranscript}</div>
+              <div class="tab">{demo.tabInsights}</div>
+              <div class="tab">Copilot</div>
+              <div class="tab">{demo.tabSummary}</div>
+            </div>
+
+            <!-- Transcript Area -->
+            <div class="transcript-area" id="transcriptArea">
+              <!-- Transcript segments will be added by JS -->
+            </div>
+
+            <!-- Input Bar -->
+            <div class="meeting-input-bar">
+              <div class="input-field">{demo.addNote}</div>
+              <div class="mic-btn-small">🎤</div>
+            </div>
+          </div>
+
+          <!-- ===== SCENE 3: Summary Generated ===== -->
+          <div class="scene scene-summary" data-scene="3">
+            <div class="meeting-appbar">
+              <span class="meeting-back">←</span>
+              <span class="meeting-title">Sprint Planning Q1</span>
+              <span class="meeting-timer">45:12</span>
+            </div>
+            <div class="meeting-tabs">
+              <div class="tab">{demo.tabTranscript}</div>
+              <div class="tab">{demo.tabInsights}</div>
+              <div class="tab">Copilot</div>
+              <div class="tab active">{demo.tabSummary}</div>
+            </div>
+
+            <div class="summary-content" id="summaryContent">
+              <div class="summary-header">
+                <span class="summary-title">{demo.summaryTitle}</span>
+                <span class="copy-btn">📋</span>
+              </div>
+              <p class="summary-overview">{demo.summaryOverview}</p>
+              <span class="summary-latency">{demo.summaryLatency}</span>
+
+              <!-- Decisions -->
+              <div class="summary-group" data-group="decisions">
+                <span class="group-title">📌 {demo.decisions}</span>
+                <div class="group-item item-primary">{demo.decision1}</div>
+                <div class="group-item item-primary">{demo.decision2}</div>
+              </div>
+
+              <!-- Action Items -->
+              <div class="summary-group" data-group="actions">
+                <span class="group-title">✅ {demo.actionItems}</span>
+                <div class="group-item item-success">{demo.action1}</div>
+                <div class="group-item item-success">{demo.action2}</div>
+              </div>
+
+              <!-- Key Topics -->
+              <div class="summary-group" data-group="topics">
+                <span class="group-title">💬 {demo.keyTopics}</span>
+                <div class="group-item item-accent">{demo.topic1}</div>
+                <div class="group-item item-accent">{demo.topic2}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ===== SCENE 4: Ask Aura ===== -->
+          <div class="scene scene-ask-aura" data-scene="4">
+            <div class="meeting-appbar">
+              <span class="meeting-back">←</span>
+              <span class="meeting-title">Ask Aura</span>
+              <span></span>
+            </div>
+
+            <div class="chat-area" id="chatArea">
+              <!-- Suggested questions (empty state) -->
+              <div class="ask-empty-state" id="askEmptyState">
+                <div class="aura-icon-large">✨</div>
+                <span class="aura-title">{demo.askAuraTitle}</span>
+                <span class="aura-subtitle">{demo.askAuraSubtitle}</span>
+                <div class="suggested-questions">
+                  <div class="suggestion" data-q="1">{demo.suggestion1}</div>
+                  <div class="suggestion" data-q="2">{demo.suggestion2}</div>
+                  <div class="suggestion" data-q="3">{demo.suggestion3}</div>
+                </div>
+              </div>
+
+              <!-- Chat messages (populated by JS) -->
+            </div>
+
+            <div class="chat-input-bar">
+              <div class="chat-input" id="chatInput">{demo.askPlaceholder}</div>
+              <div class="send-btn">↑</div>
+            </div>
+
+            <div class="bottom-nav">
+              <div class="nav-item"><span class="nav-icon">🏠</span><span>Home</span></div>
+              <div class="nav-item active"><span class="nav-icon">✨</span><span>Ask Aura</span></div>
+              <div class="nav-item"><span class="nav-icon">📋</span><span>{demo.navHistory}</span></div>
+              <div class="nav-item"><span class="nav-icon">⚙</span><span>{demo.navSettings}</span></div>
+            </div>
+          </div>
+
+          <!-- ===== SCENE 5: Privacy On-Device ===== -->
+          <div class="scene scene-privacy" data-scene="5">
+            <div class="privacy-visual">
+              <div class="phone-glow"></div>
+              <div class="shield-icon">🛡️</div>
+              <div class="privacy-title">{demo.privacyTitle}</div>
+              <div class="privacy-desc">{demo.privacyDesc}</div>
+              <div class="privacy-features">
+                <div class="priv-feat"><span class="priv-check">✓</span> {demo.privFeat1}</div>
+                <div class="priv-feat"><span class="priv-check">✓</span> {demo.privFeat2}</div>
+                <div class="priv-feat"><span class="priv-check">✓</span> {demo.privFeat3}</div>
+              </div>
+              <div class="data-particles" id="dataParticles"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Scene indicator dots -->
+      <div class="scene-dots" id="sceneDots">
+        <button class="dot active" data-target="1" aria-label="Scene 1"></button>
+        <button class="dot" data-target="2" aria-label="Scene 2"></button>
+        <button class="dot" data-target="3" aria-label="Scene 3"></button>
+        <button class="dot" data-target="4" aria-label="Scene 4"></button>
+        <button class="dot" data-target="5" aria-label="Scene 5"></button>
+      </div>
+
+      <!-- Scene labels -->
+      <div class="scene-label" id="sceneLabel">{demo.sceneLabels[0]}</div>
+    </div>
+  </div>
+</section>
+
+<style>
+/* ─── Section ─── */
+.demo-section {
+  padding: var(--space-3xl) 0;
+  overflow: hidden;
+}
+.demo-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-lg);
+  margin-top: var(--space-xl);
+}
+
+/* ─── iPhone Frame ─── */
+.iphone-frame {
+  position: relative;
+  width: 300px;
+  height: 620px;
+  background: #000;
+  border-radius: 40px;
+  border: 3px solid #2a2a2e;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.05),
+    0 25px 80px rgba(139, 92, 246, 0.15),
+    0 10px 40px rgba(0,0,0,0.5);
+  overflow: hidden;
+}
+.iphone-notch {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 28px;
+  background: #000;
+  border-radius: 0 0 18px 18px;
+  z-index: 10;
+}
+.iphone-screen {
+  width: 100%;
+  height: 100%;
+  background: #08090D;
+  position: relative;
+  overflow: hidden;
+  font-family: 'Inter', -apple-system, sans-serif;
+}
+
+/* ─── Scenes ─── */
+.scene {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  transform: translateX(30px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  pointer-events: none;
+  padding-top: 28px;
+}
+.scene.active {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+.scene.exit {
+  opacity: 0;
+  transform: translateX(-30px);
+}
+
+/* ─── Scene 1: Home ─── */
+.app-safe-area {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+}
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+.app-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #8B5CF6, #7C3AED);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 14px;
+  font-weight: 700;
+  border: 2px solid rgba(139,92,246,0.3);
+}
+.app-greeting {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.greeting-text {
+  color: #F0F2F5;
+  font-size: 14px;
+  font-weight: 700;
+}
+.greeting-sub {
+  color: rgba(255,255,255,0.4);
+  font-size: 11px;
+}
+.app-settings-icon {
+  color: rgba(255,255,255,0.25);
+  font-size: 16px;
+}
+
+/* Quick Start Card */
+.quick-start-card {
+  background: linear-gradient(135deg, #8B5CF6, #4A42D8);
+  border-radius: 16px;
+  padding: 18px;
+  margin-bottom: 16px;
+  box-shadow: 0 8px 20px rgba(139,92,246,0.3);
+}
+.qs-top-row {
+  margin-bottom: 14px;
+}
+.qs-icon-box {
+  width: 36px;
+  height: 36px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 18px;
+}
+.qs-title {
+  color: white;
+  font-size: 17px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.qs-subtitle {
+  color: rgba(255,255,255,0.65);
+  font-size: 12px;
+}
+
+/* Stats Row */
+.stats-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.stat-card {
+  flex: 1;
+  background: #161922;
+  border: 1px solid #1E2230;
+  border-radius: 12px;
+  padding: 10px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+.stat-icon { font-size: 14px; }
+.stat-value {
+  color: white;
+  font-size: 18px;
+  font-weight: 700;
+  font-family: 'Inter', monospace;
+}
+.stat-label {
+  color: rgba(255,255,255,0.4);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.stat-accent .stat-value { color: #06D6A0; }
+.stat-success .stat-value { color: #22C55E; }
+.stat-warning .stat-value { color: #EAB308; }
+
+/* Recent Meetings */
+.recent-section { margin-top: 4px; }
+.recent-title {
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 10px;
+}
+.recent-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+}
+.recent-icon {
+  width: 32px;
+  height: 32px;
+  background: rgba(139,92,246,0.12);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+}
+.recent-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.recent-name {
+  color: white;
+  font-size: 12px;
+  font-weight: 500;
+}
+.recent-date {
+  color: rgba(255,255,255,0.25);
+  font-size: 10px;
+}
+.recent-arrow {
+  color: rgba(255,255,255,0.15);
+  font-size: 16px;
+}
+
+/* Bottom Nav */
+.bottom-nav {
+  display: flex;
+  background: #0F1117;
+  padding: 8px 0 14px;
+  border-top: 1px solid #1E2230;
+}
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 9px;
+  color: #5C6370;
+}
+.nav-item.active {
+  color: #8B5CF6;
+}
+.nav-icon { font-size: 16px; }
+
+/* FAB */
+.fab-button {
+  position: absolute;
+  bottom: 70px;
+  right: 20px;
+  width: 50px;
+  height: 50px;
+  background: #8B5CF6;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  box-shadow: 0 4px 16px rgba(139,92,246,0.4);
+  animation: fabPulse 2s ease-in-out infinite;
+}
+@keyframes fabPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+/* ─── Scene 2: Meeting ─── */
+.meeting-appbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: #08090D;
+}
+.meeting-back {
+  color: #8B5CF6;
+  font-size: 16px;
+  cursor: pointer;
+}
+.meeting-title {
+  color: white;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+.meeting-timer {
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'JetBrains Mono', 'SF Mono', monospace;
+}
+
+/* Status Bar */
+.meeting-status-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-bottom: 1px solid #1E2230;
+}
+.recording-dot {
+  width: 8px;
+  height: 8px;
+  background: #EF4444;
+  border-radius: 50%;
+  animation: blink 1s ease-in-out infinite;
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+.status-text {
+  color: rgba(255,255,255,0.6);
+  font-size: 11px;
+  font-weight: 500;
+}
+.status-spacer { flex: 1; }
+.segment-indicator {
+  color: rgba(255,255,255,0.4);
+  font-size: 10px;
+  font-family: monospace;
+}
+.ai-indicator {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  color: #06D6A0;
+  font-size: 10px;
+  font-weight: 600;
+}
+.ai-spinner {
+  width: 10px;
+  height: 10px;
+  border: 1.5px solid transparent;
+  border-top-color: #06D6A0;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Tabs */
+.meeting-tabs {
+  display: flex;
+  border-bottom: 1px solid #1E2230;
+}
+.tab {
+  flex: 1;
+  text-align: center;
+  padding: 8px 4px;
+  color: #5C6370;
+  font-size: 10px;
+  font-weight: 500;
+  border-bottom: 2px solid transparent;
+  transition: all 0.3s;
+}
+.tab.active {
+  color: white;
+  font-weight: 600;
+  border-bottom-color: #8B5CF6;
+}
+
+/* Transcript */
+.transcript-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 14px;
+}
+.transcript-segment {
+  margin-bottom: 10px;
+  animation: segFadeIn 0.4s ease;
+}
+@keyframes segFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.seg-time {
+  color: rgba(255,255,255,0.3);
+  font-size: 9px;
+  font-family: monospace;
+  margin-bottom: 2px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.seg-speaker {
+  color: #8B5CF6;
+  font-size: 9px;
+  font-weight: 600;
+}
+.seg-text {
+  color: rgba(255,255,255,0.85);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.seg-text .typing-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 12px;
+  background: #8B5CF6;
+  animation: cursorBlink 0.6s step-end infinite;
+  margin-left: 2px;
+  vertical-align: middle;
+}
+@keyframes cursorBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* Input Bar */
+.meeting-input-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-top: 1px solid #1E2230;
+  background: #0F1117;
+}
+.input-field {
+  flex: 1;
+  background: #161922;
+  border: 1px solid #1E2230;
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: rgba(255,255,255,0.3);
+  font-size: 11px;
+}
+.mic-btn-small {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+/* ─── Scene 3: Summary ─── */
+.summary-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px;
+}
+.summary-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.summary-title {
+  color: white;
+  font-size: 14px;
+  font-weight: 700;
+}
+.copy-btn {
+  font-size: 14px;
+  opacity: 0.5;
+}
+.summary-overview {
+  color: rgba(255,255,255,0.65);
+  font-size: 11px;
+  line-height: 1.6;
+  margin-bottom: 6px;
+}
+.summary-latency {
+  color: rgba(255,255,255,0.2);
+  font-size: 9px;
+  display: block;
+  margin-bottom: 14px;
+}
+.summary-group {
+  margin-bottom: 12px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: all 0.4s ease;
+}
+.summary-group.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.group-title {
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 6px;
+}
+.group-item {
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 10.5px;
+  color: rgba(255,255,255,0.83);
+  line-height: 1.4;
+  margin-bottom: 4px;
+}
+.item-primary {
+  background: rgba(139,92,246,0.08);
+  border: 1px solid rgba(139,92,246,0.2);
+}
+.item-success {
+  background: rgba(34,197,94,0.08);
+  border: 1px solid rgba(34,197,94,0.2);
+}
+.item-accent {
+  background: rgba(6,214,160,0.08);
+  border: 1px solid rgba(6,214,160,0.2);
+}
+
+/* ─── Scene 4: Ask Aura ─── */
+.chat-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px;
+}
+.ask-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding-top: 20px;
+  transition: opacity 0.4s;
+}
+.ask-empty-state.hidden { opacity: 0; pointer-events: none; }
+.aura-icon-large {
+  font-size: 36px;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, rgba(139,92,246,0.3), rgba(6,214,160,0.2));
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.aura-title {
+  color: white;
+  font-size: 16px;
+  font-weight: 700;
+  display: block;
+  margin-bottom: 4px;
+}
+.aura-subtitle {
+  color: rgba(255,255,255,0.4);
+  font-size: 11px;
+  display: block;
+  margin-bottom: 16px;
+}
+.suggested-questions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+.suggestion {
+  background: #161922;
+  border: 1px solid #1E2230;
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: rgba(255,255,255,0.7);
+  font-size: 11px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.3s;
+}
+.suggestion:hover { border-color: #8B5CF6; }
+.suggestion.selected {
+  border-color: #8B5CF6;
+  background: rgba(139,92,246,0.1);
+}
+
+/* Chat Bubbles */
+.chat-bubble {
+  max-width: 85%;
+  padding: 10px 12px;
+  border-radius: 14px;
+  font-size: 11px;
+  line-height: 1.5;
+  margin-bottom: 8px;
+  animation: bubbleFadeIn 0.4s ease;
+}
+@keyframes bubbleFadeIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.chat-bubble.user {
+  background: #8B5CF6;
+  color: white;
+  margin-left: auto;
+  border-bottom-right-radius: 4px;
+}
+.chat-bubble.aura {
+  background: #161922;
+  border: 1px solid #1E2230;
+  color: rgba(255,255,255,0.85);
+  border-bottom-left-radius: 4px;
+}
+.typing-dots {
+  display: flex;
+  gap: 4px;
+  padding: 4px 0;
+}
+.typing-dots span {
+  width: 6px;
+  height: 6px;
+  background: rgba(255,255,255,0.4);
+  border-radius: 50%;
+  animation: dotBounce 1.2s ease-in-out infinite;
+}
+.typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes dotBounce {
+  0%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-6px); }
+}
+
+/* Chat Input */
+.chat-input-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-top: 1px solid #1E2230;
+  background: #0F1117;
+}
+.chat-input {
+  flex: 1;
+  background: #161922;
+  border: 1px solid #1E2230;
+  border-radius: 20px;
+  padding: 8px 14px;
+  color: rgba(255,255,255,0.3);
+  font-size: 11px;
+}
+.send-btn {
+  width: 30px;
+  height: 30px;
+  background: #8B5CF6;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* ─── Scene 5: Privacy ─── */
+.privacy-visual {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 30px 20px;
+  position: relative;
+  overflow: hidden;
+}
+.phone-glow {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(139,92,246,0.15), transparent 70%);
+  border-radius: 50%;
+  animation: glowPulse 3s ease-in-out infinite;
+}
+@keyframes glowPulse {
+  0%, 100% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.2); opacity: 1; }
+}
+.shield-icon {
+  font-size: 52px;
+  margin-bottom: 16px;
+  position: relative;
+  z-index: 1;
+}
+.privacy-title {
+  color: white;
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  position: relative;
+  z-index: 1;
+}
+.privacy-desc {
+  color: rgba(255,255,255,0.5);
+  font-size: 11px;
+  line-height: 1.5;
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 1;
+}
+.privacy-features {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  position: relative;
+  z-index: 1;
+}
+.priv-feat {
+  background: rgba(6,214,160,0.08);
+  border: 1px solid rgba(6,214,160,0.15);
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: rgba(255,255,255,0.8);
+  font-size: 11px;
+  text-align: left;
+}
+.priv-check {
+  color: #06D6A0;
+  margin-right: 6px;
+  font-weight: 700;
+}
+
+/* ─── Dots / Label ─── */
+.scene-dots {
+  display: flex;
+  gap: 8px;
+  margin-top: var(--space-md);
+}
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s;
+  padding: 0;
+}
+.dot.active {
+  background: #8B5CF6;
+  box-shadow: 0 0 8px rgba(139,92,246,0.5);
+  width: 28px;
+  border-radius: 5px;
+}
+.scene-label {
+  color: rgba(255,255,255,0.5);
+  font-size: 14px;
+  font-weight: 500;
+  margin-top: var(--space-sm);
+  min-height: 24px;
+  transition: opacity 0.3s;
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 480px) {
+  .iphone-frame {
+    width: 260px;
+    height: 540px;
+    border-radius: 32px;
+  }
+  .iphone-notch { width: 100px; height: 24px; }
+}
+</style>
+
+<script define:vars={{ demo: demo }}>
+document.addEventListener('DOMContentLoaded', () => {
+  const screen = document.getElementById('demoScreen');
+  if (!screen) return;
+
+  let currentScene = 1;
+  let autoplayTimer = null;
+  let transcriptInterval = null;
+  let timerInterval = null;
+  let timerSeconds = 0;
+
+  const sceneLabels = demo.sceneLabels || [];
+  const transcriptLines = demo.transcriptLines || [];
+  const askQuestion = demo.askQuestion || '';
+  const askAnswer = demo.askAnswer || '';
+
+  // ─── Scene Management ───
+  function goToScene(n) {
+    if (n === currentScene) return;
+    cleanup();
+
+    const scenes = screen.querySelectorAll('.scene');
+    scenes.forEach(s => {
+      s.classList.remove('active', 'exit');
+      if (parseInt(s.dataset.scene) === currentScene) s.classList.add('exit');
+    });
+
+    setTimeout(() => {
+      scenes.forEach(s => s.classList.remove('exit'));
+      const target = screen.querySelector(`.scene[data-scene="${n}"]`);
+      if (target) target.classList.add('active');
+    }, 100);
+
+    currentScene = n;
+
+    // Update dots
+    document.querySelectorAll('.dot').forEach(d => {
+      d.classList.toggle('active', parseInt(d.dataset.target) === n);
+    });
+
+    // Update label
+    const label = document.getElementById('sceneLabel');
+    if (label && sceneLabels[n - 1]) {
+      label.style.opacity = '0';
+      setTimeout(() => {
+        label.textContent = sceneLabels[n - 1];
+        label.style.opacity = '1';
+      }, 300);
+    }
+
+    // Start scene animations
+    if (n === 2) startTranscriptAnimation();
+    if (n === 3) startSummaryAnimation();
+    if (n === 4) startAskAuraAnimation();
+  }
+
+  function cleanup() {
+    if (transcriptInterval) clearInterval(transcriptInterval);
+    if (timerInterval) clearInterval(timerInterval);
+    timerSeconds = 0;
+    const area = document.getElementById('transcriptArea');
+    if (area) area.innerHTML = '';
+    const segCount = document.getElementById('segCount');
+    if (segCount) segCount.textContent = '0';
+    const timer = document.getElementById('demoTimer');
+    if (timer) timer.textContent = '00:00';
+
+    // Reset ask aura
+    const empty = document.getElementById('askEmptyState');
+    if (empty) { empty.classList.remove('hidden'); }
+    const chatArea = document.getElementById('chatArea');
+    if (chatArea) {
+      chatArea.querySelectorAll('.chat-bubble').forEach(b => b.remove());
+    }
+
+    // Reset summary groups
+    document.querySelectorAll('.summary-group').forEach(g => g.classList.remove('visible'));
+  }
+
+  // ─── Scene 2: Transcript Typing ───
+  function startTranscriptAnimation() {
+    const area = document.getElementById('transcriptArea');
+    const segCount = document.getElementById('segCount');
+    const timerEl = document.getElementById('demoTimer');
+    let lineIdx = 0;
+
+    // Start timer
+    timerInterval = setInterval(() => {
+      timerSeconds++;
+      const m = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
+      const s = String(timerSeconds % 60).padStart(2, '0');
+      if (timerEl) timerEl.textContent = `${m}:${s}`;
+    }, 1000);
+
+    function addSegment() {
+      if (lineIdx >= transcriptLines.length) return;
+
+      const line = transcriptLines[lineIdx];
+      const seg = document.createElement('div');
+      seg.className = 'transcript-segment';
+
+      const timeStr = `${String(Math.floor(timerSeconds / 60)).padStart(2, '0')}:${String(timerSeconds % 60).padStart(2, '0')}`;
+
+      seg.innerHTML = `
+        <div class="seg-time">
+          <span class="seg-speaker">${line.speaker}</span>
+          ${timeStr}
+        </div>
+        <div class="seg-text"><span class="typing-cursor"></span></div>
+      `;
+      if (area) {
+        area.appendChild(seg);
+        area.scrollTop = area.scrollHeight;
+      }
+
+      // Type out text
+      const textEl = seg.querySelector('.seg-text');
+      let charIdx = 0;
+      const typeInterval = setInterval(() => {
+        if (charIdx < line.text.length) {
+          const cursor = textEl.querySelector('.typing-cursor');
+          if (cursor) cursor.remove();
+          textEl.innerHTML = line.text.slice(0, charIdx + 1) + '<span class="typing-cursor"></span>';
+          charIdx++;
+        } else {
+          clearInterval(typeInterval);
+          const cursor = textEl.querySelector('.typing-cursor');
+          if (cursor) cursor.remove();
+          textEl.textContent = line.text;
+        }
+      }, 35);
+
+      if (segCount) segCount.textContent = String(lineIdx + 1);
+      lineIdx++;
+    }
+
+    // Add first segment immediately
+    addSegment();
+    transcriptInterval = setInterval(addSegment, 3500);
+  }
+
+  // ─── Scene 3: Summary Reveal ───
+  function startSummaryAnimation() {
+    const groups = document.querySelectorAll('.summary-group');
+    groups.forEach((g, i) => {
+      setTimeout(() => g.classList.add('visible'), 400 + i * 500);
+    });
+  }
+
+  // ─── Scene 4: Ask Aura Chat ───
+  function startAskAuraAnimation() {
+    const chatArea = document.getElementById('chatArea');
+    const empty = document.getElementById('askEmptyState');
+
+    // Step 1: Highlight suggestion
+    setTimeout(() => {
+      const suggestion = chatArea?.querySelector('.suggestion[data-q="1"]');
+      if (suggestion) suggestion.classList.add('selected');
+    }, 800);
+
+    // Step 2: Hide empty state, show user bubble
+    setTimeout(() => {
+      if (empty) empty.classList.add('hidden');
+
+      const userBubble = document.createElement('div');
+      userBubble.className = 'chat-bubble user';
+      userBubble.textContent = askQuestion;
+      chatArea?.appendChild(userBubble);
+    }, 1600);
+
+    // Step 3: Show typing dots
+    setTimeout(() => {
+      const typingBubble = document.createElement('div');
+      typingBubble.className = 'chat-bubble aura';
+      typingBubble.id = 'typingBubble';
+      typingBubble.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+      chatArea?.appendChild(typingBubble);
+      if (chatArea) chatArea.scrollTop = chatArea.scrollHeight;
+    }, 2200);
+
+    // Step 4: Replace with answer
+    setTimeout(() => {
+      const typing = document.getElementById('typingBubble');
+      if (typing) typing.remove();
+
+      const auraBubble = document.createElement('div');
+      auraBubble.className = 'chat-bubble aura';
+      auraBubble.textContent = askAnswer;
+      chatArea?.appendChild(auraBubble);
+      if (chatArea) chatArea.scrollTop = chatArea.scrollHeight;
+    }, 3800);
+  }
+
+  // ─── Autoplay ───
+  function startAutoplay() {
+    autoplayTimer = setInterval(() => {
+      const next = currentScene >= 5 ? 1 : currentScene + 1;
+      goToScene(next);
+    }, 8000);
+  }
+
+  function stopAutoplay() {
+    if (autoplayTimer) clearInterval(autoplayTimer);
+  }
+
+  // ─── Dot clicks ───
+  document.querySelectorAll('.dot').forEach(dot => {
+    dot.addEventListener('click', () => {
+      stopAutoplay();
+      goToScene(parseInt(dot.dataset.target));
+      startAutoplay();
+    });
+  });
+
+  // ─── FAB tap simulation ───
+  const fab = document.getElementById('demoFab');
+  if (fab) {
+    fab.addEventListener('click', () => {
+      stopAutoplay();
+      goToScene(2);
+      startAutoplay();
+    });
+  }
+
+  // ─── Intersection Observer ───
+  const section = document.getElementById('demo');
+  if (section) {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          startAutoplay();
+        } else {
+          stopAutoplay();
+          cleanup();
+          // Reset to scene 1
+          screen.querySelectorAll('.scene').forEach(s => s.classList.remove('active', 'exit'));
+          screen.querySelector('.scene[data-scene="1"]')?.classList.add('active');
+          currentScene = 1;
+          document.querySelectorAll('.dot').forEach(d => {
+            d.classList.toggle('active', d.dataset.target === '1');
+          });
+        }
+      });
+    }, { threshold: 0.3 });
+    observer.observe(section);
+  }
+});
+</script>
