@@ -15,6 +15,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appTagline => 'Your AI meeting copilot';
 
   @override
+  String get loginWithGoogle => 'Continue with Google';
+
+  @override
+  String get loginWithApple => 'Continue with Apple';
+
+  @override
+  String get loginSkip => 'Continue without account';
+
+  @override
   String get homeTitle => 'Aura Meet';
 
   @override
@@ -205,6 +214,64 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsDeepThink => 'Deep Think';
 
   @override
+  String get accountTitle => 'Account';
+
+  @override
+  String get accountSignOut => 'Sign Out';
+
+  @override
+  String get accountSignOutConfirm => 'Are you sure you want to sign out?';
+
+  @override
+  String get accountDeleteAccount => 'Delete Account';
+
+  @override
+  String get accountDeleteConfirmTitle => 'Delete Account?';
+
+  @override
+  String get accountDeleteConfirmBody =>
+      'This will permanently delete your account and all your meeting data. This action cannot be undone.';
+
+  @override
+  String get accountDeleteConfirmButton => 'Delete Everything';
+
+  @override
+  String get accountGuestUser => 'Guest User';
+
+  @override
+  String get accountLinkedAccounts => 'Linked Accounts';
+
+  @override
+  String get authCreateAccount => 'Create Account';
+
+  @override
+  String get authSignIn => 'Sign In';
+
+  @override
+  String get authName => 'Name';
+
+  @override
+  String get authEmail => 'Email';
+
+  @override
+  String get authPassword => 'Password';
+
+  @override
+  String get authForgotPassword => 'Forgot Password?';
+
+  @override
+  String get authToggleToRegister => 'Don\'t have an account? Sign up';
+
+  @override
+  String get authToggleToLogin => 'Already have an account? Sign in';
+
+  @override
+  String get authPasswordMinLength => 'Password must be at least 6 characters';
+
+  @override
+  String get authFillFields => 'Enter email and password';
+
+  @override
   String get subscriptionTitle => 'Subscription';
 
   @override
@@ -342,6 +409,94 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get legalTermsOfService => 'Terms of Service';
+
+  @override
+  String get legalLastUpdated => 'Last updated: February 2026';
+
+  @override
+  String get privacyIntro => 'Your Privacy Matters';
+
+  @override
+  String get privacyIntroDesc =>
+      'Aura Meet is designed with privacy at its core. Here\'s how we handle your data:';
+
+  @override
+  String get privacyAudioTitle => '🎙️ Audio Processing';
+
+  @override
+  String get privacyAudioDesc =>
+      '• Speech-to-text runs ON YOUR DEVICE\n• No audio is ever sent to our servers or stored in the cloud\n• Audio data stays on your device at all times';
+
+  @override
+  String get privacyDataTitle => '📝 Meeting Data';
+
+  @override
+  String get privacyDataDesc =>
+      '• Transcripts are sent to our servers for AI analysis only\n• Meeting data is stored securely with encryption at rest\n• You can delete any meeting and its data at any time';
+
+  @override
+  String get privacySubsTitle => '💳 Subscriptions';
+
+  @override
+  String get privacySubsDesc =>
+      '• We never see or store your payment details\n• Apple/Google handles all payment processing';
+
+  @override
+  String get privacyRightsTitle => '🔒 Your Rights';
+
+  @override
+  String get privacyRightsDesc =>
+      '• Request deletion of all your data at any time\n• Export all your meeting data\n• We do not sell your data to third parties\n• We do not use your data for advertising';
+
+  @override
+  String get privacyContact => 'For privacy inquiries: privacy@aurameet.live';
+
+  @override
+  String get privacyDeleteAccount => 'Delete My Account';
+
+  @override
+  String get privacyDeleteConfirm =>
+      'This will permanently delete your account and all associated data. This action cannot be undone.';
+
+  @override
+  String get privacyDeleteButton => 'Delete Everything';
+
+  @override
+  String get termsIntro => 'Terms of Service';
+
+  @override
+  String get termsIntroDesc => 'By using Aura Meet, you agree to these terms:';
+
+  @override
+  String get termsServiceTitle => '📱 Service';
+
+  @override
+  String get termsServiceDesc =>
+      '• Aura Meet is an AI-powered meeting assistant\n• We provide transcription, insights, and meeting management\n• Service availability is provided on a best-effort basis\n• Features may change as we improve the product';
+
+  @override
+  String get termsSubsTitle => '💰 Subscriptions';
+
+  @override
+  String get termsSubsDesc =>
+      '• Free plan: 3 meetings/week with limited features\n• Subscriptions auto-renew unless cancelled\n• Cancel anytime through App Store or Google Play\n• No refunds for partial billing periods';
+
+  @override
+  String get termsUseTitle => '✅ Acceptable Use';
+
+  @override
+  String get termsUseDesc =>
+      '• Use Aura Meet for legitimate meeting assistance\n• Comply with all applicable recording consent laws\n• You are responsible for obtaining consent from meeting participants';
+
+  @override
+  String get termsLiabilityTitle => '⚖️ Liability';
+
+  @override
+  String get termsLiabilityDesc =>
+      '• AI-generated insights may not be 100% accurate\n• We are not liable for decisions made based on AI analysis\n• Service is provided \"as-is\" without warranties';
+
+  @override
+  String get termsContact => 'For support: support@aurameet.live';
 
   @override
   String get aboutTitle => 'About';

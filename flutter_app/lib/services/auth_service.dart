@@ -131,10 +131,7 @@ class AuthService {
     final response = await http.post(
       Uri.parse('$_baseUrl/api/auth/email-login'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'email': email,
-        'password': password,
-      }),
+      body: jsonEncode({'email': email, 'password': password}),
     );
 
     if (response.statusCode != 200) {
@@ -173,9 +170,7 @@ class AuthService {
   Future<Map<String, dynamic>> getProfile() async {
     final response = await http.get(
       Uri.parse('$_baseUrl/api/auth/me'),
-      headers: {
-        'Authorization': 'Bearer $_accessToken',
-      },
+      headers: {'Authorization': 'Bearer $_accessToken'},
     );
 
     if (response.statusCode == 401) {
@@ -198,9 +193,7 @@ class AuthService {
   Future<void> deleteAccount() async {
     final response = await http.delete(
       Uri.parse('$_baseUrl/api/auth/account'),
-      headers: {
-        'Authorization': 'Bearer $_accessToken',
-      },
+      headers: {'Authorization': 'Bearer $_accessToken'},
     );
 
     if (response.statusCode != 200) {

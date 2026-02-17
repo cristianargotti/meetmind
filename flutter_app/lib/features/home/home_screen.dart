@@ -26,8 +26,8 @@ class HomeScreen extends ConsumerWidget {
     final greeting = hour < 12
         ? 'Good morning'
         : hour < 18
-            ? 'Good afternoon'
-            : 'Good evening';
+        ? 'Good afternoon'
+        : 'Good evening';
 
     return Scaffold(
       body: SafeArea(
@@ -93,11 +93,11 @@ class HomeScreen extends ConsumerWidget {
                           userName.isNotEmpty
                               ? '$greeting, $userName'
                               : greeting,
-                          style:
-                              Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.white,
-                                  ),
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
                         ),
                         const SizedBox(height: 2),
                         Text(
@@ -140,10 +140,13 @@ class HomeScreen extends ConsumerWidget {
               // Stats Row — derive from current session
               Builder(
                 builder: (context) {
-                  final isActive = meeting != null && meeting.status.name == 'recording';
+                  final isActive =
+                      meeting != null && meeting.status.name == 'recording';
                   final todayCount = isActive ? '1' : '0';
-                  final insightCount = meeting?.insights.length.toString() ?? '0';
-                  const actionCount = '0'; // TODO: connect to action items provider
+                  final insightCount =
+                      meeting?.insights.length.toString() ?? '0';
+                  const actionCount =
+                      '0'; // TODO: connect to action items provider
                   return Row(
                     children:
                         [

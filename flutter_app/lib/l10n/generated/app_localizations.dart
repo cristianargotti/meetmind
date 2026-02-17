@@ -112,6 +112,24 @@ abstract class AppLocalizations {
   /// **'Your AI meeting copilot'**
   String get appTagline;
 
+  /// No description provided for @loginWithGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Google'**
+  String get loginWithGoogle;
+
+  /// No description provided for @loginWithApple.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Apple'**
+  String get loginWithApple;
+
+  /// No description provided for @loginSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue without account'**
+  String get loginSkip;
+
   /// No description provided for @homeTitle.
   ///
   /// In en, this message translates to:
@@ -484,6 +502,120 @@ abstract class AppLocalizations {
   /// **'Deep Think'**
   String get settingsDeepThink;
 
+  /// No description provided for @accountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get accountTitle;
+
+  /// No description provided for @accountSignOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign Out'**
+  String get accountSignOut;
+
+  /// No description provided for @accountSignOutConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to sign out?'**
+  String get accountSignOutConfirm;
+
+  /// No description provided for @accountDeleteAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Account'**
+  String get accountDeleteAccount;
+
+  /// No description provided for @accountDeleteConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Account?'**
+  String get accountDeleteConfirmTitle;
+
+  /// No description provided for @accountDeleteConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This will permanently delete your account and all your meeting data. This action cannot be undone.'**
+  String get accountDeleteConfirmBody;
+
+  /// No description provided for @accountDeleteConfirmButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Everything'**
+  String get accountDeleteConfirmButton;
+
+  /// No description provided for @accountGuestUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Guest User'**
+  String get accountGuestUser;
+
+  /// No description provided for @accountLinkedAccounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Linked Accounts'**
+  String get accountLinkedAccounts;
+
+  /// No description provided for @authCreateAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Account'**
+  String get authCreateAccount;
+
+  /// No description provided for @authSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign In'**
+  String get authSignIn;
+
+  /// No description provided for @authName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get authName;
+
+  /// No description provided for @authEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get authEmail;
+
+  /// No description provided for @authPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get authPassword;
+
+  /// No description provided for @authForgotPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot Password?'**
+  String get authForgotPassword;
+
+  /// No description provided for @authToggleToRegister.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t have an account? Sign up'**
+  String get authToggleToRegister;
+
+  /// No description provided for @authToggleToLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Already have an account? Sign in'**
+  String get authToggleToLogin;
+
+  /// No description provided for @authPasswordMinLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Password must be at least 6 characters'**
+  String get authPasswordMinLength;
+
+  /// No description provided for @authFillFields.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter email and password'**
+  String get authFillFields;
+
   /// No description provided for @subscriptionTitle.
   ///
   /// In en, this message translates to:
@@ -729,6 +861,162 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Terms of Service'**
   String get legalTermsOfService;
+
+  /// No description provided for @legalLastUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Last updated: February 2026'**
+  String get legalLastUpdated;
+
+  /// No description provided for @privacyIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Privacy Matters'**
+  String get privacyIntro;
+
+  /// No description provided for @privacyIntroDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Aura Meet is designed with privacy at its core. Here\'s how we handle your data:'**
+  String get privacyIntroDesc;
+
+  /// No description provided for @privacyAudioTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'🎙️ Audio Processing'**
+  String get privacyAudioTitle;
+
+  /// No description provided for @privacyAudioDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'• Speech-to-text runs ON YOUR DEVICE\n• No audio is ever sent to our servers or stored in the cloud\n• Audio data stays on your device at all times'**
+  String get privacyAudioDesc;
+
+  /// No description provided for @privacyDataTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'📝 Meeting Data'**
+  String get privacyDataTitle;
+
+  /// No description provided for @privacyDataDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'• Transcripts are sent to our servers for AI analysis only\n• Meeting data is stored securely with encryption at rest\n• You can delete any meeting and its data at any time'**
+  String get privacyDataDesc;
+
+  /// No description provided for @privacySubsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'💳 Subscriptions'**
+  String get privacySubsTitle;
+
+  /// No description provided for @privacySubsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'• We never see or store your payment details\n• Apple/Google handles all payment processing'**
+  String get privacySubsDesc;
+
+  /// No description provided for @privacyRightsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'🔒 Your Rights'**
+  String get privacyRightsTitle;
+
+  /// No description provided for @privacyRightsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'• Request deletion of all your data at any time\n• Export all your meeting data\n• We do not sell your data to third parties\n• We do not use your data for advertising'**
+  String get privacyRightsDesc;
+
+  /// No description provided for @privacyContact.
+  ///
+  /// In en, this message translates to:
+  /// **'For privacy inquiries: privacy@aurameet.live'**
+  String get privacyContact;
+
+  /// No description provided for @privacyDeleteAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete My Account'**
+  String get privacyDeleteAccount;
+
+  /// No description provided for @privacyDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'This will permanently delete your account and all associated data. This action cannot be undone.'**
+  String get privacyDeleteConfirm;
+
+  /// No description provided for @privacyDeleteButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Everything'**
+  String get privacyDeleteButton;
+
+  /// No description provided for @termsIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Service'**
+  String get termsIntro;
+
+  /// No description provided for @termsIntroDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'By using Aura Meet, you agree to these terms:'**
+  String get termsIntroDesc;
+
+  /// No description provided for @termsServiceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'📱 Service'**
+  String get termsServiceTitle;
+
+  /// No description provided for @termsServiceDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'• Aura Meet is an AI-powered meeting assistant\n• We provide transcription, insights, and meeting management\n• Service availability is provided on a best-effort basis\n• Features may change as we improve the product'**
+  String get termsServiceDesc;
+
+  /// No description provided for @termsSubsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'💰 Subscriptions'**
+  String get termsSubsTitle;
+
+  /// No description provided for @termsSubsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'• Free plan: 3 meetings/week with limited features\n• Subscriptions auto-renew unless cancelled\n• Cancel anytime through App Store or Google Play\n• No refunds for partial billing periods'**
+  String get termsSubsDesc;
+
+  /// No description provided for @termsUseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'✅ Acceptable Use'**
+  String get termsUseTitle;
+
+  /// No description provided for @termsUseDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'• Use Aura Meet for legitimate meeting assistance\n• Comply with all applicable recording consent laws\n• You are responsible for obtaining consent from meeting participants'**
+  String get termsUseDesc;
+
+  /// No description provided for @termsLiabilityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'⚖️ Liability'**
+  String get termsLiabilityTitle;
+
+  /// No description provided for @termsLiabilityDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'• AI-generated insights may not be 100% accurate\n• We are not liable for decisions made based on AI analysis\n• Service is provided \"as-is\" without warranties'**
+  String get termsLiabilityDesc;
+
+  /// No description provided for @termsContact.
+  ///
+  /// In en, this message translates to:
+  /// **'For support: support@aurameet.live'**
+  String get termsContact;
 
   /// No description provided for @aboutTitle.
   ///

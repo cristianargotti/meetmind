@@ -96,12 +96,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   decoration: BoxDecoration(
                     color: Colors.red.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
-                    border:
-                        Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                    border: Border.all(
+                      color: Colors.red.withValues(alpha: 0.3),
+                    ),
                   ),
                   child: Text(
                     authState.error!,
-                    style: const TextStyle(color: Colors.redAccent, fontSize: 13),
+                    style: const TextStyle(
+                      color: Colors.redAccent,
+                      fontSize: 13,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -132,9 +136,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 obscureText: _obscurePassword,
                 suffixIcon: IconButton(
                   icon: Icon(
-                    _obscurePassword
-                        ? Icons.visibility_off
-                        : Icons.visibility,
+                    _obscurePassword ? Icons.visibility_off : Icons.visibility,
                     color: Colors.white38,
                     size: 20,
                   ),
@@ -165,7 +167,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                   ),
                   child: Text(
-                      _isRegisterMode ? l10n.authCreateAccount : l10n.authSignIn),
+                    _isRegisterMode ? l10n.authCreateAccount : l10n.authSignIn,
+                  ),
                 ),
               ).animate().fadeIn(delay: 200.ms),
 
@@ -189,13 +192,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               Row(
                 children: [
                   Expanded(
-                      child: Divider(color: Colors.white.withValues(alpha: 0.1))),
+                    child: Divider(color: Colors.white.withValues(alpha: 0.1)),
+                  ),
                   const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16),
                     child: Text('o', style: TextStyle(color: Colors.white38)),
                   ),
                   Expanded(
-                      child: Divider(color: Colors.white.withValues(alpha: 0.1))),
+                    child: Divider(color: Colors.white.withValues(alpha: 0.1)),
+                  ),
                 ],
               ),
 
@@ -213,7 +218,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   label: Text(l10n.loginWithGoogle),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.white,
-                    side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
+                    side: BorderSide(
+                      color: Colors.white.withValues(alpha: 0.2),
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -237,8 +244,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     label: Text(l10n.loginWithApple),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.white,
-                      side:
-                          BorderSide(color: Colors.white.withValues(alpha: 0.2)),
+                      side: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.2),
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -263,8 +271,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     onPressed: () => context.push('/legal/privacy'),
                     child: Text(
                       l10n.legalPrivacyPolicy,
-                      style:
-                          const TextStyle(color: Colors.white24, fontSize: 12),
+                      style: const TextStyle(
+                        color: Colors.white24,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
                   const Text('•', style: TextStyle(color: Colors.white12)),
@@ -272,8 +282,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     onPressed: () => context.push('/legal/terms'),
                     child: Text(
                       l10n.legalTermsOfService,
-                      style:
-                          const TextStyle(color: Colors.white24, fontSize: 12),
+                      style: const TextStyle(
+                        color: Colors.white24,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
                 ],
@@ -319,8 +331,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: MeetMindTheme.accent),
         ),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
       ),
     );
   }
@@ -343,7 +357,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     try {
       if (_isRegisterMode) {
-        await ref.read(authProvider.notifier).register(
+        await ref
+            .read(authProvider.notifier)
+            .register(
               email: email,
               password: password,
               name: _nameController.text.trim().isNotEmpty
@@ -351,10 +367,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   : null,
             );
       } else {
-        await ref.read(authProvider.notifier).emailLogin(
-              email: email,
-              password: password,
-            );
+        await ref
+            .read(authProvider.notifier)
+            .emailLogin(email: email, password: password);
       }
 
       if (!context.mounted) return;
@@ -382,11 +397,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         return;
       }
 
-      await ref.read(authProvider.notifier).login(
-        provider: 'google',
-        idToken: idToken,
-        name: account.displayName,
-      );
+      await ref
+          .read(authProvider.notifier)
+          .login(
+            provider: 'google',
+            idToken: idToken,
+            name: account.displayName,
+          );
 
       if (!context.mounted) return;
       context.go('/');
@@ -423,11 +440,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             .trim();
       }
 
-      await ref.read(authProvider.notifier).login(
-        provider: 'apple',
-        idToken: idToken,
-        name: name,
-      );
+      await ref
+          .read(authProvider.notifier)
+          .login(provider: 'apple', idToken: idToken, name: name);
 
       if (!context.mounted) return;
       context.go('/');
@@ -455,7 +470,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     const charset =
         '0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._';
     final random = Random.secure();
-    return List.generate(length, (_) => charset[random.nextInt(charset.length)])
-        .join();
+    return List.generate(
+      length,
+      (_) => charset[random.nextInt(charset.length)],
+    ).join();
   }
 }

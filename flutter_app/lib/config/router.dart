@@ -107,4 +107,3 @@ GoRouter buildRouter(WidgetRef ref) {
     ],
   );
 }
-

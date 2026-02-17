@@ -97,16 +97,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
         idToken: idToken,
         name: name,
       );
-      state = AuthState(
-        isAuthenticated: true,
-        isLoading: false,
-        user: user,
-      );
+      state = AuthState(isAuthenticated: true, isLoading: false, user: user);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
@@ -123,16 +116,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
         password: password,
         name: name,
       );
-      state = AuthState(
-        isAuthenticated: true,
-        isLoading: false,
-        user: user,
-      );
+      state = AuthState(isAuthenticated: true, isLoading: false, user: user);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
@@ -143,20 +129,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      final user = await _auth.emailLogin(
-        email: email,
-        password: password,
-      );
-      state = AuthState(
-        isAuthenticated: true,
-        isLoading: false,
-        user: user,
-      );
+      final user = await _auth.emailLogin(email: email, password: password);
+      state = AuthState(isAuthenticated: true, isLoading: false, user: user);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
@@ -173,10 +149,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await _auth.deleteAccount();
       state = const AuthState(isAuthenticated: false, isLoading: false);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 }

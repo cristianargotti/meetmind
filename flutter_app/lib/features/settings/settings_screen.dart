@@ -20,9 +20,7 @@ class SettingsScreen extends ConsumerWidget {
     final authState = ref.watch(authProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.settingsTitle),
-      ),
+      appBar: AppBar(title: Text(l10n.settingsTitle)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -31,7 +29,6 @@ class SettingsScreen extends ConsumerWidget {
           _AccountCard(authState: authState, ref: ref, l10n: l10n),
 
           const SizedBox(height: 24),
-
 
           // ─── Language ───────────────────────────
           _SectionHeader(title: l10n.settingsLanguage),
@@ -457,11 +454,7 @@ class _AccountCard extends StatelessWidget {
             onTap: () => _handleSignOut(context),
           ),
 
-          const Divider(
-            height: 1,
-            indent: 56,
-            color: MeetMindTheme.darkBorder,
-          ),
+          const Divider(height: 1, indent: 56, color: MeetMindTheme.darkBorder),
 
           // Delete Account
           ListTile(
@@ -514,8 +507,11 @@ class _AccountCard extends StatelessWidget {
       builder: (ctx) => AlertDialog(
         title: Row(
           children: [
-            const Icon(Icons.warning_amber_rounded,
-                color: MeetMindTheme.error, size: 24),
+            const Icon(
+              Icons.warning_amber_rounded,
+              color: MeetMindTheme.error,
+              size: 24,
+            ),
             const SizedBox(width: 8),
             Expanded(child: Text(l10n.accountDeleteConfirmTitle)),
           ],
@@ -527,9 +523,7 @@ class _AccountCard extends StatelessWidget {
             child: Text(l10n.commonCancel),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: MeetMindTheme.error,
-            ),
+            style: FilledButton.styleFrom(backgroundColor: MeetMindTheme.error),
             onPressed: () async {
               Navigator.pop(ctx);
               try {

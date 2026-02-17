@@ -15,6 +15,15 @@ class AppLocalizationsEs extends AppLocalizations {
   String get appTagline => 'Tu copiloto de reuniones con IA';
 
   @override
+  String get loginWithGoogle => 'Continuar con Google';
+
+  @override
+  String get loginWithApple => 'Continuar con Apple';
+
+  @override
+  String get loginSkip => 'Continuar sin cuenta';
+
+  @override
   String get homeTitle => 'Aura Meet';
 
   @override
@@ -205,6 +214,66 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsDeepThink => 'Pensamiento Profundo';
 
   @override
+  String get accountTitle => 'Cuenta';
+
+  @override
+  String get accountSignOut => 'Cerrar Sesión';
+
+  @override
+  String get accountSignOutConfirm =>
+      '¿Estás seguro de que quieres cerrar sesión?';
+
+  @override
+  String get accountDeleteAccount => 'Eliminar Cuenta';
+
+  @override
+  String get accountDeleteConfirmTitle => '¿Eliminar Cuenta?';
+
+  @override
+  String get accountDeleteConfirmBody =>
+      'Esto eliminará permanentemente tu cuenta y todos tus datos de reuniones. Esta acción no se puede deshacer.';
+
+  @override
+  String get accountDeleteConfirmButton => 'Eliminar Todo';
+
+  @override
+  String get accountGuestUser => 'Usuario Invitado';
+
+  @override
+  String get accountLinkedAccounts => 'Cuentas Vinculadas';
+
+  @override
+  String get authCreateAccount => 'Crear Cuenta';
+
+  @override
+  String get authSignIn => 'Iniciar Sesión';
+
+  @override
+  String get authName => 'Nombre';
+
+  @override
+  String get authEmail => 'Correo Electrónico';
+
+  @override
+  String get authPassword => 'Contraseña';
+
+  @override
+  String get authForgotPassword => '¿Olvidaste tu contraseña?';
+
+  @override
+  String get authToggleToRegister => '¿No tienes cuenta? Regístrate';
+
+  @override
+  String get authToggleToLogin => '¿Ya tienes cuenta? Inicia sesión';
+
+  @override
+  String get authPasswordMinLength =>
+      'La contraseña debe tener al menos 6 caracteres';
+
+  @override
+  String get authFillFields => 'Ingresa correo y contraseña';
+
+  @override
   String get subscriptionTitle => 'Suscripción';
 
   @override
@@ -343,6 +412,95 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get legalTermsOfService => 'Términos de Servicio';
+
+  @override
+  String get legalLastUpdated => 'Última actualización: Febrero 2026';
+
+  @override
+  String get privacyIntro => 'Tu Privacidad Importa';
+
+  @override
+  String get privacyIntroDesc =>
+      'Aura Meet está diseñado con la privacidad como prioridad. Así manejamos tus datos:';
+
+  @override
+  String get privacyAudioTitle => '🎙️ Procesamiento de Audio';
+
+  @override
+  String get privacyAudioDesc =>
+      '• El reconocimiento de voz se ejecuta EN TU DISPOSITIVO\n• Ningún audio se envía a nuestros servidores ni se almacena en la nube\n• Los datos de audio permanecen en tu dispositivo en todo momento';
+
+  @override
+  String get privacyDataTitle => '📝 Datos de Reuniones';
+
+  @override
+  String get privacyDataDesc =>
+      '• Las transcripciones se envían a nuestros servidores solo para análisis con IA\n• Los datos se almacenan de forma segura con cifrado en reposo\n• Puedes eliminar cualquier reunión y sus datos en cualquier momento';
+
+  @override
+  String get privacySubsTitle => '💳 Suscripciones';
+
+  @override
+  String get privacySubsDesc =>
+      '• Nunca vemos ni almacenamos tus datos de pago\n• Apple/Google maneja todo el procesamiento de pagos';
+
+  @override
+  String get privacyRightsTitle => '🔒 Tus Derechos';
+
+  @override
+  String get privacyRightsDesc =>
+      '• Solicita la eliminación de todos tus datos en cualquier momento\n• Exporta todos los datos de tus reuniones\n• No vendemos tus datos a terceros\n• No usamos tus datos para publicidad';
+
+  @override
+  String get privacyContact =>
+      'Para consultas de privacidad: privacy@aurameet.live';
+
+  @override
+  String get privacyDeleteAccount => 'Eliminar Mi Cuenta';
+
+  @override
+  String get privacyDeleteConfirm =>
+      'Esto eliminará permanentemente tu cuenta y todos los datos asociados. Esta acción no se puede deshacer.';
+
+  @override
+  String get privacyDeleteButton => 'Eliminar Todo';
+
+  @override
+  String get termsIntro => 'Términos de Servicio';
+
+  @override
+  String get termsIntroDesc => 'Al usar Aura Meet, aceptas estos términos:';
+
+  @override
+  String get termsServiceTitle => '📱 Servicio';
+
+  @override
+  String get termsServiceDesc =>
+      '• Aura Meet es un asistente de reuniones con IA\n• Proporcionamos transcripción, hallazgos y gestión de reuniones\n• La disponibilidad del servicio se ofrece con el mejor esfuerzo\n• Las funciones pueden cambiar a medida que mejoramos el producto';
+
+  @override
+  String get termsSubsTitle => '💰 Suscripciones';
+
+  @override
+  String get termsSubsDesc =>
+      '• Plan gratuito: 3 reuniones/semana con funciones limitadas\n• Las suscripciones se renuevan automáticamente a menos que se cancelen\n• Cancela en cualquier momento a través de App Store o Google Play\n• Sin reembolsos por períodos parciales de facturación';
+
+  @override
+  String get termsUseTitle => '✅ Uso Aceptable';
+
+  @override
+  String get termsUseDesc =>
+      '• Usa Aura Meet para asistencia legítima en reuniones\n• Cumple con todas las leyes aplicables de consentimiento de grabación\n• Eres responsable de obtener el consentimiento de los participantes';
+
+  @override
+  String get termsLiabilityTitle => '⚖️ Responsabilidad';
+
+  @override
+  String get termsLiabilityDesc =>
+      '• Los hallazgos generados por IA pueden no ser 100% precisos\n• No somos responsables de decisiones tomadas basadas en análisis de IA\n• El servicio se proporciona \"tal cual\" sin garantías';
+
+  @override
+  String get termsContact => 'Para soporte: support@aurameet.live';
 
   @override
   String get aboutTitle => 'Acerca de';

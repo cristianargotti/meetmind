@@ -155,9 +155,7 @@ class LegalScreen extends StatelessWidget {
               // TODO: Call DELETE /api/auth/account when auth is connected
               Navigator.of(context).pop();
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.redAccent,
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
             child: Text(l10n.privacyDeleteButton),
           ),
         ],

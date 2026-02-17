@@ -392,7 +392,8 @@ class MeetingNotifier extends StateNotifier<MeetingSession?> {
     Future<void>.delayed(const Duration(seconds: 30), () {
       if (state != null && state!.isCopilotLoading) {
         final CopilotMessage timeoutMsg = CopilotMessage(
-          text: 'No response received. Please check your connection and try again.',
+          text:
+              'No response received. Please check your connection and try again.',
           sender: CopilotSender.error,
           timestamp: DateTime.now(),
         );
