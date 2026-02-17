@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 
 import 'package:meetmind/config/theme.dart';
 import 'package:meetmind/features/meeting/widgets/copilot_panel.dart';
-import 'package:meetmind/features/meeting/widgets/cost_bar.dart';
 import 'package:meetmind/features/meeting/widgets/input_bar.dart';
 import 'package:meetmind/features/meeting/widgets/insight_widgets.dart';
 import 'package:meetmind/features/meeting/widgets/stt_widgets.dart';

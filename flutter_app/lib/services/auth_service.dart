@@ -1,9 +1,8 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:meetmind/config/app_config.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Authentication service — handles OAuth login, token management, and logout.
 ///
@@ -74,7 +73,7 @@ class AuthService {
       body: jsonEncode({
         'provider': provider,
         'id_token': idToken,
-        if (name != null) 'name': name,
+        ?'name': name,
       }),
     );
 
@@ -105,7 +104,7 @@ class AuthService {
       body: jsonEncode({
         'email': email,
         'password': password,
-        if (name != null) 'name': name,
+        ?'name': name,
       }),
     );
 

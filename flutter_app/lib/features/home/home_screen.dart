@@ -143,7 +143,7 @@ class HomeScreen extends ConsumerWidget {
                   final isActive = meeting != null && meeting.status.name == 'recording';
                   final todayCount = isActive ? '1' : '0';
                   final insightCount = meeting?.insights.length.toString() ?? '0';
-                  final actionCount = '0'; // TODO: connect to action items provider
+                  const actionCount = '0'; // TODO: connect to action items provider
                   return Row(
                     children:
                         [

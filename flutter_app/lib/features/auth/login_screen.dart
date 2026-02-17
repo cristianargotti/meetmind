@@ -357,9 +357,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             );
       }
 
-      if (mounted) context.go('/');
+      if (!context.mounted) return;
+      context.go('/');
     } catch (e) {
-      if (mounted) _showError(context, '$e');
+      if (!context.mounted) return;
+      _showError(context, '$e');
     }
   }
 
@@ -375,6 +377,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       final idToken = auth.idToken;
 
       if (idToken == null) {
+        if (!context.mounted) return;
         _showError(context, 'Google sign-in failed: no id_token received');
         return;
       }
@@ -385,9 +388,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         name: account.displayName,
       );
 
-      if (mounted) context.go('/');
+      if (!context.mounted) return;
+      context.go('/');
     } catch (e) {
-      if (mounted) _showError(context, 'Google sign-in error: $e');
+      if (!context.mounted) return;
+      _showError(context, 'Google sign-in error: $e');
     }
   }
 
@@ -407,6 +412,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
       final idToken = credential.identityToken;
       if (idToken == null) {
+        if (!context.mounted) return;
         _showError(context, 'Apple sign-in failed: no identity token');
         return;
       }
@@ -423,12 +429,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         name: name,
       );
 
-      if (mounted) context.go('/');
+      if (!context.mounted) return;
+      context.go('/');
     } on SignInWithAppleAuthorizationException catch (e) {
       if (e.code == AuthorizationErrorCode.canceled) return;
-      if (mounted) _showError(context, 'Apple sign-in error: ${e.message}');
+      if (!context.mounted) return;
+      _showError(context, 'Apple sign-in error: ${e.message}');
     } catch (e) {
-      if (mounted) _showError(context, 'Apple sign-in error: $e');
+      if (!context.mounted) return;
+      _showError(context, 'Apple sign-in error: $e');
     }
   }
 

@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
 import 'package:meetmind/config/theme.dart';
 import 'package:meetmind/providers/auth_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Animated splash screen — premium first impression.
 ///

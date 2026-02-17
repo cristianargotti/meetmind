@@ -296,7 +296,7 @@ class _MeetingCard extends StatelessWidget {
     final status = meeting['status'] as String? ?? 'unknown';
     final segments = meeting['total_segments'] as int? ?? 0;
     final insights = meeting['total_insights'] as int? ?? 0;
-    final costUsd = (meeting['cost_usd'] as num?)?.toDouble() ?? 0.0;
+    final _ = (meeting['cost_usd'] as num?)?.toDouble() ?? 0.0; // ignore-dynamic
     final durationSecs = meeting['duration_secs'] as int? ?? 0;
     final startedAt = meeting['started_at'] as String?;
 
