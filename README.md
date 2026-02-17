@@ -57,11 +57,28 @@ MEETMIND_AWS_REGION=us-east-1
 ### Flutter App
 ```bash
 cd flutter_app
-fvm use 3.38.3
-fvm flutter pub get
-fvm flutter test              # Run tests
-fvm flutter run               # Run app
+flutter pub get
+flutter gen-l10n              # Generate localizations
+flutter test                  # Run tests
+flutter run                   # Run app
 ```
+
+### Local Builds (iOS + Android)
+```bash
+cd flutter_app
+
+# iOS — Build IPA for App Store
+flutter build ipa --release
+# Output: build/ios/ipa/*.ipa (≈30 MB)
+# Upload via Transporter app: https://apps.apple.com/us/app/transporter/id1450874784
+
+# Android — Build release APK
+flutter build apk --release --obfuscate --split-debug-info=build/debug-info
+# Output: build/app/outputs/flutter-apk/app-release.apk
+```
+
+> **Note:** Bump the build number in `pubspec.yaml` (`version: X.Y.Z+BUILD`)
+> before each App Store upload to avoid ITMS-90189 duplicate build errors.
 
 ### Chrome Extension
 ```bash
@@ -110,7 +127,7 @@ meetmind/
 
 | Component | Technology | Rationale |
 |-----------|------------|-----------|
-| Mobile/Web | **Flutter** (Dart) via FVM 3.38.3 | AOT native, `dart:ffi` → C++ |
+| Mobile/Web | **Flutter** (Dart) 3.41.1 | AOT native, `dart:ffi` → C++ |
 | STT on-device | **whisper.cpp** / **Moonshine** | CoreML/Metal, 99 languages |
 | STT server | **Parakeet TDT 0.6B** / **Qwen3-ASR** | CPU int8, local processing (4 engines) |
 | Backend | **FastAPI** (Python 3.12) | Hexagonal Architecture |
