@@ -126,3 +126,7 @@ output "cdn_domain_name" {
 output "cdn_distribution_id" {
   value = "pending-cloudfront-verification"
 }
+
+output "website_bucket_arn" {
+  value = aws_s3_bucket.website.arn
+}

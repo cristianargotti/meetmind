@@ -98,7 +98,8 @@ module "monitoring" {
 
 # --- OIDC (GitHub Actions) ---
 module "oidc" {
-  source       = "../../modules/oidc"
-  project_name = local.name
-  github_repo  = "cristianargotti/meetmind"
+  source             = "../../modules/oidc"
+  project_name       = local.name
+  github_repo        = "cristianargotti/meetmind"
+  website_bucket_arn = module.storage.website_bucket_arn
 }

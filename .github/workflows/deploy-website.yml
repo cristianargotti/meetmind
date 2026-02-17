@@ -1,0 +1,65 @@
+# =============================================================================
+# MeetMind — Website Deploy Pipeline (Astro → S3)
+# =============================================================================
+name: 🚀 Deploy Website
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "website/**"
+      - ".github/workflows/deploy-website.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-website
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: us-east-1
+  S3_BUCKET: aurameet-website # Matches Terraform
+  ROLE_TO_ASSUME: "arn:aws:iam::755400489315:role/aurameet-github-actions"
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build-and-deploy:
+    name: Build & Sync
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+          cache-dependency-path: website/package-lock.json
+
+      - name: 📦 Install Dependencies
+        working-directory: website
+        run: npm ci
+
+      - name: 🏗️ Build Astro Site
+        working-directory: website
+        run: npm run build
+
+      - name: 🔧 Configure AWS Credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: 📤 Sync to S3
+        run: |
+          aws s3 sync website/dist s3://${{ env.S3_BUCKET }} --delete --cache-control "max-age=31536000,public"
+          # Upload HTML files with shorter cache for updates
+          aws s3 sync website/dist s3://${{ env.S3_BUCKET }} --delete --exclude "*" --include "*.html" --cache-control "max-age=0,no-cache,no-store,must-revalidate"
+
+      # - name: 🧹 Invalidate CloudFront (Planned)
+      #   run: aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DIST_ID }} --paths "/*"

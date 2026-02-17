@@ -53,3 +53,28 @@ resource "aws_iam_role_policy" "ecr_push" {
     ]
   })
 }
+
+resource "aws_iam_role_policy" "s3_deploy" {
+  name = "s3-deploy"
+  role = aws_iam_role.github_actions.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:PutObject",
+          "s3:GetObject",
+          "s3:ListBucket",
+          "s3:DeleteObject",
+          "s3:GetBucketLocation"
+        ]
+        Resource = [
+          var.website_bucket_arn,
+          "${var.website_bucket_arn}/*"
+        ]
+      }
+    ]
+  })
+}
