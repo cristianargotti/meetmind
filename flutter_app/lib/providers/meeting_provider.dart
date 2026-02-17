@@ -387,6 +387,21 @@ class MeetingNotifier extends StateNotifier<MeetingSession?> {
 
     // Send via WebSocket
     _ref.read(webSocketProvider).sendCopilotQuery(question);
+
+    // Safety timeout — if backend doesn't respond in 30s, clear loading
+    Future<void>.delayed(const Duration(seconds: 30), () {
+      if (state != null && state!.isCopilotLoading) {
+        final CopilotMessage timeoutMsg = CopilotMessage(
+          text: 'No response received. Please check your connection and try again.',
+          sender: CopilotSender.error,
+          timestamp: DateTime.now(),
+        );
+        state = state!.copyWith(
+          copilotMessages: [...state!.copilotMessages, timeoutMsg],
+          isCopilotLoading: false,
+        );
+      }
+    });
   }
 
   /// Request a meeting summary from the backend.

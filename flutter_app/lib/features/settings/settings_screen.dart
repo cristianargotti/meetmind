@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meetmind/config/theme.dart';
 import 'package:meetmind/l10n/generated/app_localizations.dart';
+import 'package:meetmind/providers/auth_provider.dart';
 import 'package:meetmind/providers/preferences_provider.dart';
 import 'package:meetmind/providers/subscription_provider.dart';
 import 'package:meetmind/services/user_preferences.dart';
@@ -16,6 +17,7 @@ class SettingsScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final prefs = ref.watch(preferencesProvider);
     final prefsNotifier = ref.read(preferencesProvider.notifier);
+    final authState = ref.watch(authProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -24,6 +26,13 @@ class SettingsScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          // ─── Account ─────────────────────────────
+          _SectionHeader(title: l10n.accountTitle),
+          _AccountCard(authState: authState, ref: ref, l10n: l10n),
+
+          const SizedBox(height: 24),
+
+
           // ─── Language ───────────────────────────
           _SectionHeader(title: l10n.settingsLanguage),
           Card(
@@ -317,6 +326,229 @@ class _SectionHeader extends StatelessWidget {
           fontWeight: FontWeight.w600,
           letterSpacing: 0.5,
         ),
+      ),
+    );
+  }
+}
+
+/// Account card with user info, sign out, and delete account.
+class _AccountCard extends StatelessWidget {
+  const _AccountCard({
+    required this.authState,
+    required this.ref,
+    required this.l10n,
+  });
+
+  final AuthState authState;
+  final WidgetRef ref;
+  final AppLocalizations l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    final user = authState.user;
+    final name = user?['name'] as String? ?? '';
+    final email = user?['email'] as String? ?? '';
+    final avatarUrl = user?['avatar_url'] as String? ?? '';
+    final displayName = name.isNotEmpty ? name : l10n.accountGuestUser;
+    final initials = displayName
+        .split(' ')
+        .where((w) => w.isNotEmpty)
+        .take(2)
+        .map((w) => w[0].toUpperCase())
+        .join();
+
+    return Card(
+      child: Column(
+        children: [
+          // User info
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                // Avatar
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: avatarUrl.isEmpty
+                        ? const LinearGradient(
+                            colors: [MeetMindTheme.primary, Color(0xFF7C3AED)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          )
+                        : null,
+                    image: avatarUrl.isNotEmpty
+                        ? DecorationImage(
+                            image: NetworkImage(avatarUrl),
+                            fit: BoxFit.cover,
+                          )
+                        : null,
+                    border: Border.all(
+                      color: MeetMindTheme.primary.withValues(alpha: 0.3),
+                      width: 2,
+                    ),
+                  ),
+                  child: avatarUrl.isEmpty
+                      ? Center(
+                          child: Text(
+                            initials,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        )
+                      : null,
+                ),
+                const SizedBox(width: 14),
+                // Name + email
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        displayName,
+                        style: const TextStyle(
+                          color: MeetMindTheme.textPrimary,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (email.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Text(
+                            email,
+                            style: const TextStyle(
+                              color: MeetMindTheme.textTertiary,
+                              fontSize: 13,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const Divider(
+            height: 1,
+            indent: 16,
+            endIndent: 16,
+            color: MeetMindTheme.darkBorder,
+          ),
+
+          // Sign Out
+          ListTile(
+            leading: const Icon(
+              Icons.logout_rounded,
+              color: MeetMindTheme.warning,
+            ),
+            title: Text(l10n.accountSignOut),
+            trailing: const Icon(
+              Icons.chevron_right,
+              color: MeetMindTheme.textTertiary,
+            ),
+            onTap: () => _handleSignOut(context),
+          ),
+
+          const Divider(
+            height: 1,
+            indent: 56,
+            color: MeetMindTheme.darkBorder,
+          ),
+
+          // Delete Account
+          ListTile(
+            leading: const Icon(
+              Icons.delete_forever_rounded,
+              color: MeetMindTheme.error,
+            ),
+            title: Text(
+              l10n.accountDeleteAccount,
+              style: const TextStyle(color: MeetMindTheme.error),
+            ),
+            trailing: const Icon(
+              Icons.chevron_right,
+              color: MeetMindTheme.textTertiary,
+            ),
+            onTap: () => _handleDeleteAccount(context),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _handleSignOut(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.accountSignOut),
+        content: Text(l10n.accountSignOutConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.commonCancel),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              ref.read(authProvider.notifier).logout();
+              context.go('/login');
+            },
+            child: Text(l10n.accountSignOut),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _handleDeleteAccount(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Row(
+          children: [
+            const Icon(Icons.warning_amber_rounded,
+                color: MeetMindTheme.error, size: 24),
+            const SizedBox(width: 8),
+            Expanded(child: Text(l10n.accountDeleteConfirmTitle)),
+          ],
+        ),
+        content: Text(l10n.accountDeleteConfirmBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.commonCancel),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: MeetMindTheme.error,
+            ),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              try {
+                await ref.read(authProvider.notifier).deleteAccount();
+                if (context.mounted) context.go('/login');
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('${l10n.commonError}: $e'),
+                      backgroundColor: MeetMindTheme.error,
+                    ),
+                  );
+                }
+              }
+            },
+            child: Text(l10n.accountDeleteConfirmButton),
+          ),
+        ],
       ),
     );
   }

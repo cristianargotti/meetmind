@@ -117,6 +117,31 @@ class MeetMindTheme {
       unselectedItemColor: textTertiary,
       type: BottomNavigationBarType.fixed,
     ),
+    navigationBarTheme: NavigationBarThemeData(
+      backgroundColor: darkSurface,
+      indicatorColor: primary.withValues(alpha: 0.15),
+      labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+      iconTheme: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.selected)) {
+          return const IconThemeData(color: primary, size: 24);
+        }
+        return const IconThemeData(color: textTertiary, size: 24);
+      }),
+      labelTextStyle: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.selected)) {
+          return const TextStyle(
+            color: primary,
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+          );
+        }
+        return const TextStyle(
+          color: textTertiary,
+          fontSize: 11,
+          fontWeight: FontWeight.w500,
+        );
+      }),
+    ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: darkCard,

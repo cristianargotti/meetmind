@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:meetmind/config/theme.dart';
 import 'package:meetmind/features/meeting/widgets/copilot_panel.dart';
@@ -190,7 +191,7 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
             onPressed: () {
               ref.read(meetingProvider.notifier).stopMeeting();
               Navigator.of(dialogContext).pop();
-              Navigator.of(context).pop();
+              context.go('/');
             },
             child: const Text('End Meeting'),
           ),

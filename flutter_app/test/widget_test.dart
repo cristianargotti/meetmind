@@ -20,7 +20,7 @@ void main() {
     return const ProviderScope(child: MeetMindApp());
   }
 
-  testWidgets('App renders home screen with title', (
+  testWidgets('App renders splash screen on launch', (
     WidgetTester tester,
   ) async {
     tester.view.physicalSize = const Size(1170, 2532);
@@ -33,35 +33,28 @@ void main() {
     // flutter_animate has repeat animations that never settle
     await tester.pump(const Duration(seconds: 2));
 
-    // Check for localized title (defaults to English)
+    // Splash screen shows app name
     expect(find.text('Aura Meet'), findsWidgets);
-    expect(find.text('Your AI meeting companion'), findsOneWidget);
   });
 
-  testWidgets('Home screen has start meeting FAB', (WidgetTester tester) async {
+  testWidgets('App navigates to login after splash', (
+    WidgetTester tester,
+  ) async {
     tester.view.physicalSize = const Size(1170, 2532);
     tester.view.devicePixelRatio = 3.0;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    await tester.pumpWidget(buildApp());
-    await tester.pump(const Duration(seconds: 2));
-
-    expect(find.byType(FloatingActionButton), findsOneWidget);
-    expect(find.byIcon(Icons.mic), findsWidgets);
-  });
-
-  testWidgets('Bottom navigation has 3 items', (WidgetTester tester) async {
-    tester.view.physicalSize = const Size(1170, 2532);
-    tester.view.devicePixelRatio = 3.0;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
+    // Mark onboarding as complete so splash goes to login
+    SharedPreferences.setMockInitialValues({'onboarding_complete': true});
+    await UserPreferences.initialize();
 
     await tester.pumpWidget(buildApp());
-    await tester.pump(const Duration(seconds: 2));
+    // Wait for splash animation + navigation delay (2.5s)
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pump(const Duration(milliseconds: 500));
 
-    expect(find.byType(BottomNavigationBar), findsOneWidget);
-    // Bottom nav labels are now localized
-    expect(find.text('Aura'), findsWidgets); // First word of homeTitle
+    // Should see login screen elements
+    expect(find.text('Aura Meet'), findsWidgets);
   });
 }

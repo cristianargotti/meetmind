@@ -12,18 +12,19 @@ import 'package:meetmind/features/meeting/meeting_screen.dart';
 import 'package:meetmind/features/onboarding/onboarding_screen.dart';
 import 'package:meetmind/features/settings/legal_screen.dart';
 import 'package:meetmind/features/settings/settings_screen.dart';
+import 'package:meetmind/features/splash/splash_screen.dart';
 import 'package:meetmind/features/subscription/paywall_screen.dart';
 import 'package:meetmind/providers/auth_provider.dart';
 
 /// Routes that do NOT require authentication.
-const _publicPaths = {'/login', '/onboarding'};
+const _publicPaths = {'/login', '/onboarding', '/splash'};
 
 /// Build the app router with auth redirect guard.
 GoRouter buildRouter(WidgetRef ref) {
   final authState = ref.watch(authProvider);
 
   return GoRouter(
-    initialLocation: '/',
+    initialLocation: '/splash',
     redirect: (BuildContext context, GoRouterState state) {
       final path = state.uri.path;
 
@@ -45,6 +46,11 @@ GoRouter buildRouter(WidgetRef ref) {
         path: '/',
         name: 'home',
         builder: (context, state) => const HomeScreen(),
+      ),
+      GoRoute(
+        path: '/splash',
+        name: 'splash',
+        builder: (context, state) => const SplashScreen(),
       ),
       GoRoute(
         path: '/login',

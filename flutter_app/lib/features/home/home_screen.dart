@@ -6,6 +6,7 @@ import 'package:meetmind/config/theme.dart';
 import 'package:meetmind/features/subscription/widgets/free_limit_banner.dart';
 import 'package:meetmind/l10n/generated/app_localizations.dart';
 import 'package:meetmind/models/meeting_models.dart';
+import 'package:meetmind/providers/auth_provider.dart';
 import 'package:meetmind/providers/meeting_provider.dart';
 import 'package:meetmind/providers/subscription_provider.dart';
 
@@ -17,6 +18,16 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final MeetingSession? meeting = ref.watch(meetingProvider);
+    final authState = ref.watch(authProvider);
+    final user = authState.user;
+    final userName = (user?['name'] as String?)?.split(' ').first ?? '';
+    final avatarUrl = user?['avatar_url'] as String? ?? '';
+    final hour = DateTime.now().hour;
+    final greeting = hour < 12
+        ? 'Good morning'
+        : hour < 18
+            ? 'Good afternoon'
+            : 'Good evening';
 
     return Scaffold(
       body: SafeArea(
@@ -25,38 +36,90 @@ class HomeScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
 
-              // Header with logo
+              // Header with user avatar + greeting
               Row(
                 children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.asset(
-                      'assets/images/app_logo.png',
-                      width: 40,
-                      height: 40,
+                  // User avatar
+                  GestureDetector(
+                    onTap: () => context.push('/settings'),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: avatarUrl.isEmpty
+                            ? const LinearGradient(
+                                colors: [
+                                  MeetMindTheme.primary,
+                                  Color(0xFF7C3AED),
+                                ],
+                              )
+                            : null,
+                        image: avatarUrl.isNotEmpty
+                            ? DecorationImage(
+                                image: NetworkImage(avatarUrl),
+                                fit: BoxFit.cover,
+                              )
+                            : null,
+                        border: Border.all(
+                          color: MeetMindTheme.primary.withValues(alpha: 0.3),
+                          width: 2,
+                        ),
+                      ),
+                      child: avatarUrl.isEmpty
+                          ? Center(
+                              child: Text(
+                                userName.isNotEmpty
+                                    ? userName[0].toUpperCase()
+                                    : '?',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            )
+                          : null,
                     ),
                   ),
                   const SizedBox(width: 12),
-                  Text(
-                    l10n.homeTitle,
-                    style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          userName.isNotEmpty
+                              ? '$greeting, $userName'
+                              : greeting,
+                          style:
+                              Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
+                                  ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          l10n.homeSubtitle,
+                          style: const TextStyle(
+                            color: Colors.white54,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Settings icon
+                  IconButton(
+                    onPressed: () => context.push('/settings'),
+                    icon: const Icon(
+                      Icons.settings_outlined,
+                      color: Colors.white38,
                     ),
                   ),
                 ],
-              ).animate().fadeIn(duration: 400.ms).slideX(begin: -0.1),
-
-              const SizedBox(height: 4),
-
-              Text(
-                l10n.homeSubtitle,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyLarge?.copyWith(color: Colors.white54),
-              ).animate().fadeIn(delay: 100.ms, duration: 400.ms),
+              ).animate().fadeIn(duration: 400.ms).slideX(begin: -0.05),
 
               const SizedBox(height: 40),
 
@@ -169,28 +232,38 @@ class HomeScreen extends ConsumerWidget {
         ),
       ),
 
-      // Bottom Navigation
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0,
-        onTap: (int index) {
+      // Bottom Navigation — Material 3
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: 0,
+        onDestinationSelected: (int index) {
           switch (index) {
             case 1:
-              context.push('/history');
+              context.push('/ask-aura');
             case 2:
+              context.push('/history');
+            case 3:
               context.push('/settings');
           }
         },
-        items: [
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.home),
+        destinations: [
+          NavigationDestination(
+            icon: const Icon(Icons.home_outlined),
+            selectedIcon: const Icon(Icons.home),
             label: l10n.homeTitle.split(' ').first,
           ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.history),
+          const NavigationDestination(
+            icon: Icon(Icons.auto_awesome_outlined),
+            selectedIcon: Icon(Icons.auto_awesome),
+            label: 'Ask Aura',
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.history_outlined),
+            selectedIcon: const Icon(Icons.history),
             label: l10n.historyTitle,
           ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.settings),
+          NavigationDestination(
+            icon: const Icon(Icons.settings_outlined),
+            selectedIcon: const Icon(Icons.settings),
             label: l10n.settingsTitle,
           ),
         ],

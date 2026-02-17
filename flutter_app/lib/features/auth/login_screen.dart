@@ -110,7 +110,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               if (_isRegisterMode)
                 _buildTextField(
                   controller: _nameController,
-                  hint: 'Nombre',
+                  hint: l10n.authName,
                   icon: Icons.person_outline,
                 ).animate().fadeIn(duration: 200.ms),
 
@@ -118,7 +118,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
               _buildTextField(
                 controller: _emailController,
-                hint: 'Email',
+                hint: l10n.authEmail,
                 icon: Icons.email_outlined,
                 keyboardType: TextInputType.emailAddress,
               ).animate().fadeIn(delay: 100.ms),
@@ -127,7 +127,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
               _buildTextField(
                 controller: _passwordController,
-                hint: 'Contraseña',
+                hint: l10n.authPassword,
                 icon: Icons.lock_outline,
                 obscureText: _obscurePassword,
                 suffixIcon: IconButton(
@@ -165,7 +165,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                   ),
                   child: Text(
-                      _isRegisterMode ? 'Crear cuenta' : 'Iniciar sesión'),
+                      _isRegisterMode ? l10n.authCreateAccount : l10n.authSignIn),
                 ),
               ).animate().fadeIn(delay: 200.ms),
 
@@ -177,8 +177,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     setState(() => _isRegisterMode = !_isRegisterMode),
                 child: Text(
                   _isRegisterMode
-                      ? '¿Ya tienes cuenta? Inicia sesión'
-                      : '¿No tienes cuenta? Regístrate',
+                      ? l10n.authToggleToLogin
+                      : l10n.authToggleToRegister,
                   style: const TextStyle(color: Colors.white54, fontSize: 13),
                 ),
               ),
@@ -327,16 +327,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   /// Email/password auth flow.
   Future<void> _handleEmailAuth(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
-      _showError(context, 'Ingresa email y contraseña');
+      _showError(context, l10n.authFillFields);
       return;
     }
 
     if (_isRegisterMode && password.length < 6) {
-      _showError(context, 'La contraseña debe tener al menos 6 caracteres');
+      _showError(context, l10n.authPasswordMinLength);
       return;
     }
 
