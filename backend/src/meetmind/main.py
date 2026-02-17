@@ -134,7 +134,7 @@ app = FastAPI(
 )
 
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]
 
 app.add_middleware(
     CORSMiddleware,
@@ -574,7 +574,8 @@ async def get_pending_actions(
         List of pending action items.
     """
     items = await storage.get_pending_action_items(
-        limit=limit, user_id=current_user["user_id"],
+        limit=limit,
+        user_id=current_user["user_id"],
     )
     return {"action_items": items, "count": len(items)}
 

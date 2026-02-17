@@ -83,7 +83,9 @@ class ConnectionManager:
         """Check if AI agents are initialized."""
         return self._screening_agent is not None
 
-    async def connect(self, websocket: WebSocket, *, language: str = "", user_id: str | None = None) -> str:
+    async def connect(
+        self, websocket: WebSocket, *, language: str = "", user_id: str | None = None
+    ) -> str:
         """Accept a WebSocket connection and assign an ID.
 
         Args:

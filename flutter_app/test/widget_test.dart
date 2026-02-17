@@ -34,8 +34,11 @@ void main() {
     // Splash screen shows app name
     expect(find.text('Aura Meet'), findsWidgets);
 
-    // Drain all remaining timers (splash delay + flutter_animate)
-    await tester.pumpAndSettle(const Duration(seconds: 5));
+    // Advance past splash animations (use pump, not pumpAndSettle,
+    // because flutter_animate creates continuous animations)
+    for (int i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 500));
+    }
   });
 
   testWidgets('App navigates to login after splash', (
@@ -63,14 +66,17 @@ void main() {
 
     await tester.pumpWidget(buildApp());
 
-    // Advance past splash delay (2.5s) + animations
+    // Advance past splash delay (2.5s) + navigation
     await tester.pump(const Duration(seconds: 3));
     await tester.pump(const Duration(seconds: 1));
 
     // Should see login/app content
     expect(find.text('Aura Meet'), findsWidgets);
 
-    // Drain all remaining timers
-    await tester.pumpAndSettle(const Duration(seconds: 5));
+    // Advance past remaining animations (use pump, not pumpAndSettle,
+    // because flutter_animate creates continuous animations that never settle)
+    for (int i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 500));
+    }
   });
 }
