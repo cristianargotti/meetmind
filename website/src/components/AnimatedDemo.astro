@@ -27,13 +27,13 @@ const demo = t.animatedDemo;
                   <span class="greeting-text">Good morning, Cristian</span>
                   <span class="greeting-sub">{demo.homeSubtitle}</span>
                 </div>
-                <div class="app-settings-icon">⚙</div>
+                <svg class="app-settings-svg" viewBox="0 0 24 24" width="18" height="18" fill="rgba(255,255,255,0.3)"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>
               </div>
 
               <!-- Quick Start Card -->
               <div class="quick-start-card">
                 <div class="qs-top-row">
-                  <div class="qs-icon-box">▶</div>
+                  <div class="qs-icon-box"><svg viewBox="0 0 24 24" width="22" height="22" fill="white"><path d="M8 5v14l11-7z"/></svg></div>
                 </div>
                 <div class="qs-title">{demo.startMeeting}</div>
                 <div class="qs-subtitle">{demo.transcribeRealtime}</div>
@@ -42,17 +42,17 @@ const demo = t.animatedDemo;
               <!-- Stats Row -->
               <div class="stats-row">
                 <div class="stat-card stat-accent">
-                  <span class="stat-icon">🎤</span>
+                  <svg class="stat-svg" viewBox="0 0 24 24" width="16" height="16" fill="#06D6A0"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
                   <span class="stat-value">3</span>
                   <span class="stat-label">{demo.statToday}</span>
                 </div>
                 <div class="stat-card stat-success">
-                  <span class="stat-icon">💡</span>
+                  <svg class="stat-svg" viewBox="0 0 24 24" width="16" height="16" fill="#22C55E"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/></svg>
                   <span class="stat-value">12</span>
                   <span class="stat-label">{demo.statInsights}</span>
                 </div>
                 <div class="stat-card stat-warning">
-                  <span class="stat-icon">✅</span>
+                  <svg class="stat-svg" viewBox="0 0 24 24" width="16" height="16" fill="#EAB308"><path d="M22 5.18L10.59 16.6l-4.24-4.24 1.41-1.41 2.83 2.83 10-10L22 5.18zm-2.21 5.04c.13.57.21 1.17.21 1.78 0 4.42-3.58 8-8 8s-8-3.58-8-8 3.58-8 8-8c1.58 0 3.04.46 4.28 1.25l1.44-1.44A9.9 9.9 0 0012 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10c0-1.19-.22-2.33-.6-3.39l-1.61 1.61z"/></svg>
                   <span class="stat-value">5</span>
                   <span class="stat-label">{demo.statActions}</span>
                 </div>
@@ -62,43 +62,43 @@ const demo = t.animatedDemo;
               <div class="recent-section">
                 <span class="recent-title">{demo.recentMeetings}</span>
                 <div class="recent-item">
-                  <div class="recent-icon">🎤</div>
+                  <div class="recent-icon"><svg viewBox="0 0 24 24" width="15" height="15" fill="#8B5CF6"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/></svg></div>
                   <div class="recent-info">
                     <span class="recent-name">Sprint Planning Q1</span>
                     <span class="recent-date">Feb 17 · 2:30 PM · 45m 12s</span>
                   </div>
-                  <span class="recent-arrow">›</span>
+                  <svg class="recent-chevron" viewBox="0 0 24 24" width="14" height="14" fill="rgba(255,255,255,0.15)"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
                 </div>
                 <div class="recent-item">
-                  <div class="recent-icon">🎤</div>
+                  <div class="recent-icon"><svg viewBox="0 0 24 24" width="15" height="15" fill="#8B5CF6"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/></svg></div>
                   <div class="recent-info">
                     <span class="recent-name">Product Review</span>
                     <span class="recent-date">Feb 16 · 10:00 AM · 32m 5s</span>
                   </div>
-                  <span class="recent-arrow">›</span>
+                  <svg class="recent-chevron" viewBox="0 0 24 24" width="14" height="14" fill="rgba(255,255,255,0.15)"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
                 </div>
                 <div class="recent-item">
-                  <div class="recent-icon">🎤</div>
+                  <div class="recent-icon"><svg viewBox="0 0 24 24" width="15" height="15" fill="#8B5CF6"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/></svg></div>
                   <div class="recent-info">
                     <span class="recent-name">Design Sync</span>
                     <span class="recent-date">Feb 15 · 4:15 PM · 18m 34s</span>
                   </div>
-                  <span class="recent-arrow">›</span>
+                  <svg class="recent-chevron" viewBox="0 0 24 24" width="14" height="14" fill="rgba(255,255,255,0.15)"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
                 </div>
               </div>
             </div>
 
             <!-- Bottom Nav -->
             <div class="bottom-nav">
-              <div class="nav-item active"><span class="nav-icon">🏠</span><span>Home</span></div>
-              <div class="nav-item"><span class="nav-icon">✨</span><span>Ask Aura</span></div>
-              <div class="nav-item"><span class="nav-icon">📋</span><span>{demo.navHistory}</span></div>
-              <div class="nav-item"><span class="nav-icon">⚙</span><span>{demo.navSettings}</span></div>
+              <div class="nav-item active"><svg class="nav-svg" viewBox="0 0 24 24" width="20" height="20"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>Home</span></div>
+              <div class="nav-item"><svg class="nav-svg" viewBox="0 0 24 24" width="20" height="20"><path d="M19 9l1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5z"/></svg><span>Ask Aura</span></div>
+              <div class="nav-item"><svg class="nav-svg" viewBox="0 0 24 24" width="20" height="20"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0013 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg><span>{demo.navHistory}</span></div>
+              <div class="nav-item"><svg class="nav-svg" viewBox="0 0 24 24" width="20" height="20"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg><span>{demo.navSettings}</span></div>
             </div>
 
             <!-- FAB -->
             <div class="fab-button" id="demoFab">
-              <span>🎤</span>
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="white"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
             </div>
           </div>
 
@@ -132,10 +132,20 @@ const demo = t.animatedDemo;
               <!-- Transcript segments will be added by JS -->
             </div>
 
+            <!-- iOS Notification Banner -->
+            <div class="ios-notification" id="iosNotification">
+              <img src="/app-icon.png" alt="Aura Meet" class="notif-app-icon" width="28" height="28" />
+              <div class="notif-content">
+                <span class="notif-app-name">Aura Meet</span>
+                <span class="notif-text">{demo.notifText}</span>
+              </div>
+              <span class="notif-time">now</span>
+            </div>
+
             <!-- Input Bar -->
             <div class="meeting-input-bar">
               <div class="input-field">{demo.addNote}</div>
-              <div class="mic-btn-small">🎤</div>
+              <svg class="mic-svg" viewBox="0 0 24 24" width="18" height="18" fill="#8B5CF6"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
             </div>
           </div>
 
@@ -156,7 +166,7 @@ const demo = t.animatedDemo;
             <div class="summary-content" id="summaryContent">
               <div class="summary-header">
                 <span class="summary-title">{demo.summaryTitle}</span>
-                <span class="copy-btn">📋</span>
+                <svg class="copy-svg" viewBox="0 0 24 24" width="16" height="16" fill="rgba(255,255,255,0.4)"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
               </div>
               <p class="summary-overview">{demo.summaryOverview}</p>
               <span class="summary-latency">{demo.summaryLatency}</span>
@@ -195,7 +205,7 @@ const demo = t.animatedDemo;
             <div class="chat-area" id="chatArea">
               <!-- Suggested questions (empty state) -->
               <div class="ask-empty-state" id="askEmptyState">
-                <div class="aura-icon-large">✨</div>
+                <div class="aura-icon-large"><img src="/app-icon.png" alt="Aura Meet" width="36" height="36" style="border-radius: 8px;" /></div>
                 <span class="aura-title">{demo.askAuraTitle}</span>
                 <span class="aura-subtitle">{demo.askAuraSubtitle}</span>
                 <div class="suggested-questions">
@@ -214,10 +224,10 @@ const demo = t.animatedDemo;
             </div>
 
             <div class="bottom-nav">
-              <div class="nav-item"><span class="nav-icon">🏠</span><span>Home</span></div>
-              <div class="nav-item active"><span class="nav-icon">✨</span><span>Ask Aura</span></div>
-              <div class="nav-item"><span class="nav-icon">📋</span><span>{demo.navHistory}</span></div>
-              <div class="nav-item"><span class="nav-icon">⚙</span><span>{demo.navSettings}</span></div>
+              <div class="nav-item"><svg class="nav-svg" viewBox="0 0 24 24" width="20" height="20"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>Home</span></div>
+              <div class="nav-item active"><svg class="nav-svg" viewBox="0 0 24 24" width="20" height="20"><path d="M19 9l1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5z"/></svg><span>Ask Aura</span></div>
+              <div class="nav-item"><svg class="nav-svg" viewBox="0 0 24 24" width="20" height="20"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0013 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg><span>{demo.navHistory}</span></div>
+              <div class="nav-item"><svg class="nav-svg" viewBox="0 0 24 24" width="20" height="20"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg><span>{demo.navSettings}</span></div>
             </div>
           </div>
 
@@ -225,7 +235,7 @@ const demo = t.animatedDemo;
           <div class="scene scene-privacy" data-scene="5">
             <div class="privacy-visual">
               <div class="phone-glow"></div>
-              <div class="shield-icon">🛡️</div>
+              <div class="shield-icon"><svg viewBox="0 0 24 24" width="52" height="52" fill="#06D6A0"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg></div>
               <div class="privacy-title">{demo.privacyTitle}</div>
               <div class="privacy-desc">{demo.privacyDesc}</div>
               <div class="privacy-features">
@@ -376,6 +386,28 @@ const demo = t.animatedDemo;
   padding: 18px;
   margin-bottom: 16px;
   box-shadow: 0 8px 20px rgba(139,92,246,0.3);
+  position: relative;
+  overflow: hidden;
+  animation: cardPulse 3s infinite;
+}
+@keyframes cardPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); box-shadow: 0 10px 25px rgba(139,92,246,0.5); }
+}
+.quick-start-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transform: skewX(-20deg);
+  animation: shine 3s infinite;
+}
+@keyframes shine {
+  0%, 20% { left: -100%; }
+  100% { left: 200%; }
 }
 .qs-top-row {
   margin-bottom: 14px;
@@ -1011,6 +1043,79 @@ const demo = t.animatedDemo;
   }
   .iphone-notch { width: 100px; height: 24px; }
 }
+
+/* ─── Scrollbars ─── */
+.app-safe-area,
+.transcript-area,
+.summary-content,
+.chat-area {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+.app-safe-area::-webkit-scrollbar,
+.transcript-area::-webkit-scrollbar,
+.summary-content::-webkit-scrollbar,
+.chat-area::-webkit-scrollbar {
+  display: none; /* Chrome/Safari/Opera */
+}
+
+/* ─── SVGs ─── */
+svg { display: block; }
+.nav-item svg { fill: #5C6370; transition: fill 0.3s; }
+.nav-item.active svg { fill: #8B5CF6; }
+
+/* ─── Notification Banner ─── */
+.ios-notification {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  background: rgba(30, 30, 35, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 14px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+  z-index: 100;
+  transform: translateY(-150%);
+  transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.ios-notification.show {
+  transform: translateY(0);
+}
+.notif-app-icon {
+  border-radius: 8px;
+}
+.notif-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+}
+.notif-app-name {
+  color: rgba(255,255,255,0.5);
+  font-size: 10px;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+.notif-text {
+  color: white;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.notif-time {
+  color: rgba(255,255,255,0.4);
+  font-size: 10px;
+  align-self: flex-start;
+  margin-top: 2px;
+}
 </style>
 
 <script define:vars={{ demo: demo }}>
@@ -1152,6 +1257,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // Add first segment immediately
     addSegment();
     transcriptInterval = setInterval(addSegment, 3500);
+
+    // Trigger Notification after delay
+    setTimeout(() => {
+      const notif = document.getElementById('iosNotification');
+      if (notif) {
+        notif.classList.add('show');
+        setTimeout(() => notif.classList.remove('show'), 4000);
+      }
+    }, 2000);
   }
 
   // ─── Scene 3: Summary Reveal ───
@@ -1208,14 +1322,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ─── Autoplay ───
   function startAutoplay() {
-    autoplayTimer = setInterval(() => {
+    // Clear any existing timer
+    stopAutoplay();
+    
+    // Determine duration based on current scene
+    // Scene 1 (Home): 1.5s (very fast start)
+    // Scene 2, 3, 4: 8s (time to read)
+    // Scene 5: 6s
+    let duration = 8000;
+    if (currentScene === 1) duration = 1500; 
+    else if (currentScene === 5) duration = 6000;
+
+    autoplayTimer = setTimeout(() => {
       const next = currentScene >= 5 ? 1 : currentScene + 1;
       goToScene(next);
-    }, 8000);
+      startAutoplay(); // Recursive for variable timing
+    }, duration);
   }
 
   function stopAutoplay() {
-    if (autoplayTimer) clearInterval(autoplayTimer);
+    if (autoplayTimer) clearTimeout(autoplayTimer);
   }
 
   // ─── Dot clicks ───

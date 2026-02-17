@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:meetmind/config/app_config.dart';
+import 'package:meetmind/services/subscription_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Authentication service — handles OAuth login, token management, and logout.
@@ -60,7 +61,7 @@ class AuthService {
         } catch (_) {
           // Profile fetch failed — keep cached user data
         }
-        
+
         // Identify in RevenueCat
         if (_user != null && _user!['id'] != null) {
           await SubscriptionService.instance.logIn(_user!['id'].toString());
@@ -241,7 +242,7 @@ class AuthService {
     await prefs.remove(_accessTokenKey);
     await prefs.remove(_refreshTokenKey);
     await prefs.remove(_userKey);
-    
+
     // Log out from RevenueCat
     await SubscriptionService.instance.logOut();
   }

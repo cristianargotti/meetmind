@@ -338,6 +338,7 @@
         "tabSummary": "Summary",
         "addNote": "Add manual note...",
         "summaryTitle": "Sprint Planning Q1 — Summary",
+        "notifText": "Aura is taking notes",
         "summaryOverview": "The team reviewed Q1 objectives, prioritized the API backlog, and defined deliverables for the next 2 weeks.",
         "summaryLatency": "Generated in 1.2s",
         "decisions": "Decisions",

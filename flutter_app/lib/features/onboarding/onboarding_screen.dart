@@ -72,7 +72,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   child: Text(
                     l10n.onboardingSkip,
                     style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.5),
                     ),
                   ),
                 ),
@@ -200,7 +203,10 @@ class _WelcomePage extends StatelessWidget {
           Text(
             l10n.onboardingWelcomeDesc,
             style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: 0.7),
               fontSize: 16,
               height: 1.5,
             ),
@@ -249,7 +255,10 @@ class _LanguagePage extends StatelessWidget {
           Text(
             l10n.onboardingLanguageDesc,
             style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.6),
                 fontSize: 15),
             textAlign: TextAlign.center,
           ),
@@ -352,7 +361,10 @@ class _MicPermissionPage extends StatelessWidget {
           Text(
             l10n.onboardingMicDesc,
             style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: 0.6),
               fontSize: 15,
               height: 1.5,
             ),
@@ -408,7 +420,10 @@ class _ReadyPage extends StatelessWidget {
           Text(
             l10n.onboardingReadyDesc,
             style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: 0.7),
               fontSize: 16,
               height: 1.5,
             ),

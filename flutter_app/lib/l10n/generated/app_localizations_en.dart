@@ -301,10 +301,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get subscriptionUpgrade => 'Upgrade';
 
   @override
-  String get paywallTitle => 'Unlock Full Power';
+  String get paywallTitle => 'Unlock Aura Pro';
 
   @override
-  String get paywallSubtitle => 'Get unlimited meetings and AI features';
+  String get paywallSubtitle => 'Your AI meeting copilot, unleashed';
 
   @override
   String get paywallMonthly => 'Monthly';
@@ -380,7 +380,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paywallFeatureDigest => 'Weekly Digest';
 
   @override
-  String get paywallLegal => 'Subscription auto-renews. Cancel anytime.';
+  String get paywallLegal => 'Cancel anytime. Recurring billing.';
 
   @override
   String freeLimitBannerRemaining(int remaining) {
@@ -622,4 +622,51 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get commonCopied => 'Copied to clipboard';
+
+  @override
+  String get paywallWelcome => 'Welcome to Aura Pro!';
+
+  @override
+  String paywallSave(String amount) {
+    return 'Save $amount%';
+  }
+
+  @override
+  String get paywallRestoring => 'Restoring...';
+
+  @override
+  String get paywallSuccessRestore => '✅ Purchases restored!';
+
+  @override
+  String get paywallNoRestore => 'No previous purchases found';
+
+  @override
+  String get paywallFeatUnlimited => 'Unlimited';
+
+  @override
+  String get paywallFeatForever => 'Forever';
+
+  @override
+  String get paywallFeatAll => 'All';
+
+  @override
+  String get paywallFeatMeetings => 'Meetings per week';
+
+  @override
+  String get paywallFeatHistory => 'Meeting history';
+
+  @override
+  String get paywallFeatInsights => 'Insights per meeting';
+
+  @override
+  String get paywallFeatChat => 'Ask Aura (AI chat)';
+
+  @override
+  String get paywallFeatDigest => 'Weekly Digest';
+
+  @override
+  String get paywallFeatExport => 'Export & share';
+
+  @override
+  String get paywallFeatBriefing => 'Pre-Meeting Briefing';
 }

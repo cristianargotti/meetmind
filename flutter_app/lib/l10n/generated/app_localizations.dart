@@ -64,7 +64,7 @@ import 'app_localizations_pt.dart';
 /// property.
 abstract class AppLocalizations {
   AppLocalizations(String locale)
-      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -87,11 +87,11 @@ abstract class AppLocalizations {
   /// of delegates is preferred or required.
   static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
       <LocalizationsDelegate<dynamic>>[
-    delegate,
-    GlobalMaterialLocalizations.delegate,
-    GlobalCupertinoLocalizations.delegate,
-    GlobalWidgetsLocalizations.delegate,
-  ];
+        delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ];
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
@@ -673,13 +673,13 @@ abstract class AppLocalizations {
   /// No description provided for @paywallTitle.
   ///
   /// In en, this message translates to:
-  /// **'Unlock Full Power'**
+  /// **'Unlock Aura Pro'**
   String get paywallTitle;
 
   /// No description provided for @paywallSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Get unlimited meetings and AI features'**
+  /// **'Your AI meeting copilot, unleashed'**
   String get paywallSubtitle;
 
   /// No description provided for @paywallMonthly.
@@ -811,7 +811,7 @@ abstract class AppLocalizations {
   /// No description provided for @paywallLegal.
   ///
   /// In en, this message translates to:
-  /// **'Subscription auto-renews. Cancel anytime.'**
+  /// **'Cancel anytime. Recurring billing.'**
   String get paywallLegal;
 
   /// No description provided for @freeLimitBannerRemaining.
@@ -1251,6 +1251,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Copied to clipboard'**
   String get commonCopied;
+
+  /// No description provided for @paywallWelcome.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to Aura Pro!'**
+  String get paywallWelcome;
+
+  /// No description provided for @paywallSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save {amount}%'**
+  String paywallSave(String amount);
+
+  /// No description provided for @paywallRestoring.
+  ///
+  /// In en, this message translates to:
+  /// **'Restoring...'**
+  String get paywallRestoring;
+
+  /// No description provided for @paywallSuccessRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'✅ Purchases restored!'**
+  String get paywallSuccessRestore;
+
+  /// No description provided for @paywallNoRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'No previous purchases found'**
+  String get paywallNoRestore;
+
+  /// No description provided for @paywallFeatUnlimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited'**
+  String get paywallFeatUnlimited;
+
+  /// No description provided for @paywallFeatForever.
+  ///
+  /// In en, this message translates to:
+  /// **'Forever'**
+  String get paywallFeatForever;
+
+  /// No description provided for @paywallFeatAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get paywallFeatAll;
+
+  /// No description provided for @paywallFeatMeetings.
+  ///
+  /// In en, this message translates to:
+  /// **'Meetings per week'**
+  String get paywallFeatMeetings;
+
+  /// No description provided for @paywallFeatHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Meeting history'**
+  String get paywallFeatHistory;
+
+  /// No description provided for @paywallFeatInsights.
+  ///
+  /// In en, this message translates to:
+  /// **'Insights per meeting'**
+  String get paywallFeatInsights;
+
+  /// No description provided for @paywallFeatChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask Aura (AI chat)'**
+  String get paywallFeatChat;
+
+  /// No description provided for @paywallFeatDigest.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly Digest'**
+  String get paywallFeatDigest;
+
+  /// No description provided for @paywallFeatExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Export & share'**
+  String get paywallFeatExport;
+
+  /// No description provided for @paywallFeatBriefing.
+  ///
+  /// In en, this message translates to:
+  /// **'Pre-Meeting Briefing'**
+  String get paywallFeatBriefing;
 }
 
 class _AppLocalizationsDelegate

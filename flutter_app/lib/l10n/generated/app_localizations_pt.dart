@@ -627,4 +627,51 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get commonCopied => 'Copiado para a área de transferência';
+
+  @override
+  String get paywallWelcome => 'Welcome to Aura Pro!';
+
+  @override
+  String paywallSave(String amount) {
+    return 'Save $amount%';
+  }
+
+  @override
+  String get paywallRestoring => 'Restoring...';
+
+  @override
+  String get paywallSuccessRestore => '✅ Purchases restored!';
+
+  @override
+  String get paywallNoRestore => 'No previous purchases found';
+
+  @override
+  String get paywallFeatUnlimited => 'Unlimited';
+
+  @override
+  String get paywallFeatForever => 'Forever';
+
+  @override
+  String get paywallFeatAll => 'All';
+
+  @override
+  String get paywallFeatMeetings => 'Meetings per week';
+
+  @override
+  String get paywallFeatHistory => 'Meeting history';
+
+  @override
+  String get paywallFeatInsights => 'Insights per meeting';
+
+  @override
+  String get paywallFeatChat => 'Ask Aura (AI chat)';
+
+  @override
+  String get paywallFeatDigest => 'Weekly Digest';
+
+  @override
+  String get paywallFeatExport => 'Export & share';
+
+  @override
+  String get paywallFeatBriefing => 'Pre-Meeting Briefing';
 }

@@ -303,10 +303,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get subscriptionUpgrade => 'Mejorar';
 
   @override
-  String get paywallTitle => 'Desbloquea Todo el Poder';
+  String get paywallTitle => 'Desbloquea Aura Pro';
 
   @override
-  String get paywallSubtitle => 'Reuniones ilimitadas y funciones de IA';
+  String get paywallSubtitle => 'Tu copiloto de reuniones con IA, desatado';
 
   @override
   String get paywallMonthly => 'Mensual';
@@ -382,8 +382,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get paywallFeatureDigest => 'Resumen Semanal';
 
   @override
-  String get paywallLegal =>
-      'La suscripción se renueva automáticamente. Cancela cuando quieras.';
+  String get paywallLegal => 'Cancela cuando quieras. Facturación recurrente.';
 
   @override
   String freeLimitBannerRemaining(int remaining) {
@@ -626,4 +625,51 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get commonCopied => 'Copiado al portapapeles';
+
+  @override
+  String get paywallWelcome => '¡Bienvenido a Aura Pro!';
+
+  @override
+  String paywallSave(String amount) {
+    return 'Ahorra $amount%';
+  }
+
+  @override
+  String get paywallRestoring => 'Restaurando...';
+
+  @override
+  String get paywallSuccessRestore => '✅ Compras restauradas!';
+
+  @override
+  String get paywallNoRestore => 'No se encontraron compras previas';
+
+  @override
+  String get paywallFeatUnlimited => 'Ilimitadas';
+
+  @override
+  String get paywallFeatForever => 'Por siempre';
+
+  @override
+  String get paywallFeatAll => 'Todos';
+
+  @override
+  String get paywallFeatMeetings => 'Reuniones por semana';
+
+  @override
+  String get paywallFeatHistory => 'Historial de reuniones';
+
+  @override
+  String get paywallFeatInsights => 'Hallazgos por reunión';
+
+  @override
+  String get paywallFeatChat => 'Pregunta a Aura (Chat AI)';
+
+  @override
+  String get paywallFeatDigest => 'Resumen Semanal';
+
+  @override
+  String get paywallFeatExport => 'Exportar y compartir';
+
+  @override
+  String get paywallFeatBriefing => 'Briefing Pre-Reunión';
 }

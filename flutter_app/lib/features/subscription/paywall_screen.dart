@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meetmind/config/theme.dart';
+import 'package:meetmind/l10n/generated/app_localizations.dart';
 import 'package:meetmind/providers/subscription_provider.dart';
 import 'package:meetmind/services/subscription_service.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
@@ -140,7 +141,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
               const SizedBox(height: 12),
 
               // Legal
-              const Text(
+              Text(
                 AppLocalizations.of(context)!.paywallLegal,
                 style: TextStyle(
                   color: MeetMindTheme.textTertiary,
@@ -182,7 +183,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
           child: const Icon(Icons.auto_awesome, color: Colors.white, size: 32),
         ).animate().scale(duration: 600.ms, curve: Curves.elasticOut),
         const SizedBox(height: 20),
-        const Text(
+        Text(
           AppLocalizations.of(context)!.paywallTitle,
           style: TextStyle(
             color: MeetMindTheme.textPrimary,
@@ -192,7 +193,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
           ),
         ).animate().fadeIn(duration: 400.ms),
         const SizedBox(height: 8),
-        const Text(
+        Text(
           AppLocalizations.of(context)!.paywallSubtitle,
           style: TextStyle(color: MeetMindTheme.textSecondary, fontSize: 15),
         ).animate().fadeIn(delay: 100.ms, duration: 400.ms),
@@ -210,7 +211,9 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       ),
       child: Row(
         children: [
-          Expanded(child: _toggleButton(AppLocalizations.of(context)!.paywallMonthly, '\$14.99/mo', !_isYearly)),
+          Expanded(
+              child: _toggleButton(AppLocalizations.of(context)!.paywallMonthly,
+                  '\$14.99/mo', !_isYearly)),
           Expanded(
             child: _toggleButton(
               AppLocalizations.of(context)!.paywallYearly,
@@ -231,7 +234,8 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     String? badge,
   }) {
     return GestureDetector(
-      onTap: () => setState(() => _isYearly = label == AppLocalizations.of(context)!.paywallYearly),
+      onTap: () => setState(() =>
+          _isYearly = label == AppLocalizations.of(context)!.paywallYearly),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 12),
@@ -293,9 +297,12 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   Widget _buildFeatureComparison() {
     final l10n = AppLocalizations.of(context)!;
     final features = [
-      _FeatureRow(l10n.paywallFeatMeetings, '3', l10n.paywallFeatUnlimited, Icons.mic),
-      _FeatureRow(l10n.paywallFeatHistory, '7 days', l10n.paywallFeatForever, Icons.history),
-      _FeatureRow(l10n.paywallFeatInsights, '1', l10n.paywallFeatAll, Icons.lightbulb_outline),
+      _FeatureRow(
+          l10n.paywallFeatMeetings, '3', l10n.paywallFeatUnlimited, Icons.mic),
+      _FeatureRow(l10n.paywallFeatHistory, '7 days', l10n.paywallFeatForever,
+          Icons.history),
+      _FeatureRow(l10n.paywallFeatInsights, '1', l10n.paywallFeatAll,
+          Icons.lightbulb_outline),
       _FeatureRow(l10n.paywallFeatChat, '—', '✓', Icons.chat_bubble_outline),
       _FeatureRow(l10n.paywallFeatDigest, '—', '✓', Icons.summarize),
       _FeatureRow(l10n.paywallFeatExport, '—', '✓', Icons.share),
@@ -388,8 +395,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
               )
             : Text(
                 _isYearly
-                    ? AppLocalizations.of(context)!.paywallStartProYearly('\$119.99')
-                    : AppLocalizations.of(context)!.paywallStartProMonthly('\$14.99'),
+                    ? AppLocalizations.of(context)!
+                        .paywallStartProYearly('\$119.99')
+                    : AppLocalizations.of(context)!
+                        .paywallStartProMonthly('\$14.99'),
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,

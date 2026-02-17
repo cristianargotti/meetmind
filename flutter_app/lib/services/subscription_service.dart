@@ -244,12 +244,22 @@ class SubscriptionService {
   }
 
   /// Identify user (call after authentication).
-  Future<void> identifyUser(String userId) async {
+  Future<void> logIn(String userId) async {
     try {
-      await Purchases.logIn(userId);
-      await refreshEntitlements();
+      final customerInfo = await Purchases.logIn(userId);
+      _processCustomerInfo(customerInfo.customerInfo);
     } catch (e) {
       debugPrint('⚠️ Failed to identify user: $e');
+    }
+  }
+
+  /// Reset user identity (call on logout).
+  Future<void> logOut() async {
+    try {
+      final customerInfo = await Purchases.logOut();
+      _processCustomerInfo(customerInfo);
+    } catch (e) {
+      debugPrint('⚠️ Failed to logout user: $e');
     }
   }
 
