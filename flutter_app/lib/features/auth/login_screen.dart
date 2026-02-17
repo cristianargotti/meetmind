@@ -397,7 +397,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   /// Google Sign-In flow.
   Future<void> _handleGoogleSignIn(BuildContext context) async {
     try {
-      final googleSignIn = GoogleSignIn(scopes: ['email', 'profile']);
+      final googleSignIn = GoogleSignIn(
+        scopes: ['email', 'profile'],
+        // serverClientId must match the backend's MEETMIND_GOOGLE_CLIENT_ID
+        // for proper ID token audience validation.
+        serverClientId:
+            '190972367615-4ft721hggursqog484ftlibtthkeeskm.apps.googleusercontent.com',
+      );
       final account = await googleSignIn.signIn();
 
       if (account == null) return; // User cancelled
@@ -420,6 +426,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (!context.mounted) return;
       context.go('/');
     } catch (e) {
+      debugPrint('[GoogleSignIn] Error: $e');
       if (!context.mounted) return;
       _showError(context, 'Google sign-in error: $e');
     }
@@ -460,9 +467,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       context.go('/');
     } on SignInWithAppleAuthorizationException catch (e) {
       if (e.code == AuthorizationErrorCode.canceled) return;
+      debugPrint('[AppleSignIn] Auth exception: ${e.code} - ${e.message}');
       if (!context.mounted) return;
       _showError(context, 'Apple sign-in error: ${e.message}');
     } catch (e) {
+      debugPrint('[AppleSignIn] Error: $e');
       if (!context.mounted) return;
       _showError(context, 'Apple sign-in error: $e');
     }

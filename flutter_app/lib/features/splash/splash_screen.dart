@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meetmind/config/theme.dart';
 import 'package:meetmind/providers/auth_provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:meetmind/services/user_preferences.dart';
 
 /// Animated splash screen — premium first impression.
 ///
@@ -33,9 +33,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     if (!mounted || _navigated) return;
     _navigated = true;
 
-    // Check if user has completed onboarding
-    final prefs = await SharedPreferences.getInstance();
-    final hasOnboarded = prefs.getBool('onboarding_complete') ?? false;
+    // Check if user has completed onboarding using the correct key
+    // (UserPreferences uses 'pref_onboarding_complete' internally)
+    final hasOnboarded = UserPreferences.instance.onboardingComplete;
 
     if (!mounted) return;
 

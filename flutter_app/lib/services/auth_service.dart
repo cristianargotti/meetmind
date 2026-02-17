@@ -42,10 +42,17 @@ class AuthService {
   String? get accessToken => _accessToken;
 
   /// Build base URL from AppConfig.
+  ///
+  /// Omits port when it's the default for the scheme (443 for HTTPS, 80 for HTTP)
+  /// to avoid issues with reverse proxies and CDNs.
   String get _baseUrl {
     final config = AppConfig.instance;
     final scheme = config.protocol == 'wss' ? 'https' : 'http';
-    return '$scheme://${config.host}:${config.port}';
+    final isDefaultPort = (scheme == 'https' && config.port == 443) ||
+        (scheme == 'http' && config.port == 80);
+    return isDefaultPort
+        ? '$scheme://${config.host}'
+        : '$scheme://${config.host}:${config.port}';
   }
 
   /// Initialize from stored tokens (call on app startup).
