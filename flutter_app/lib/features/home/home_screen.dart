@@ -355,10 +355,8 @@ class HomeScreen extends ConsumerWidget {
         onDestinationSelected: (int index) {
           switch (index) {
             case 1:
-              context.push('/ask-aura');
-            case 2:
               context.push('/history');
-            case 3:
+            case 2:
               context.push('/settings');
           }
         },
@@ -367,11 +365,6 @@ class HomeScreen extends ConsumerWidget {
             icon: const Icon(Icons.home_outlined),
             selectedIcon: const Icon(Icons.home),
             label: l10n.homeTitle.split(' ').first,
-          ),
-          const NavigationDestination(
-            icon: Icon(Icons.auto_awesome_outlined),
-            selectedIcon: Icon(Icons.auto_awesome),
-            label: 'Ask Aura',
           ),
           NavigationDestination(
             icon: const Icon(Icons.history_outlined),

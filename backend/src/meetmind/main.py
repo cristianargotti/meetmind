@@ -139,8 +139,15 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # ty
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[o.strip() for o in settings.cors_origins.split(",")],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=[
+        "Authorization",
+        "Content-Type",
+        "Accept",
+        "Origin",
+        "X-Requested-With",
+    ],
 )
 
 
@@ -148,9 +155,22 @@ app.add_middleware(
 
 
 @app.get("/health")
-async def health_check() -> dict[str, str]:
-    """Health check endpoint."""
-    return {"status": "healthy", "environment": settings.environment}
+async def health_check() -> dict[str, object]:
+    """Health check endpoint with database connectivity verification."""
+    result: dict[str, object] = {
+        "status": "healthy",
+        "environment": settings.environment,
+    }
+    try:
+        pool = await storage.get_pool()
+        async with pool.acquire() as conn:
+            await conn.fetchval("SELECT 1")
+        result["database"] = "connected"
+    except Exception as e:
+        result["status"] = "degraded"
+        result["database"] = f"error: {e!s}"
+        logger.warning("health_check_db_error", error=str(e))
+    return result
 
 
 # ─── Auth ────────────────────────────────────────────────────────
@@ -288,7 +308,8 @@ async def auth_email_login(request: Request, body: EmailLoginRequest) -> AuthTok
 
 
 @app.post("/api/auth/refresh")
-async def auth_refresh(body: RefreshRequest) -> dict[str, str]:
+@limiter.limit("10/minute")
+async def auth_refresh(request: Request, body: RefreshRequest) -> dict[str, str]:
     """Get new access + refresh tokens using a refresh token (rotation).
 
     Args:
@@ -313,7 +334,9 @@ async def auth_refresh(body: RefreshRequest) -> dict[str, str]:
 
 
 @app.get("/api/auth/me")
+@limiter.limit("30/minute")
 async def auth_me(
+    request: Request,
     current_user: dict[str, Any] = _auth_dep,
 ) -> dict[str, Any]:
     """Get the current authenticated user profile.
@@ -335,7 +358,9 @@ async def auth_me(
 
 
 @app.delete("/api/auth/account")
+@limiter.limit("3/minute")
 async def auth_delete_account(
+    request: Request,
     current_user: dict[str, Any] = _auth_dep,
 ) -> dict[str, str]:
     """Delete the current user account and ALL associated data.
@@ -356,7 +381,9 @@ async def auth_delete_account(
 
 
 @app.get("/api/meetings")
+@limiter.limit("30/minute")
 async def list_meetings(
+    request: Request,
     limit: int = 50,
     offset: int = 0,
     current_user: dict[str, Any] = _auth_dep,
@@ -380,7 +407,9 @@ async def list_meetings(
 
 
 @app.get("/api/meetings/{meeting_id}")
+@limiter.limit("30/minute")
 async def get_meeting(
+    request: Request,
     meeting_id: str,
     current_user: dict[str, Any] = _auth_dep,
 ) -> dict[str, Any]:
@@ -405,7 +434,9 @@ async def get_meeting(
 
 
 @app.delete("/api/meetings/{meeting_id}")
+@limiter.limit("10/minute")
 async def delete_meeting(
+    request: Request,
     meeting_id: str,
     current_user: dict[str, Any] = _auth_dep,
 ) -> dict[str, str]:
@@ -434,7 +465,9 @@ async def delete_meeting(
 
 
 @app.post("/api/meetings/{meeting_id}/end")
+@limiter.limit("10/minute")
 async def end_meeting_endpoint(
+    request: Request,
     meeting_id: str,
     title: str | None = None,
     duration_secs: int | None = None,
@@ -518,7 +551,8 @@ async def forgot_password(request: Request, body: ForgotPasswordRequest) -> dict
 
 
 @app.post("/api/auth/reset-password")
-async def reset_password(body: ResetPasswordRequest) -> dict[str, str]:
+@limiter.limit("3/minute")
+async def reset_password(request: Request, body: ResetPasswordRequest) -> dict[str, str]:
     """Reset password using a valid reset token.
 
     Args:
@@ -560,7 +594,9 @@ async def reset_password(body: ResetPasswordRequest) -> dict[str, str]:
 
 
 @app.get("/api/action-items")
+@limiter.limit("30/minute")
 async def get_pending_actions(
+    request: Request,
     limit: int = 50,
     current_user: dict[str, Any] = _auth_dep,
 ) -> dict[str, Any]:
@@ -581,7 +617,9 @@ async def get_pending_actions(
 
 
 @app.patch("/api/action-items/{item_id}")
+@limiter.limit("30/minute")
 async def update_action_item(
+    request: Request,
     item_id: int,
     status: str = "done",
     current_user: dict[str, Any] = _auth_dep,
@@ -606,7 +644,9 @@ async def update_action_item(
 
 
 @app.get("/api/stats")
+@limiter.limit("30/minute")
 async def get_stats(
+    request: Request,
     current_user: dict[str, Any] = _auth_dep,
 ) -> dict[str, Any]:
     """Get dashboard statistics for the authenticated user.
