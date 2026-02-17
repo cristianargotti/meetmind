@@ -172,7 +172,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
               ).animate().fadeIn(delay: 200.ms),
 
-              const SizedBox(height: 8),
+              // Forgot password link (login mode only)
+              if (!_isRegisterMode)
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () => context.push('/forgot-password'),
+                    child: Text(
+                      l10n.forgotPasswordLink,
+                      style: TextStyle(
+                        color: MeetMindTheme.accent.withValues(alpha: 0.8),
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                ),
+
+              if (_isRegisterMode) const SizedBox(height: 8),
 
               // Toggle register/login
               TextButton(

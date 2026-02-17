@@ -18,6 +18,12 @@ variable "cdn_domain" {
   type = string
 }
 
+variable "cdn_hosted_zone_id" {
+  type = string
+}
+
+
+
 variable "validation_records" {
   type = set(object({
     name  = string
@@ -49,6 +55,33 @@ resource "aws_route53_record" "validation" {
   records = [each.value.value]
   allow_overwrite = true
 }
+
+# --- CloudFront Alias (Root Domain) ---
+
+resource "aws_route53_record" "root" {
+  zone_id = var.hosted_zone_id
+  name    = var.domain_name
+  type    = "A"
+
+  alias {
+    name                   = var.cdn_domain
+    zone_id                = var.cdn_hosted_zone_id
+    evaluate_target_health = false
+  }
+}
+
+resource "aws_route53_record" "www" {
+  zone_id = var.hosted_zone_id
+  name    = "www.${var.domain_name}"
+  type    = "A"
+
+  alias {
+    name                   = var.cdn_domain
+    zone_id                = var.cdn_hosted_zone_id
+    evaluate_target_health = false
+  }
+}
+
 
 # --- Outputs ---
 

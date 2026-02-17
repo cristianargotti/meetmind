@@ -66,3 +66,9 @@ terraform.tfstate*
 *.p8
 *.p12
 *.p8
+
+# Terraform secrets & state
+infra/*.tfvars
+infra/**/*.tfvars
+infra/**/.terraform/
+infra/**/*.tfstate*

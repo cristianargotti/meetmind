@@ -36,6 +36,7 @@ resource "aws_ecr_lifecycle_policy" "backend" {
   })
 }
 
+
 # --- Outputs ---
 
 output "repository_url" {
@@ -49,3 +50,4 @@ output "repository_arn" {
 output "repository_name" {
   value = aws_ecr_repository.backend.name
 }
+

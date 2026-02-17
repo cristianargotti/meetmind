@@ -89,6 +89,9 @@ def test_get_meeting_not_found(mock_storage: AsyncMock, authed_client: TestClien
 @patch("meetmind.main.storage")
 def test_delete_meeting_success(mock_storage: AsyncMock, authed_client: TestClient) -> None:
     """Delete meeting returns confirmation."""
+    mock_storage.get_meeting = AsyncMock(
+        return_value={"id": "m1", "title": "Test", "user_id": "test-user-id"}
+    )
     mock_storage.delete_meeting = AsyncMock(return_value=True)
     response = authed_client.delete("/api/meetings/m1")
     assert response.status_code == 200
@@ -99,7 +102,7 @@ def test_delete_meeting_success(mock_storage: AsyncMock, authed_client: TestClie
 @patch("meetmind.main.storage")
 def test_delete_meeting_not_found(mock_storage: AsyncMock, authed_client: TestClient) -> None:
     """Delete meeting returns 404 when not found."""
-    mock_storage.delete_meeting = AsyncMock(return_value=False)
+    mock_storage.get_meeting = AsyncMock(return_value=None)
     response = authed_client.delete("/api/meetings/nonexistent")
     assert response.status_code == 404
 

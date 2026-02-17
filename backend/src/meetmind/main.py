@@ -2,13 +2,17 @@
 
 from __future__ import annotations
 
+import asyncio
 import uuid
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Any
 
 import structlog
-from fastapi import Depends, FastAPI, HTTPException, WebSocket
-from pydantic import BaseModel
+from fastapi import Depends, FastAPI, HTTPException, Request, WebSocket
+from pydantic import BaseModel, EmailStr, field_validator
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 from starlette.middleware.cors import CORSMiddleware
 
 if TYPE_CHECKING:
@@ -66,15 +70,24 @@ class RefreshRequest(BaseModel):
 class EmailRegisterRequest(BaseModel):
     """Email registration request."""
 
-    email: str
+    email: EmailStr
     password: str
     name: str | None = None
+
+    @field_validator("password")
+    @classmethod
+    def password_min_length(cls, v: str) -> str:
+        """Enforce minimum password length."""
+        if len(v) < 8:
+            msg = "Password must be at least 8 characters"
+            raise ValueError(msg)
+        return v
 
 
 class EmailLoginRequest(BaseModel):
     """Email login request."""
 
-    email: str
+    email: EmailStr
     password: str
 
 
@@ -88,8 +101,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     # Initialize PostgreSQL + pgvector
     try:
-        await storage.init_db()
+        await asyncio.wait_for(storage.init_db(), timeout=10)
         logger.info("database_ready")
+    except asyncio.TimeoutError:
+        logger.warning("database_init_failed", error="connection timeout (10s)")
     except Exception as e:
         logger.warning("database_init_failed", error=str(e))
 
@@ -106,6 +121,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     await storage.close_db()
 
 
+# ─── Rate Limiter ────────────────────────────────────────────────
+
+limiter = Limiter(key_func=get_remote_address)
+
 app = FastAPI(
     title="Aura Meet API",
     description="AI-powered meeting assistant backend",
@@ -114,6 +133,8 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,
@@ -136,7 +157,8 @@ async def health_check() -> dict[str, str]:
 
 
 @app.post("/api/auth/login")
-async def auth_login(body: AuthLoginRequest) -> AuthTokenResponse:
+@limiter.limit("5/minute")
+async def auth_login(request: Request, body: AuthLoginRequest) -> AuthTokenResponse:
     """Exchange a Google/Apple id_token for our JWT tokens.
 
     Args:
@@ -190,7 +212,8 @@ async def auth_login(body: AuthLoginRequest) -> AuthTokenResponse:
 
 
 @app.post("/api/auth/register")
-async def auth_register(body: EmailRegisterRequest) -> AuthTokenResponse:
+@limiter.limit("3/minute")
+async def auth_register(request: Request, body: EmailRegisterRequest) -> AuthTokenResponse:
     """Register a new user with email and password."""
     existing = await storage.get_user_by_email(body.email)
     if existing:
@@ -232,7 +255,8 @@ async def auth_register(body: EmailRegisterRequest) -> AuthTokenResponse:
 
 
 @app.post("/api/auth/email-login")
-async def auth_email_login(body: EmailLoginRequest) -> AuthTokenResponse:
+@limiter.limit("5/minute")
+async def auth_email_login(request: Request, body: EmailLoginRequest) -> AuthTokenResponse:
     """Login with email and password."""
     user = await storage.get_user_by_email(body.email)
     if not user or not user.get("password_hash"):
@@ -265,13 +289,13 @@ async def auth_email_login(body: EmailLoginRequest) -> AuthTokenResponse:
 
 @app.post("/api/auth/refresh")
 async def auth_refresh(body: RefreshRequest) -> dict[str, str]:
-    """Get a new access token using a refresh token.
+    """Get new access + refresh tokens using a refresh token (rotation).
 
     Args:
         body: Refresh token.
 
     Returns:
-        New access token.
+        New access and refresh tokens.
     """
     payload = decode_token(body.refresh_token)
     if payload.get("type") != "refresh":
@@ -283,6 +307,7 @@ async def auth_refresh(body: RefreshRequest) -> dict[str, str]:
 
     return {
         "access_token": create_access_token(user["id"], user["email"]),
+        "refresh_token": create_refresh_token(user["id"]),
         "token_type": "bearer",
     }
 
@@ -369,10 +394,12 @@ async def get_meeting(
         Complete meeting data.
 
     Raises:
-        HTTPException: If meeting not found.
+        HTTPException: If meeting not found or not owned by user.
     """
     meeting = await storage.get_meeting(meeting_id)
     if not meeting:
+        raise HTTPException(status_code=404, detail="Meeting not found")
+    if meeting.get("user_id") and meeting["user_id"] != current_user["user_id"]:
         raise HTTPException(status_code=404, detail="Meeting not found")
     return meeting
 
@@ -392,8 +419,14 @@ async def delete_meeting(
         Confirmation message.
 
     Raises:
-        HTTPException: If meeting not found.
+        HTTPException: If meeting not found or not owned by user.
     """
+    # Verify ownership before deleting
+    meeting = await storage.get_meeting(meeting_id)
+    if not meeting:
+        raise HTTPException(status_code=404, detail="Meeting not found")
+    if meeting.get("user_id") and meeting["user_id"] != current_user["user_id"]:
+        raise HTTPException(status_code=404, detail="Meeting not found")
     deleted = await storage.delete_meeting(meeting_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Meeting not found")
@@ -423,9 +456,11 @@ async def end_meeting_endpoint(
     Raises:
         HTTPException: If meeting not found.
     """
-    # Check meeting exists
+    # Check meeting exists and verify ownership
     meeting = await storage.get_meeting(meeting_id)
     if not meeting:
+        raise HTTPException(status_code=404, detail="Meeting not found")
+    if meeting.get("user_id") and meeting["user_id"] != current_user["user_id"]:
         raise HTTPException(status_code=404, detail="Meeting not found")
 
     # Already ended — idempotent
@@ -446,7 +481,7 @@ async def end_meeting_endpoint(
 class ForgotPasswordRequest(BaseModel):
     """Forgot password request."""
 
-    email: str
+    email: EmailStr
 
 
 class ResetPasswordRequest(BaseModel):
@@ -457,7 +492,8 @@ class ResetPasswordRequest(BaseModel):
 
 
 @app.post("/api/auth/forgot-password")
-async def forgot_password(body: ForgotPasswordRequest) -> dict[str, str]:
+@limiter.limit("3/minute")
+async def forgot_password(request: Request, body: ForgotPasswordRequest) -> dict[str, str]:
     """Request a password reset email.
 
     Args:
@@ -537,7 +573,9 @@ async def get_pending_actions(
     Returns:
         List of pending action items.
     """
-    items = await storage.get_pending_action_items(limit=limit)
+    items = await storage.get_pending_action_items(
+        limit=limit, user_id=current_user["user_id"],
+    )
     return {"action_items": items, "count": len(items)}
 
 
@@ -575,7 +613,7 @@ async def get_stats(
     Returns:
         Aggregated stats for the home dashboard.
     """
-    return await storage.get_stats()
+    return await storage.get_stats(user_id=current_user["user_id"])
 
 
 # ─── WebSocket ───────────────────────────────────────────────────

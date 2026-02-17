@@ -382,7 +382,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get paywallFeatureDigest => 'Resumen Semanal';
 
   @override
-  String get paywallLegal => 'Cancela cuando quieras. Facturación recurrente.';
+  String get paywallLegal =>
+      'La suscripción se renueva automáticamente al precio indicado, a menos que se cancele al menos 24 horas antes del final del período actual. El pago se carga a tu cuenta de Apple ID. Al suscribirte aceptas nuestra Política de Privacidad y Términos de Uso.';
 
   @override
   String freeLimitBannerRemaining(int remaining) {
@@ -672,4 +673,35 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get paywallFeatBriefing => 'Briefing Pre-Reunión';
+
+  @override
+  String get forgotPasswordLink => '¿Olvidaste tu contraseña?';
+
+  @override
+  String get forgotPasswordTitle => 'Restablecer Contraseña';
+
+  @override
+  String get forgotPasswordDescription =>
+      'Ingresa tu dirección de correo electrónico y te enviaremos un enlace para restablecer tu contraseña.';
+
+  @override
+  String get forgotPasswordEnterEmail =>
+      'Por favor ingresa tu correo electrónico';
+
+  @override
+  String get forgotPasswordSendLink => 'Enviar Enlace';
+
+  @override
+  String get forgotPasswordSent => '¡Enlace enviado!';
+
+  @override
+  String get forgotPasswordCheckInbox =>
+      'Revisa tu bandeja de entrada para un enlace de restablecimiento de contraseña. Puede tardar unos minutos.';
+
+  @override
+  String get forgotPasswordBackToLogin => 'Volver al Login';
+
+  @override
+  String get forgotPasswordError =>
+      'Algo salió mal. Por favor intenta de nuevo.';
 }

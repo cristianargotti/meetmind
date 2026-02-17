@@ -64,7 +64,7 @@ import 'app_localizations_pt.dart';
 /// property.
 abstract class AppLocalizations {
   AppLocalizations(String locale)
-      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -87,11 +87,11 @@ abstract class AppLocalizations {
   /// of delegates is preferred or required.
   static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
       <LocalizationsDelegate<dynamic>>[
-    delegate,
-    GlobalMaterialLocalizations.delegate,
-    GlobalCupertinoLocalizations.delegate,
-    GlobalWidgetsLocalizations.delegate,
-  ];
+        delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ];
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
@@ -811,7 +811,7 @@ abstract class AppLocalizations {
   /// No description provided for @paywallLegal.
   ///
   /// In en, this message translates to:
-  /// **'Cancel anytime. Recurring billing.'**
+  /// **'Subscription auto-renews at the price shown above unless cancelled at least 24 hours before the end of the current period. Payment is charged to your Apple ID account. By subscribing you agree to our Privacy Policy and Terms of Use.'**
   String get paywallLegal;
 
   /// No description provided for @freeLimitBannerRemaining.
@@ -1341,6 +1341,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pre-Meeting Briefing'**
   String get paywallFeatBriefing;
+
+  /// No description provided for @forgotPasswordLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot Password?'**
+  String get forgotPasswordLink;
+
+  /// No description provided for @forgotPasswordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset Password'**
+  String get forgotPasswordTitle;
+
+  /// No description provided for @forgotPasswordDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your email address and we\'ll send you a link to reset your password.'**
+  String get forgotPasswordDescription;
+
+  /// No description provided for @forgotPasswordEnterEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your email address'**
+  String get forgotPasswordEnterEmail;
+
+  /// No description provided for @forgotPasswordSendLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Send Reset Link'**
+  String get forgotPasswordSendLink;
+
+  /// No description provided for @forgotPasswordSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset link sent!'**
+  String get forgotPasswordSent;
+
+  /// No description provided for @forgotPasswordCheckInbox.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your email inbox for a link to reset your password. It may take a few minutes.'**
+  String get forgotPasswordCheckInbox;
+
+  /// No description provided for @forgotPasswordBackToLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to Login'**
+  String get forgotPasswordBackToLogin;
+
+  /// No description provided for @forgotPasswordError.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong. Please try again.'**
+  String get forgotPasswordError;
 }
 
 class _AppLocalizationsDelegate

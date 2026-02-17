@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING, Any
 
 import structlog
 from fastapi import WebSocket, WebSocketDisconnect
+from starlette.websockets import WebSocketState
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -30,6 +31,7 @@ from meetmind.agents.screening_agent import ScreeningAgent
 from meetmind.agents.summary_agent import SummaryAgent
 from meetmind.api import handlers
 from meetmind.config.settings import settings
+from meetmind.core.auth import decode_token
 from meetmind.core import storage
 from meetmind.core.speaker_tracker import SpeakerTracker
 from meetmind.core.transcript import TranscriptManager
@@ -81,13 +83,14 @@ class ConnectionManager:
         """Check if AI agents are initialized."""
         return self._screening_agent is not None
 
-    async def connect(self, websocket: WebSocket, *, language: str = "") -> str:
+    async def connect(self, websocket: WebSocket, *, language: str = "", user_id: str | None = None) -> str:
         """Accept a WebSocket connection and assign an ID.
 
         Args:
             websocket: The WebSocket connection to accept.
             language: Optional language code from client (e.g., 'es', 'en', 'pt').
                      Falls back to server default if empty or 'auto'.
+            user_id: Authenticated user ID from JWT token.
 
         Returns:
             Unique connection ID.
@@ -116,6 +119,7 @@ class ConnectionManager:
             await storage.create_meeting(
                 meeting_id=connection_id,
                 language=language_code,
+                user_id=user_id,
             )
         except Exception as e:
             logger.warning("db_create_meeting_failed", error=str(e))
@@ -408,12 +412,37 @@ async def websocket_transcription(websocket: WebSocket) -> None:
       Server → Client: {"type": "screening", "relevant": true, "reason": "..."}
       Server → Client: {"type": "analysis", "insight": {...}}
 
+    Requires:
+        ?token=<JWT> query parameter for authentication.
+
     Args:
         websocket: The WebSocket connection.
     """
+    # ─── Authenticate before accepting ───────────────────────────
+    token = websocket.query_params.get("token")
+    if not token:
+        await websocket.close(code=4401, reason="Authentication required")
+        logger.warning("ws_rejected", reason="no_token")
+        return
+
+    try:
+        payload = decode_token(token)
+        if payload.get("type") != "access":
+            await websocket.close(code=4401, reason="Invalid token type")
+            logger.warning("ws_rejected", reason="invalid_token_type")
+            return
+        ws_user_id = payload.get("sub", "anonymous")
+    except Exception:
+        await websocket.close(code=4401, reason="Invalid or expired token")
+        logger.warning("ws_rejected", reason="invalid_token")
+        return
+
+    logger.info("ws_authenticated", user_id=ws_user_id)
+
     connection_id = await manager.connect(
         websocket,
         language=websocket.query_params.get("lang", ""),
+        user_id=ws_user_id,
     )
 
     try:

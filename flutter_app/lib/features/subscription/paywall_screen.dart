@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:meetmind/config/theme.dart';
 import 'package:meetmind/l10n/generated/app_localizations.dart';
 import 'package:meetmind/providers/subscription_provider.dart';
@@ -140,7 +141,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
 
               const SizedBox(height: 12),
 
-              // Legal
+              // Legal — Apple-required subscription disclosure
               Text(
                 AppLocalizations.of(context)!.paywallLegal,
                 style: TextStyle(
@@ -148,6 +149,49 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                   fontSize: 11,
                 ),
                 textAlign: TextAlign.center,
+              ),
+
+              const SizedBox(height: 8),
+
+              // Privacy Policy + Terms links (Apple requirement)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  GestureDetector(
+                    onTap: () => context.push('/legal/privacy'),
+                    child: Text(
+                      AppLocalizations.of(context)!.legalPrivacyPolicy,
+                      style: TextStyle(
+                        color: MeetMindTheme.primaryLight,
+                        fontSize: 11,
+                        decoration: TextDecoration.underline,
+                        decorationColor: MeetMindTheme.primaryLight,
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Text(
+                      '·',
+                      style: TextStyle(
+                        color: MeetMindTheme.textTertiary,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => context.push('/legal/terms'),
+                    child: Text(
+                      AppLocalizations.of(context)!.legalTermsOfService,
+                      style: TextStyle(
+                        color: MeetMindTheme.primaryLight,
+                        fontSize: 11,
+                        decoration: TextDecoration.underline,
+                        decorationColor: MeetMindTheme.primaryLight,
+                      ),
+                    ),
+                  ),
+                ],
               ),
 
               const SizedBox(height: 24),

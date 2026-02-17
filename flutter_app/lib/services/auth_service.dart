@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:meetmind/config/app_config.dart';
 import 'package:meetmind/services/subscription_service.dart';
@@ -19,6 +20,13 @@ class AuthService {
   static const _accessTokenKey = 'auth_access_token';
   static const _refreshTokenKey = 'auth_refresh_token';
   static const _userKey = 'auth_user';
+  static const _migratedKey = 'auth_tokens_migrated';
+
+  /// Secure storage for JWT tokens (iOS Keychain / Android EncryptedSharedPrefs).
+  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage(
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+    iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
+  );
 
   String? _accessToken;
   String? _refreshToken;
@@ -43,8 +51,24 @@ class AuthService {
   /// Initialize from stored tokens (call on app startup).
   Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
-    _accessToken = prefs.getString(_accessTokenKey);
-    _refreshToken = prefs.getString(_refreshTokenKey);
+
+    // Migrate tokens from SharedPreferences to SecureStorage (one-time)
+    if (prefs.getBool(_migratedKey) != true) {
+      final oldAccess = prefs.getString(_accessTokenKey);
+      final oldRefresh = prefs.getString(_refreshTokenKey);
+      if (oldAccess != null) {
+        await _secureStorage.write(key: _accessTokenKey, value: oldAccess);
+        await prefs.remove(_accessTokenKey);
+      }
+      if (oldRefresh != null) {
+        await _secureStorage.write(key: _refreshTokenKey, value: oldRefresh);
+        await prefs.remove(_refreshTokenKey);
+      }
+      await prefs.setBool(_migratedKey, true);
+    }
+
+    _accessToken = await _secureStorage.read(key: _accessTokenKey);
+    _refreshToken = await _secureStorage.read(key: _refreshTokenKey);
 
     final userJson = prefs.getString(_userKey);
     if (userJson != null) {
@@ -238,25 +262,28 @@ class AuthService {
     _refreshToken = null;
     _user = null;
 
+    // Clear secure storage (tokens)
+    await _secureStorage.delete(key: _accessTokenKey);
+    await _secureStorage.delete(key: _refreshTokenKey);
+
+    // Clear shared preferences (user profile cache)
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_accessTokenKey);
-    await prefs.remove(_refreshTokenKey);
     await prefs.remove(_userKey);
 
     // Log out from RevenueCat
     await SubscriptionService.instance.logOut();
   }
 
-  /// Persist tokens to secure storage.
+  /// Persist tokens to secure storage and user profile to SharedPreferences.
   Future<void> _persistTokens() async {
-    final prefs = await SharedPreferences.getInstance();
     if (_accessToken != null) {
-      await prefs.setString(_accessTokenKey, _accessToken!);
+      await _secureStorage.write(key: _accessTokenKey, value: _accessToken!);
     }
     if (_refreshToken != null) {
-      await prefs.setString(_refreshTokenKey, _refreshToken!);
+      await _secureStorage.write(key: _refreshTokenKey, value: _refreshToken!);
     }
     if (_user != null) {
+      final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_userKey, jsonEncode(_user));
     }
   }

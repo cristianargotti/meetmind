@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,11 +15,31 @@ import 'package:meetmind/services/user_preferences.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await AppConfig.initialize();
-  await UserPreferences.initialize();
-  await NotificationService.instance.initialize();
-  await SubscriptionService.instance.initialize();
-  runApp(const ProviderScope(child: MeetMindApp()));
+
+  // Global error boundary — catches uncaught Flutter framework errors
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.presentError(details);
+    // TODO: Send to Sentry/Crashlytics when integrated
+    if (kDebugMode) {
+      debugPrint('🔴 FlutterError: ${details.exception}');
+      debugPrint('${details.stack}');
+    }
+  };
+
+  // Catch async errors not handled by Flutter framework
+  runZonedGuarded(() async {
+    await AppConfig.initialize();
+    await UserPreferences.initialize();
+    await NotificationService.instance.initialize();
+    await SubscriptionService.instance.initialize();
+    runApp(const ProviderScope(child: MeetMindApp()));
+  }, (Object error, StackTrace stack) {
+    // TODO: Send to Sentry/Crashlytics when integrated
+    if (kDebugMode) {
+      debugPrint('🔴 Uncaught async error: $error');
+      debugPrint('$stack');
+    }
+  });
 }
 
 class MeetMindApp extends ConsumerWidget {

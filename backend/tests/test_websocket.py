@@ -6,16 +6,58 @@ from unittest.mock import patch
 from fastapi.testclient import TestClient
 
 from meetmind.api.websocket import ConnectionManager
+from meetmind.core.auth import create_access_token
 from meetmind.main import app
 
 
-def test_websocket_connect_and_receive_welcome() -> None:
-    """WebSocket connects and receives welcome message."""
-    # Arrange
+def _ws_url(token: str | None = None, path: str = "/ws/transcription") -> str:
+    """Build WebSocket URL with optional token."""
+    if token:
+        return f"{path}?token={token}"
+    return path
+
+
+def _make_token(user_id: str = "test-user-1") -> str:
+    """Create a valid access token for testing."""
+    return create_access_token(user_id=user_id, email="test@example.com")
+
+
+# --- Authentication tests ---
+
+
+def test_websocket_rejects_no_token() -> None:
+    """WebSocket connection without token is rejected with 4401."""
     client = TestClient(app)
 
-    # Act & Assert
-    with client.websocket_connect("/ws/transcription") as ws:
+    try:
+        with client.websocket_connect("/ws/transcription"):
+            pass  # Should not reach here
+        assert False, "Expected WebSocketDisconnect"  # noqa: B011
+    except Exception:
+        pass  # Connection rejected — expected
+
+
+def test_websocket_rejects_invalid_token() -> None:
+    """WebSocket connection with invalid token is rejected."""
+    client = TestClient(app)
+
+    try:
+        with client.websocket_connect(_ws_url(token="invalid.jwt.token")):
+            pass
+        assert False, "Expected WebSocketDisconnect"  # noqa: B011
+    except Exception:
+        pass  # Connection rejected — expected
+
+
+# --- Authenticated endpoint tests ---
+
+
+def test_websocket_connect_and_receive_welcome() -> None:
+    """WebSocket connects with valid token and receives welcome message."""
+    client = TestClient(app)
+    token = _make_token()
+
+    with client.websocket_connect(_ws_url(token=token)) as ws:
         data = ws.receive_json()
         assert data["type"] == "connected"
         assert "connection_id" in data
@@ -25,14 +67,12 @@ def test_websocket_connect_and_receive_welcome() -> None:
 
 def test_websocket_send_transcript_chunk() -> None:
     """Sending a transcript chunk returns an ack."""
-    # Arrange
     client = TestClient(app)
+    token = _make_token()
 
-    with client.websocket_connect("/ws/transcription") as ws:
-        # Skip welcome
-        ws.receive_json()
+    with client.websocket_connect(_ws_url(token=token)) as ws:
+        ws.receive_json()  # Skip welcome
 
-        # Act
         ws.send_text(
             json.dumps(
                 {
@@ -43,7 +83,6 @@ def test_websocket_send_transcript_chunk() -> None:
             )
         )
 
-        # Assert
         response = ws.receive_json()
         assert response["type"] == "transcript_ack"
         assert response["segments"] == 1
@@ -51,48 +90,43 @@ def test_websocket_send_transcript_chunk() -> None:
 
 def test_websocket_ping_pong() -> None:
     """Ping message returns pong."""
-    # Arrange
     client = TestClient(app)
+    token = _make_token()
 
-    with client.websocket_connect("/ws/transcription") as ws:
+    with client.websocket_connect(_ws_url(token=token)) as ws:
         ws.receive_json()  # skip welcome
 
-        # Act
         ws.send_text(json.dumps({"type": "ping"}))
 
-        # Assert
         response = ws.receive_json()
         assert response["type"] == "pong"
 
 
 def test_websocket_unknown_message_type() -> None:
     """Unknown message type is handled gracefully."""
-    # Arrange
     client = TestClient(app)
+    token = _make_token()
 
-    with client.websocket_connect("/ws/transcription") as ws:
+    with client.websocket_connect(_ws_url(token=token)) as ws:
         ws.receive_json()  # skip welcome
 
-        # Act — send unknown type, should not crash
         ws.send_text(json.dumps({"type": "unknown_type", "data": "test"}))
 
         # Send ping to verify connection still alive
         ws.send_text(json.dumps({"type": "ping"}))
 
-        # Assert
         response = ws.receive_json()
         assert response["type"] == "pong"
 
 
 def test_websocket_transcript_with_default_speaker() -> None:
     """Transcript without speaker defaults to 'unknown'."""
-    # Arrange
     client = TestClient(app)
+    token = _make_token()
 
-    with client.websocket_connect("/ws/transcription") as ws:
+    with client.websocket_connect(_ws_url(token=token)) as ws:
         ws.receive_json()  # skip welcome
 
-        # Act — no speaker field
         ws.send_text(
             json.dumps(
                 {
@@ -102,7 +136,6 @@ def test_websocket_transcript_with_default_speaker() -> None:
             )
         )
 
-        # Assert
         response = ws.receive_json()
         assert response["type"] == "transcript_ack"
         assert response["speaker"] == "unknown"
@@ -110,13 +143,12 @@ def test_websocket_transcript_with_default_speaker() -> None:
 
 def test_websocket_multiple_transcript_chunks() -> None:
     """Multiple transcript chunks increment segment count."""
-    # Arrange
     client = TestClient(app)
+    token = _make_token()
 
-    with client.websocket_connect("/ws/transcription") as ws:
+    with client.websocket_connect(_ws_url(token=token)) as ws:
         ws.receive_json()  # skip welcome
 
-        # Act — send 3 chunks
         for i in range(3):
             ws.send_text(
                 json.dumps(
@@ -129,18 +161,16 @@ def test_websocket_multiple_transcript_chunks() -> None:
             )
             response = ws.receive_json()
 
-        # Assert — 3 segments
         assert response["type"] == "transcript_ack"
         assert response["segments"] == 3
 
 
 def test_websocket_alias_endpoint() -> None:
     """The /ws alias endpoint also works for transcription."""
-    # Arrange
     client = TestClient(app)
+    token = _make_token()
 
-    # Act & Assert
-    with client.websocket_connect("/ws") as ws:
+    with client.websocket_connect(_ws_url(token=token, path="/ws")) as ws:
         data = ws.receive_json()
         assert data["type"] == "connected"
         assert "connection_id" in data
@@ -148,21 +178,17 @@ def test_websocket_alias_endpoint() -> None:
 
 def test_websocket_binary_audio_chunked_mode() -> None:
     """Binary audio frames are handled in chunked mode."""
-    # Arrange
     client = TestClient(app)
+    token = _make_token()
 
-    with client.websocket_connect("/ws/transcription") as ws:
+    with client.websocket_connect(_ws_url(token=token)) as ws:
         ws.receive_json()  # skip welcome
 
-        # Act — send raw binary audio (too small for real Whisper, but
-        # exercises the binary frame path in chunked mode)
         with patch("meetmind.api.websocket.settings") as mock_settings:
             mock_settings.stt_mode = "chunked"
 
-            # Send small binary — won't produce transcription but shouldn't crash
             ws.send_bytes(b"\x00" * 100)
 
-            # Verify connection still alive
             ws.send_text(json.dumps({"type": "ping"}))
             response = ws.receive_json()
             assert response["type"] == "pong"

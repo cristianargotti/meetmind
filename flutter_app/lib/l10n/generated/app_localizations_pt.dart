@@ -383,7 +383,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get paywallLegal =>
-      'A assinatura renova automaticamente. Cancele quando quiser.';
+      'A assinatura renova automaticamente pelo preço indicado, a menos que seja cancelada pelo menos 24 horas antes do final do período atual. O pagamento é cobrado na sua conta Apple ID. Ao assinar, você concorda com nossa Política de Privacidade e Termos de Uso.';
 
   @override
   String freeLimitBannerRemaining(int remaining) {
@@ -629,49 +629,79 @@ class AppLocalizationsPt extends AppLocalizations {
   String get commonCopied => 'Copiado para a área de transferência';
 
   @override
-  String get paywallWelcome => 'Welcome to Aura Pro!';
+  String get paywallWelcome => 'Bem-vindo ao Aura Pro!';
 
   @override
   String paywallSave(String amount) {
-    return 'Save $amount%';
+    return 'Economize $amount%';
   }
 
   @override
-  String get paywallRestoring => 'Restoring...';
+  String get paywallRestoring => 'Restaurando...';
 
   @override
-  String get paywallSuccessRestore => '✅ Purchases restored!';
+  String get paywallSuccessRestore => '✅ Compras restauradas!';
 
   @override
-  String get paywallNoRestore => 'No previous purchases found';
+  String get paywallNoRestore => 'Nenhuma compra anterior encontrada';
 
   @override
-  String get paywallFeatUnlimited => 'Unlimited';
+  String get paywallFeatUnlimited => 'Ilimitadas';
 
   @override
-  String get paywallFeatForever => 'Forever';
+  String get paywallFeatForever => 'Para sempre';
 
   @override
-  String get paywallFeatAll => 'All';
+  String get paywallFeatAll => 'Todos';
 
   @override
-  String get paywallFeatMeetings => 'Meetings per week';
+  String get paywallFeatMeetings => 'Reuniões por semana';
 
   @override
-  String get paywallFeatHistory => 'Meeting history';
+  String get paywallFeatHistory => 'Histórico de reuniões';
 
   @override
-  String get paywallFeatInsights => 'Insights per meeting';
+  String get paywallFeatInsights => 'Insights por reunião';
 
   @override
-  String get paywallFeatChat => 'Ask Aura (AI chat)';
+  String get paywallFeatChat => 'Pergunte ao Aura (Chat IA)';
 
   @override
-  String get paywallFeatDigest => 'Weekly Digest';
+  String get paywallFeatDigest => 'Resumo Semanal';
 
   @override
-  String get paywallFeatExport => 'Export & share';
+  String get paywallFeatExport => 'Exportar e compartilhar';
 
   @override
-  String get paywallFeatBriefing => 'Pre-Meeting Briefing';
+  String get paywallFeatBriefing => 'Briefing Pré-Reunião';
+
+  @override
+  String get forgotPasswordLink => 'Esqueceu a senha?';
+
+  @override
+  String get forgotPasswordTitle => 'Redefinir Senha';
+
+  @override
+  String get forgotPasswordDescription =>
+      'Digite seu endereço de e-mail e enviaremos um link para redefinir sua senha.';
+
+  @override
+  String get forgotPasswordEnterEmail => 'Por favor, digite seu e-mail';
+
+  @override
+  String get forgotPasswordSendLink => 'Enviar Link';
+
+  @override
+  String get forgotPasswordSent => 'Link enviado!';
+
+  @override
+  String get forgotPasswordCheckInbox =>
+      'Verifique sua caixa de entrada para um link de redefinição de senha. Pode levar alguns minutos.';
+
+  @override
+  String get forgotPasswordBackToLogin => 'Voltar ao Login';
+
+  @override
+  String get forgotPasswordError =>
+      'Algo deu errado. Por favor, tente novamente.';
 }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:meetmind/features/ask_aura/ask_aura_screen.dart';
+import 'package:meetmind/features/auth/forgot_password_screen.dart';
 import 'package:meetmind/features/auth/login_screen.dart';
 import 'package:meetmind/features/digest/weekly_digest_screen.dart';
 import 'package:meetmind/features/history/history_screen.dart';
@@ -17,7 +18,7 @@ import 'package:meetmind/features/subscription/paywall_screen.dart';
 import 'package:meetmind/providers/auth_provider.dart';
 
 /// Routes that do NOT require authentication.
-const _publicPaths = {'/login', '/onboarding', '/splash'};
+const _publicPaths = {'/login', '/onboarding', '/splash', '/forgot-password'};
 
 /// Build the app router with auth redirect guard.
 GoRouter buildRouter(WidgetRef ref) {
@@ -56,6 +57,11 @@ GoRouter buildRouter(WidgetRef ref) {
         path: '/login',
         name: 'login',
         builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/forgot-password',
+        name: 'forgot-password',
+        builder: (context, state) => const ForgotPasswordScreen(),
       ),
       GoRoute(
         path: '/meeting',

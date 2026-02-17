@@ -163,7 +163,7 @@
   "paywallFeatureAskAura": "Ask Aura",
   "paywallFeatureExport": "Full Export",
   "paywallFeatureDigest": "Weekly Digest",
-  "paywallLegal": "Subscription auto-renews. Cancel anytime.",
+  "paywallLegal": "Subscription auto-renews at the price shown above unless cancelled at least 24 hours before the end of the current period. Payment is charged to your Apple ID account. By subscribing you agree to our Privacy Policy and Terms of Use.",
 
   "freeLimitBannerRemaining": "{remaining} meeting(s) left this week",
   "@freeLimitBannerRemaining": {
@@ -297,7 +297,7 @@
   "paywallRestoring": "Restoring...",
   "paywallSuccessRestore": "✅ Purchases restored!",
   "paywallNoRestore": "No previous purchases found",
-  "paywallLegal": "Cancel anytime. Recurring billing.",
+  "paywallLegal": "Subscription auto-renews at the price shown above unless cancelled at least 24 hours before the end of the current period. Payment is charged to your Apple ID account. By subscribing you agree to our Privacy Policy and Terms of Use.",
 
   "paywallFeatUnlimited": "Unlimited",
   "paywallFeatForever": "Forever",
@@ -308,5 +308,15 @@
   "paywallFeatChat": "Ask Aura (AI chat)",
   "paywallFeatDigest": "Weekly Digest",
   "paywallFeatExport": "Export & share",
-  "paywallFeatBriefing": "Pre-Meeting Briefing"
+  "paywallFeatBriefing": "Pre-Meeting Briefing",
+
+  "forgotPasswordLink": "Forgot Password?",
+  "forgotPasswordTitle": "Reset Password",
+  "forgotPasswordDescription": "Enter your email address and we'll send you a link to reset your password.",
+  "forgotPasswordEnterEmail": "Please enter your email address",
+  "forgotPasswordSendLink": "Send Reset Link",
+  "forgotPasswordSent": "Reset link sent!",
+  "forgotPasswordCheckInbox": "Check your email inbox for a link to reset your password. It may take a few minutes.",
+  "forgotPasswordBackToLogin": "Back to Login",
+  "forgotPasswordError": "Something went wrong. Please try again."
 }

@@ -128,7 +128,7 @@
   "paywallFeatureAskAura": "Pergunte ao Aura",
   "paywallFeatureExport": "Exportação Completa",
   "paywallFeatureDigest": "Resumo Semanal",
-  "paywallLegal": "A assinatura renova automaticamente. Cancele quando quiser.",
+  "paywallLegal": "A assinatura renova automaticamente pelo preço indicado, a menos que seja cancelada pelo menos 24 horas antes do final do período atual. O pagamento é cobrado na sua conta Apple ID. Ao assinar, você concorda com nossa Política de Privacidade e Termos de Uso.",
 
   "freeLimitBannerRemaining": "{remaining} reunião(ões) restante(s) esta semana",
   "freeLimitBannerReached": "Limite semanal atingido",
@@ -211,5 +211,39 @@
   "commonError": "Algo deu errado",
   "commonRetry": "Tentar novamente",
   "commonLoading": "Carregando...",
-  "commonCopied": "Copiado para a área de transferência"
+  "commonCopied": "Copiado para a área de transferência",
+
+  "paywallWelcome": "Bem-vindo ao Aura Pro!",
+  "paywallSave": "Economize {amount}%",
+  "@paywallSave": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "paywallRestoring": "Restaurando...",
+  "paywallSuccessRestore": "✅ Compras restauradas!",
+  "paywallNoRestore": "Nenhuma compra anterior encontrada",
+
+  "paywallFeatUnlimited": "Ilimitadas",
+  "paywallFeatForever": "Para sempre",
+  "paywallFeatAll": "Todos",
+  "paywallFeatMeetings": "Reuniões por semana",
+  "paywallFeatHistory": "Histórico de reuniões",
+  "paywallFeatInsights": "Insights por reunião",
+  "paywallFeatChat": "Pergunte ao Aura (Chat IA)",
+  "paywallFeatDigest": "Resumo Semanal",
+  "paywallFeatExport": "Exportar e compartilhar",
+  "paywallFeatBriefing": "Briefing Pré-Reunião",
+
+  "forgotPasswordLink": "Esqueceu a senha?",
+  "forgotPasswordTitle": "Redefinir Senha",
+  "forgotPasswordDescription": "Digite seu endereço de e-mail e enviaremos um link para redefinir sua senha.",
+  "forgotPasswordEnterEmail": "Por favor, digite seu e-mail",
+  "forgotPasswordSendLink": "Enviar Link",
+  "forgotPasswordSent": "Link enviado!",
+  "forgotPasswordCheckInbox": "Verifique sua caixa de entrada para um link de redefinição de senha. Pode levar alguns minutos.",
+  "forgotPasswordBackToLogin": "Voltar ao Login",
+  "forgotPasswordError": "Algo deu errado. Por favor, tente novamente."
 }

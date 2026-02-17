@@ -100,6 +100,102 @@ resource "aws_s3_bucket_lifecycle_configuration" "recordings" {
   }
 }
 
+# --- ACM Certificate (US-East-1 for CloudFront) ---
+
+resource "aws_acm_certificate" "website" {
+  domain_name       = var.domain_name
+  validation_method = "DNS"
+
+  subject_alternative_names = ["www.${var.domain_name}"]
+
+  tags = { Component = "cdn" }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+# --- CloudFront Distribution ---
+
+resource "aws_cloudfront_distribution" "website" {
+  origin {
+    domain_name = aws_s3_bucket_website_configuration.website.website_endpoint
+    origin_id   = "S3-${aws_s3_bucket.website.id}"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "http-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }
+
+  enabled             = true
+  is_ipv6_enabled     = true
+  default_root_object = "index.html"
+
+  aliases = [var.domain_name, "www.${var.domain_name}"]
+
+  default_cache_behavior {
+    allowed_methods  = ["GET", "HEAD"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "S3-${aws_s3_bucket.website.id}"
+
+    forwarded_values {
+      query_string = false
+      cookies { forward = "none" }
+    }
+
+    viewer_protocol_policy = "redirect-to-https"
+    min_ttl                = 0
+    default_ttl            = 3600
+    max_ttl                = 86400
+  }
+
+  viewer_certificate {
+    acm_certificate_arn      = aws_acm_certificate.website.arn
+    ssl_support_method       = "sni-only"
+    minimum_protocol_version = "TLSv1.2_2021"
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  tags = { Component = "cdn" }
+}
+
+# --- ACM Validation Records (CloudFront) ---
+
+# --- ACM Validation Records (CloudFront) ---
+
+resource "aws_route53_record" "acm_validation" {
+  for_each = toset([var.domain_name, "www.${var.domain_name}"])
+
+  allow_overwrite = true
+  zone_id         = var.hosted_zone_id
+  ttl             = 60
+
+  name = one([
+    for o in aws_acm_certificate.website.domain_validation_options : o.resource_record_name
+    if o.domain_name == each.key
+  ])
+
+  type = one([
+    for o in aws_acm_certificate.website.domain_validation_options : o.resource_record_type
+    if o.domain_name == each.key
+  ])
+
+  records = [
+    one([
+      for o in aws_acm_certificate.website.domain_validation_options : o.resource_record_value
+      if o.domain_name == each.key
+    ])
+  ]
+}
+
 # --- Outputs ---
 
 output "website_bucket" {
@@ -118,13 +214,16 @@ output "bucket_arn" {
   value = aws_s3_bucket.recordings.arn
 }
 
-# Placeholder until CloudFront is enabled
 output "cdn_domain_name" {
-  value = aws_s3_bucket_website_configuration.website.website_endpoint
+  value = aws_cloudfront_distribution.website.domain_name
 }
 
 output "cdn_distribution_id" {
-  value = "pending-cloudfront-verification"
+  value = aws_cloudfront_distribution.website.id
+}
+
+output "cdn_hosted_zone_id" {
+  value = aws_cloudfront_distribution.website.hosted_zone_id
 }
 
 output "website_bucket_arn" {

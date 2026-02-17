@@ -128,7 +128,7 @@
   "paywallFeatureAskAura": "Pregunta a Aura",
   "paywallFeatureExport": "Exportación Completa",
   "paywallFeatureDigest": "Resumen Semanal",
-  "paywallLegal": "La suscripción se renueva automáticamente. Cancela cuando quieras.",
+  "paywallLegal": "La suscripción se renueva automáticamente al precio indicado, a menos que se cancele al menos 24 horas antes del final del período actual. El pago se carga a tu cuenta de Apple ID. Al suscribirte aceptas nuestra Política de Privacidad y Términos de Uso.",
 
   "freeLimitBannerRemaining": "{remaining} reunión(es) restante(s) esta semana",
   "freeLimitBannerReached": "Límite semanal alcanzado",
@@ -246,7 +246,7 @@
   "paywallRestoring": "Restaurando...",
   "paywallSuccessRestore": "✅ Compras restauradas!",
   "paywallNoRestore": "No se encontraron compras previas",
-  "paywallLegal": "Cancela cuando quieras. Facturación recurrente.",
+  "paywallLegal": "La suscripción se renueva automáticamente al precio indicado, a menos que se cancele al menos 24 horas antes del final del período actual. El pago se carga a tu cuenta de Apple ID. Al suscribirte aceptas nuestra Política de Privacidad y Términos de Uso.",
 
   "paywallFeatUnlimited": "Ilimitadas",
   "paywallFeatForever": "Por siempre",
@@ -257,5 +257,15 @@
   "paywallFeatChat": "Pregunta a Aura (Chat AI)",
   "paywallFeatDigest": "Resumen Semanal",
   "paywallFeatExport": "Exportar y compartir",
-  "paywallFeatBriefing": "Briefing Pre-Reunión"
+  "paywallFeatBriefing": "Briefing Pre-Reunión",
+
+  "forgotPasswordLink": "¿Olvidaste tu contraseña?",
+  "forgotPasswordTitle": "Restablecer Contraseña",
+  "forgotPasswordDescription": "Ingresa tu dirección de correo electrónico y te enviaremos un enlace para restablecer tu contraseña.",
+  "forgotPasswordEnterEmail": "Por favor ingresa tu correo electrónico",
+  "forgotPasswordSendLink": "Enviar Enlace",
+  "forgotPasswordSent": "¡Enlace enviado!",
+  "forgotPasswordCheckInbox": "Revisa tu bandeja de entrada para un enlace de restablecimiento de contraseña. Puede tardar unos minutos.",
+  "forgotPasswordBackToLogin": "Volver al Login",
+  "forgotPasswordError": "Algo salió mal. Por favor intenta de nuevo."
 }

@@ -38,6 +38,7 @@ async def init_db() -> None:
         min_size=2,
         max_size=10,
         command_timeout=30,
+        timeout=5,  # fail fast if DB unreachable (prevents lifespan hang)
     )
     logger.info("db_pool_created", dsn=dsn.split("@")[-1])  # log host only
 
@@ -507,55 +508,106 @@ async def update_action_item(
     return bool(result == "UPDATE 1")
 
 
-async def get_pending_action_items(limit: int = 50) -> list[dict[str, Any]]:
-    """Get all pending action items across meetings."""
+async def get_pending_action_items(
+    limit: int = 50,
+    user_id: str | None = None,
+) -> list[dict[str, Any]]:
+    """Get pending action items, optionally scoped to a user."""
     pool = await get_pool()
     async with pool.acquire() as conn:
-        rows = await conn.fetch(
-            """
-            SELECT ai.id, ai.assignee, ai.task, ai.deadline, ai.priority,
-                   ai.status, m.title as meeting_title, m.started_at
-            FROM action_items ai
-            JOIN meetings m ON m.id = ai.meeting_id
-            WHERE ai.status = 'pending'
-            ORDER BY ai.created_at DESC
-            LIMIT $1
-            """,
-            limit,
-        )
+        if user_id:
+            rows = await conn.fetch(
+                """
+                SELECT ai.id, ai.assignee, ai.task, ai.deadline, ai.priority,
+                       ai.status, m.title as meeting_title, m.started_at
+                FROM action_items ai
+                JOIN meetings m ON m.id = ai.meeting_id
+                WHERE ai.status = 'pending' AND m.user_id = $2
+                ORDER BY ai.created_at DESC
+                LIMIT $1
+                """,
+                limit,
+                user_id,
+            )
+        else:
+            rows = await conn.fetch(
+                """
+                SELECT ai.id, ai.assignee, ai.task, ai.deadline, ai.priority,
+                       ai.status, m.title as meeting_title, m.started_at
+                FROM action_items ai
+                JOIN meetings m ON m.id = ai.meeting_id
+                WHERE ai.status = 'pending'
+                ORDER BY ai.created_at DESC
+                LIMIT $1
+                """,
+                limit,
+            )
     return [dict(r) for r in rows]
 
 
 # ─── Stats ───────────────────────────────────────────────────────
 
 
-async def get_stats() -> dict[str, Any]:
-    """Get dashboard stats: total meetings, hours, insights, action items."""
+async def get_stats(user_id: str | None = None) -> dict[str, Any]:
+    """Get dashboard stats, scoped to a user if provided."""
     pool = await get_pool()
     async with pool.acquire() as conn:
-        total_meetings = await conn.fetchval(
-            "SELECT COUNT(*) FROM meetings WHERE status = 'completed'"
-        )
-        total_duration = await conn.fetchval(
-            "SELECT COALESCE(SUM(duration_secs), 0) FROM meetings WHERE status = 'completed'"
-        )
-        total_insights = await conn.fetchval("SELECT COUNT(*) FROM insights")
-        pending_actions = await conn.fetchval(
-            "SELECT COUNT(*) FROM action_items WHERE status = 'pending'"
-        )
-        meetings_today = await conn.fetchval(
-            """
-            SELECT COUNT(*) FROM meetings
-            WHERE started_at >= CURRENT_DATE AND status = 'completed'
-            """
-        )
-        meetings_this_week = await conn.fetchval(
-            """
-            SELECT COUNT(*) FROM meetings
-            WHERE started_at >= DATE_TRUNC('week', CURRENT_DATE)
-                  AND status = 'completed'
-            """
-        )
+        if user_id:
+            total_meetings = await conn.fetchval(
+                "SELECT COUNT(*) FROM meetings WHERE status = 'completed' AND user_id = $1",
+                user_id,
+            )
+            total_duration = await conn.fetchval(
+                "SELECT COALESCE(SUM(duration_secs), 0) FROM meetings WHERE status = 'completed' AND user_id = $1",
+                user_id,
+            )
+            total_insights = await conn.fetchval(
+                "SELECT COUNT(*) FROM insights i JOIN meetings m ON m.id = i.meeting_id WHERE m.user_id = $1",
+                user_id,
+            )
+            pending_actions = await conn.fetchval(
+                "SELECT COUNT(*) FROM action_items ai JOIN meetings m ON m.id = ai.meeting_id WHERE ai.status = 'pending' AND m.user_id = $1",
+                user_id,
+            )
+            meetings_today = await conn.fetchval(
+                """
+                SELECT COUNT(*) FROM meetings
+                WHERE started_at >= CURRENT_DATE AND status = 'completed' AND user_id = $1
+                """,
+                user_id,
+            )
+            meetings_this_week = await conn.fetchval(
+                """
+                SELECT COUNT(*) FROM meetings
+                WHERE started_at >= DATE_TRUNC('week', CURRENT_DATE)
+                      AND status = 'completed' AND user_id = $1
+                """,
+                user_id,
+            )
+        else:
+            total_meetings = await conn.fetchval(
+                "SELECT COUNT(*) FROM meetings WHERE status = 'completed'"
+            )
+            total_duration = await conn.fetchval(
+                "SELECT COALESCE(SUM(duration_secs), 0) FROM meetings WHERE status = 'completed'"
+            )
+            total_insights = await conn.fetchval("SELECT COUNT(*) FROM insights")
+            pending_actions = await conn.fetchval(
+                "SELECT COUNT(*) FROM action_items WHERE status = 'pending'"
+            )
+            meetings_today = await conn.fetchval(
+                """
+                SELECT COUNT(*) FROM meetings
+                WHERE started_at >= CURRENT_DATE AND status = 'completed'
+                """
+            )
+            meetings_this_week = await conn.fetchval(
+                """
+                SELECT COUNT(*) FROM meetings
+                WHERE started_at >= DATE_TRUNC('week', CURRENT_DATE)
+                      AND status = 'completed'
+                """
+            )
 
     return {
         "total_meetings": total_meetings or 0,
