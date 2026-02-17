@@ -558,15 +558,26 @@ async def get_stats(user_id: str | None = None) -> dict[str, Any]:
                 user_id,
             )
             total_duration = await conn.fetchval(
-                "SELECT COALESCE(SUM(duration_secs), 0) FROM meetings WHERE status = 'completed' AND user_id = $1",
+                """
+                SELECT COALESCE(SUM(duration_secs), 0) FROM meetings
+                WHERE status = 'completed' AND user_id = $1
+                """,
                 user_id,
             )
             total_insights = await conn.fetchval(
-                "SELECT COUNT(*) FROM insights i JOIN meetings m ON m.id = i.meeting_id WHERE m.user_id = $1",
+                """
+                SELECT COUNT(*) FROM insights i
+                JOIN meetings m ON m.id = i.meeting_id
+                WHERE m.user_id = $1
+                """,
                 user_id,
             )
             pending_actions = await conn.fetchval(
-                "SELECT COUNT(*) FROM action_items ai JOIN meetings m ON m.id = ai.meeting_id WHERE ai.status = 'pending' AND m.user_id = $1",
+                """
+                SELECT COUNT(*) FROM action_items ai
+                JOIN meetings m ON m.id = ai.meeting_id
+                WHERE ai.status = 'pending' AND m.user_id = $1
+                """,
                 user_id,
             )
             meetings_today = await conn.fetchval(

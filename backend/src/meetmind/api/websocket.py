@@ -18,7 +18,6 @@ from typing import TYPE_CHECKING, Any
 
 import structlog
 from fastapi import WebSocket, WebSocketDisconnect
-from starlette.websockets import WebSocketState
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -31,8 +30,8 @@ from meetmind.agents.screening_agent import ScreeningAgent
 from meetmind.agents.summary_agent import SummaryAgent
 from meetmind.api import handlers
 from meetmind.config.settings import settings
-from meetmind.core.auth import decode_token
 from meetmind.core import storage
+from meetmind.core.auth import decode_token
 from meetmind.core.speaker_tracker import SpeakerTracker
 from meetmind.core.transcript import TranscriptManager
 from meetmind.providers.factory import create_llm_provider

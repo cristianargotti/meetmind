@@ -103,7 +103,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     try:
         await asyncio.wait_for(storage.init_db(), timeout=10)
         logger.info("database_ready")
-    except asyncio.TimeoutError:
+    except TimeoutError:
         logger.warning("database_init_failed", error="connection timeout (10s)")
     except Exception as e:
         logger.warning("database_init_failed", error=str(e))

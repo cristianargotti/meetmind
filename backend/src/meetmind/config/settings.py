@@ -50,7 +50,9 @@ class Settings(BaseSettings):
     jwt_secret_key: str = ""  # Auto-generated if empty; set in .env for production
     jwt_access_minutes: int = 15
     jwt_refresh_days: int = 30
-    google_client_id: str = "190972367615-4ft721hggursqog484ftlibtthkeeskm.apps.googleusercontent.com"
+    google_client_id: str = (
+        "190972367615-4ft721hggursqog484ftlibtthkeeskm.apps.googleusercontent.com"
+    )
     apple_team_id: str = ""
     apple_bundle_id: str = "com.meetmind.meetmind"
     apple_service_id: str = ""  # For web Sign in with Apple
