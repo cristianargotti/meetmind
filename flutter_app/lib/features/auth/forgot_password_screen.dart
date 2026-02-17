@@ -46,7 +46,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       final config = AppConfig.instance;
       final httpProtocol = config.protocol == 'wss' ? 'https' : 'http';
       final response = await http.post(
-        Uri.parse('$httpProtocol://${config.host}:${config.port}/api/auth/forgot-password'),
+        Uri.parse(
+            '$httpProtocol://${config.host}:${config.port}/api/auth/forgot-password'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email}),
       );
@@ -170,7 +171,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       ),
                     ],
                   ),
-                ).animate().fadeIn(duration: 300.ms).scale(begin: const Offset(0.95, 0.95)),
+                )
+                    .animate()
+                    .fadeIn(duration: 300.ms)
+                    .scale(begin: const Offset(0.95, 0.95)),
 
                 const SizedBox(height: 24),
 
