@@ -8,16 +8,14 @@ Zero-cost auth system:
 
 from __future__ import annotations
 
+import hashlib
+import os
 import secrets
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import httpx
 import jwt
-
-import hashlib
-import os
-
 import structlog
 from fastapi import Depends, HTTPException, WebSocket, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -88,6 +86,18 @@ def create_refresh_token(user_id: str) -> str:
         "type": "refresh",
         "iat": datetime.now(UTC),
         "exp": datetime.now(UTC) + timedelta(days=settings.jwt_refresh_days),
+    }
+    return jwt.encode(payload, _get_jwt_secret(), algorithm="HS256")
+
+
+def create_reset_token(user_id: str) -> str:
+    """Create a short-lived password reset token (30 min)."""
+    payload = {
+        "sub": user_id,
+        "type": "reset",
+        "purpose": "password_reset",
+        "iat": datetime.now(UTC),
+        "exp": datetime.now(UTC) + timedelta(minutes=30),
     }
     return jwt.encode(payload, _get_jwt_secret(), algorithm="HS256")
 

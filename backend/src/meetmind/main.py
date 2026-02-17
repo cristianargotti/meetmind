@@ -21,6 +21,7 @@ from meetmind.core import storage
 from meetmind.core.auth import (
     create_access_token,
     create_refresh_token,
+    create_reset_token,
     decode_token,
     get_current_user,
     hash_password,
@@ -397,6 +398,126 @@ async def delete_meeting(
     if not deleted:
         raise HTTPException(status_code=404, detail="Meeting not found")
     return {"status": "deleted", "meeting_id": meeting_id}
+
+
+@app.post("/api/meetings/{meeting_id}/end")
+async def end_meeting_endpoint(
+    meeting_id: str,
+    title: str | None = None,
+    duration_secs: int | None = None,
+    current_user: dict[str, Any] = _auth_dep,
+) -> dict[str, Any]:
+    """End a meeting and finalize its metadata.
+
+    Idempotent — returns existing data if already ended.
+
+    Args:
+        meeting_id: The unique meeting identifier.
+        title: Optional title for the meeting.
+        duration_secs: Meeting duration in seconds.
+        current_user: Injected by auth dependency.
+
+    Returns:
+        Final meeting data with stats.
+
+    Raises:
+        HTTPException: If meeting not found.
+    """
+    # Check meeting exists
+    meeting = await storage.get_meeting(meeting_id)
+    if not meeting:
+        raise HTTPException(status_code=404, detail="Meeting not found")
+
+    # Already ended — idempotent
+    if meeting.get("status") == "completed":
+        return {"status": "already_completed", "meeting": meeting}
+
+    result = await storage.end_meeting(
+        meeting_id,
+        title=title,
+        duration_secs=duration_secs,
+    )
+    return {"status": "completed", "meeting": result}
+
+
+# ─── Password Reset ─────────────────────────────────────────────
+
+
+class ForgotPasswordRequest(BaseModel):
+    """Forgot password request."""
+
+    email: str
+
+
+class ResetPasswordRequest(BaseModel):
+    """Reset password request."""
+
+    token: str
+    new_password: str
+
+
+@app.post("/api/auth/forgot-password")
+async def forgot_password(body: ForgotPasswordRequest) -> dict[str, str]:
+    """Request a password reset email.
+
+    Args:
+        body: Email address to send reset link to.
+
+    Returns:
+        Confirmation message (always 200 to prevent email enumeration).
+    """
+    user = await storage.get_user_by_email(body.email)
+    if user:
+        # Generate reset token (30 min expiry)
+        reset_token = create_reset_token(user_id=user["id"])
+        logger.info(
+            "password_reset_requested",
+            email=body.email,
+            token=reset_token[:8] + "...",
+        )
+        # TODO: Send email with reset_token via SES/SendGrid
+
+    # Always return 200 to prevent email enumeration attacks
+    return {"message": "If an account exists, a reset email has been sent."}
+
+
+@app.post("/api/auth/reset-password")
+async def reset_password(body: ResetPasswordRequest) -> dict[str, str]:
+    """Reset password using a valid reset token.
+
+    Args:
+        body: Reset token and new password.
+
+    Returns:
+        Confirmation message.
+
+    Raises:
+        HTTPException: If token is invalid or expired.
+    """
+    try:
+        payload = decode_token(body.token)
+    except HTTPException:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset token") from None
+
+    if payload.get("purpose") != "password_reset":
+        raise HTTPException(status_code=400, detail="Invalid token purpose")
+
+    user_id = payload.get("sub")
+    if not user_id:
+        raise HTTPException(status_code=400, detail="Invalid token")
+
+    # Update password
+    hashed = hash_password(body.new_password)
+    pool = await storage.get_pool()
+    async with pool.acquire() as conn:
+        await conn.execute(
+            "UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2",
+            hashed,
+            user_id,
+        )
+
+    logger.info("password_reset_completed", user_id=user_id)
+    return {"message": "Password has been reset successfully."}
 
 
 # ─── Action Items ────────────────────────────────────────────────
