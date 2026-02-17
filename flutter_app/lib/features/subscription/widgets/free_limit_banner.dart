@@ -45,8 +45,9 @@ class FreeLimitBanner extends ConsumerWidget {
             children: [
               Icon(
                 isAtLimit ? Icons.warning_amber : Icons.mic,
-                color:
-                    isAtLimit ? MeetMindTheme.warning : MeetMindTheme.primary,
+                color: isAtLimit
+                    ? MeetMindTheme.warning
+                    : MeetMindTheme.primary,
                 size: 18,
               ),
               const SizedBox(width: 8),

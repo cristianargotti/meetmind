@@ -68,8 +68,9 @@ class ExportService {
     if (actionItems.isNotEmpty) {
       buffer.writeln('## Action Items');
       for (final item in actionItems) {
-        final text =
-            item is Map ? (item['text'] ?? item.toString()) : item.toString();
+        final text = item is Map
+            ? (item['text'] ?? item.toString())
+            : item.toString();
         final status = item is Map ? (item['status'] ?? 'pending') : 'pending';
         final check = status == 'done' ? '✅' : '⬜';
         buffer.writeln('$check $text');

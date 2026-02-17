@@ -29,44 +29,46 @@ final class WhisperBridgeResultNative extends Struct {
 // ─── Native Function Signatures ────────────────
 
 // Init
-typedef _InitNative = Pointer<WhisperBridgeContext> Function(
-    Pointer<Utf8> modelPath);
-typedef _InitDart = Pointer<WhisperBridgeContext> Function(
-    Pointer<Utf8> modelPath);
+typedef _InitNative =
+    Pointer<WhisperBridgeContext> Function(Pointer<Utf8> modelPath);
+typedef _InitDart =
+    Pointer<WhisperBridgeContext> Function(Pointer<Utf8> modelPath);
 
 // Free
 typedef _FreeNative = Void Function(Pointer<WhisperBridgeContext> ctx);
 typedef _FreeDart = void Function(Pointer<WhisperBridgeContext> ctx);
 
 // Set language
-typedef _SetLanguageNative = Int32 Function(
-    Pointer<WhisperBridgeContext> ctx, Pointer<Utf8> lang);
-typedef _SetLanguageDart = int Function(
-    Pointer<WhisperBridgeContext> ctx, Pointer<Utf8> lang);
+typedef _SetLanguageNative =
+    Int32 Function(Pointer<WhisperBridgeContext> ctx, Pointer<Utf8> lang);
+typedef _SetLanguageDart =
+    int Function(Pointer<WhisperBridgeContext> ctx, Pointer<Utf8> lang);
 
 // Set threads
-typedef _SetThreadsNative = Void Function(
-    Pointer<WhisperBridgeContext> ctx, Int32 nThreads);
-typedef _SetThreadsDart = void Function(
-    Pointer<WhisperBridgeContext> ctx, int nThreads);
+typedef _SetThreadsNative =
+    Void Function(Pointer<WhisperBridgeContext> ctx, Int32 nThreads);
+typedef _SetThreadsDart =
+    void Function(Pointer<WhisperBridgeContext> ctx, int nThreads);
 
 // Transcribe
-typedef _TranscribeNative = WhisperBridgeResultNative Function(
-  Pointer<WhisperBridgeContext> ctx,
-  Pointer<Float> audioData,
-  Int32 audioLen,
-);
-typedef _TranscribeDart = WhisperBridgeResultNative Function(
-  Pointer<WhisperBridgeContext> ctx,
-  Pointer<Float> audioData,
-  int audioLen,
-);
+typedef _TranscribeNative =
+    WhisperBridgeResultNative Function(
+      Pointer<WhisperBridgeContext> ctx,
+      Pointer<Float> audioData,
+      Int32 audioLen,
+    );
+typedef _TranscribeDart =
+    WhisperBridgeResultNative Function(
+      Pointer<WhisperBridgeContext> ctx,
+      Pointer<Float> audioData,
+      int audioLen,
+    );
 
 // PCM16 to F32
-typedef _Pcm16ToF32Native = Void Function(
-    Pointer<Int16> src, Pointer<Float> dst, Int32 n);
-typedef _Pcm16ToF32Dart = void Function(
-    Pointer<Int16> src, Pointer<Float> dst, int n);
+typedef _Pcm16ToF32Native =
+    Void Function(Pointer<Int16> src, Pointer<Float> dst, Int32 n);
+typedef _Pcm16ToF32Dart =
+    void Function(Pointer<Int16> src, Pointer<Float> dst, int n);
 
 // Version
 typedef _VersionNative = Pointer<Utf8> Function();
@@ -121,25 +123,25 @@ class WhisperBindings {
     'whisper_bridge_free',
   );
 
-  late final _SetLanguageDart _setLanguage =
-      _lib.lookupFunction<_SetLanguageNative, _SetLanguageDart>(
-    'whisper_bridge_set_language',
-  );
+  late final _SetLanguageDart _setLanguage = _lib
+      .lookupFunction<_SetLanguageNative, _SetLanguageDart>(
+        'whisper_bridge_set_language',
+      );
 
-  late final _SetThreadsDart _setThreads =
-      _lib.lookupFunction<_SetThreadsNative, _SetThreadsDart>(
-    'whisper_bridge_set_threads',
-  );
+  late final _SetThreadsDart _setThreads = _lib
+      .lookupFunction<_SetThreadsNative, _SetThreadsDart>(
+        'whisper_bridge_set_threads',
+      );
 
-  late final _TranscribeDart _transcribe =
-      _lib.lookupFunction<_TranscribeNative, _TranscribeDart>(
-    'whisper_bridge_transcribe',
-  );
+  late final _TranscribeDart _transcribe = _lib
+      .lookupFunction<_TranscribeNative, _TranscribeDart>(
+        'whisper_bridge_transcribe',
+      );
 
-  late final _Pcm16ToF32Dart _pcm16ToF32 =
-      _lib.lookupFunction<_Pcm16ToF32Native, _Pcm16ToF32Dart>(
-    'whisper_bridge_pcm16_to_f32',
-  );
+  late final _Pcm16ToF32Dart _pcm16ToF32 = _lib
+      .lookupFunction<_Pcm16ToF32Native, _Pcm16ToF32Dart>(
+        'whisper_bridge_pcm16_to_f32',
+      );
 
   late final _VersionDart _version = _lib
       .lookupFunction<_VersionNative, _VersionDart>('whisper_bridge_version');

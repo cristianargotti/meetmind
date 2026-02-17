@@ -88,9 +88,9 @@ class _AskAuraScreenState extends ConsumerState<AskAuraScreen> {
                 Text(
                   l10n.askAuraTitle,
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -314,8 +314,9 @@ class _ChatBubble extends StatelessWidget {
           maxWidth: MediaQuery.of(context).size.width * 0.78,
         ),
         decoration: BoxDecoration(
-          color:
-              message.isUser ? MeetMindTheme.primary : MeetMindTheme.darkCard,
+          color: message.isUser
+              ? MeetMindTheme.primary
+              : MeetMindTheme.darkCard,
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(16),
             topRight: const Radius.circular(16),

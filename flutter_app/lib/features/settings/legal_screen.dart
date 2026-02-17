@@ -31,8 +31,9 @@ class LegalScreen extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children:
-              isPrivacy ? _privacyContent(context, l10n) : _termsContent(l10n),
+          children: isPrivacy
+              ? _privacyContent(context, l10n)
+              : _termsContent(l10n),
         ),
       ),
     );

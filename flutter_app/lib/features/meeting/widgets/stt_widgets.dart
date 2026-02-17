@@ -15,16 +15,16 @@ class SttBadge extends StatelessWidget {
     final (Color color, String label, IconData icon) = switch (status) {
       WhisperModelStatus.unloaded => (Colors.white24, 'STT OFF', Icons.mic_off),
       WhisperModelStatus.loading => (
-          MeetMindTheme.warning,
-          'Loading',
-          Icons.download,
-        ),
+        MeetMindTheme.warning,
+        'Loading',
+        Icons.download,
+      ),
       WhisperModelStatus.loaded => (MeetMindTheme.success, 'STT ON', Icons.mic),
       WhisperModelStatus.error => (
-          MeetMindTheme.error,
-          'Error',
-          Icons.error_outline,
-        ),
+        MeetMindTheme.error,
+        'Error',
+        Icons.error_outline,
+      ),
     };
 
     return Container(
@@ -124,22 +124,23 @@ class _PartialTranscriptBarState extends State<PartialTranscriptBar>
                       .custom(
                         duration: const Duration(milliseconds: 400),
                         curve: Curves.easeInOut,
-                        builder: (
-                          BuildContext context,
-                          double value,
-                          Widget? child,
-                        ) {
-                          return Container(
-                            width: 4,
-                            height: 8 + (16 * value),
-                            decoration: BoxDecoration(
-                              color: MeetMindTheme.accent.withValues(
-                                alpha: 0.8,
-                              ),
-                              borderRadius: BorderRadius.circular(2),
-                            ),
-                          );
-                        },
+                        builder:
+                            (
+                              BuildContext context,
+                              double value,
+                              Widget? child,
+                            ) {
+                              return Container(
+                                width: 4,
+                                height: 8 + (16 * value),
+                                decoration: BoxDecoration(
+                                  color: MeetMindTheme.accent.withValues(
+                                    alpha: 0.8,
+                                  ),
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
+                              );
+                            },
                       );
                 }),
               ),
