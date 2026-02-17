@@ -1,0 +1,9 @@
+# Secrets - NEVER commit
+*.tfvars
+*.tfvars.json
+.terraform/
+*.tfstate*
+tfplan
+terraform.tfstate
+terraform.tfstate.backup
+terraform.tfvars

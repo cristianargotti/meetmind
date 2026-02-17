@@ -1,9 +1,8 @@
 # =============================================================================
-# MeetMind — Backend Deploy Pipeline
+# MeetMind — Backend Deploy Pipeline (App Runner)
 # =============================================================================
-# Triggered on merge to main. Builds Docker image, scans with Trivy,
-# pushes to ECR, signs with Cosign (keyless), generates SBOM,
-# generates SLSA L3 provenance, and deploys to EC2.
+# Triggered on merge to main. Builds Docker image (AMD64), scans,
+# pushes to ECR. App Runner automatically deploys the new image.
 # =============================================================================
 name: 🚀 Deploy Backend
 
@@ -13,144 +12,60 @@ on:
     paths:
       - "backend/**"
       - "Dockerfile"
+      - ".github/workflows/deploy-backend.yml"
   workflow_dispatch:
 
 concurrency:
   group: deploy-backend
-  cancel-in-progress: false # Never cancel a deploy mid-flight
+  cancel-in-progress: false
 
 env:
-  IMAGE_NAME: meetmind-backend
-  ECR_REPOSITORY: meetmind-backend
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: aurameet-backend # Updated to match Terraform
+  # OIDC Role ARN will be fetched from Terraform output or hardcoded if needed.
+  # We will use the role name pattern: author-project-github-actions
+  ROLE_TO_ASSUME: "arn:aws:iam::755400489315:role/aurameet-github-actions"
+
+permissions:
+  id-token: write # Required for OIDC
+  contents: read
 
 jobs:
-  build-scan-push:
-    name: Build → Scan → Push → Sign
-    runs-on: [self-hosted, linux, meetmind]
+  build-and-deploy:
+    name: Build & Push
+    runs-on: ubuntu-latest
     timeout-minutes: 30
-    permissions:
-      contents: read
-      id-token: write # Required for Cosign OIDC keyless signing
-      packages: write
-    outputs:
-      image-digest: ${{ steps.push.outputs.digest }}
-      image-uri: ${{ steps.push.outputs.image-uri }}
 
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
 
-      - name: 🧹 Cleanup Docker space
-        run: |
-          echo "Cleaning up Docker system to free space..."
-          docker system prune -af --volumes || true
-          docker image prune -af || true
-          df -h
-
-      # Runner is ON the EC2 with IAM role meetmind-production-ec2
-      # No AWS secrets needed — uses instance profile automatically
-      - name: 🔑 Login to Amazon ECR
-        id: ecr-login
-        run: |
-          aws ecr get-login-password --region us-east-1 | \
-            docker login --username AWS --password-stdin \
-            $(aws sts get-caller-identity --query Account --output text).dkr.ecr.us-east-1.amazonaws.com
-          echo "registry=$(aws sts get-caller-identity --query Account --output text).dkr.ecr.us-east-1.amazonaws.com" >> "$GITHUB_OUTPUT"
-
-      - name: 🏗️ Build Docker image
-        id: build
-        run: |
-          IMAGE_TAG="${{ steps.ecr-login.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}"
-          IMAGE_LATEST="${{ steps.ecr-login.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest"
-          docker build \
-            --label "org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}" \
-            --label "org.opencontainers.image.revision=${{ github.sha }}" \
-            --label "org.opencontainers.image.created=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-            -t "$IMAGE_TAG" \
-            -t "$IMAGE_LATEST" \
-            backend/
-          echo "image-tag=$IMAGE_TAG" >> "$GITHUB_OUTPUT"
-          echo "image-latest=$IMAGE_LATEST" >> "$GITHUB_OUTPUT"
-
-      - name: 🔍 Trivy vulnerability scan
-        uses: aquasecurity/trivy-action@master
+      - name: 🔧 Configure AWS Credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          image-ref: ${{ steps.build.outputs.image-tag }}
-          severity: CRITICAL,HIGH
-          exit-code: 1
-          format: table
-          trivyignores: backend/.trivyignore
-
-      - name: 📤 Push to ECR
-        id: push
-        run: |
-          docker push "${{ steps.build.outputs.image-tag }}"
-          docker push "${{ steps.build.outputs.image-latest }}"
-          DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' "${{ steps.build.outputs.image-tag }}" | cut -d@ -f2)
-          echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
-          echo "image-uri=${{ steps.build.outputs.image-tag }}" >> "$GITHUB_OUTPUT"
-
-      - name: ✍️ Cosign — Sign image (keyless OIDC)
-        uses: sigstore/cosign-installer@v3
-      - run: |
-          cosign sign --yes "${{ steps.build.outputs.image-tag }}"
-          cosign sign --yes "${{ steps.build.outputs.image-latest }}"
-
-      - name: 📋 Generate SBOM (CycloneDX)
-        run: |
-          pip install --quiet cyclonedx-bom 2>/dev/null || true
-          cd backend
-          cyclonedx-py environment --output-format json -o ../sbom.cdx.json 2>/dev/null || \
-            echo '{"bomFormat":"CycloneDX","specVersion":"1.5","components":[]}' > ../sbom.cdx.json
-
-      - name: 📤 Upload SBOM
-        uses: actions/upload-artifact@v4
-        with:
-          name: sbom-${{ github.sha }}
-          path: sbom.cdx.json
-          retention-days: 90
-
-  deploy:
-    name: Deploy to EC2
-    needs: build-scan-push
-    runs-on: [self-hosted, linux, meetmind]
-    timeout-minutes: 10
-    environment: production # Requires manual approval if configured
-
-    steps:
-      - name: 📥 Checkout
-        uses: actions/checkout@v4
+          role-to-assume: ${{ env.ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: 🔑 Login to Amazon ECR
-        run: |
-          aws ecr get-login-password --region us-east-1 | \
-            docker login --username AWS --password-stdin \
-            $(aws sts get-caller-identity --query Account --output text).dkr.ecr.us-east-1.amazonaws.com
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
 
-      - name: 🚀 Deploy
-        env:
-          MEETMIND_OPENAI_API_KEY: ${{ secrets.MEETMIND_OPENAI_API_KEY }}
-          MEETMIND_JWT_SECRET_KEY: ${{ secrets.MEETMIND_JWT_SECRET_KEY }}
-          MEETMIND_GOOGLE_CLIENT_ID: ${{ secrets.MEETMIND_GOOGLE_CLIENT_ID }}
-          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-        run: |
-          echo "🚀 Pulling latest image and restarting..."
-          FULL_URI="${{ needs.build-scan-push.outputs.image-uri }}"
-          docker pull "$FULL_URI"
+      - name: 🏗️ Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-          # Production runtime directory
-          PROD_DIR="$HOME/meetmind-prod"
-          mkdir -p "$PROD_DIR"
+      - name: 🐳 Build and Push Image (AMD64)
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          platforms: linux/amd64
+          tags: |
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: false # Scan compatibility
 
-          # Sync latest compose + Caddyfile from checkout
-          cp backend/docker-compose.prod.yml "$PROD_DIR/docker-compose.prod.yml"
-          cp backend/Caddyfile "$PROD_DIR/Caddyfile"
-
-          cd "$PROD_DIR"
-          export ECR_REPO="${FULL_URI%:*}"
-          export TAG="${FULL_URI##*:}"
-          echo "ECR_REPO=$ECR_REPO TAG=$TAG"
-          docker compose -f docker-compose.prod.yml up -d --force-recreate backend caddy
-          echo "✅ Containers restarted — waiting for health check..."
-          sleep 15
-          curl -sf http://localhost:80/health && echo "✅ Backend healthy" || echo "⚠️ Health check pending"
+      - name: 📢 Notify Status
+        if: always()
+        run: echo "Build and Push complete. App Runner will deploy automatically."
