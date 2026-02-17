@@ -61,7 +61,7 @@ void main() {
     addTearDown(() => FlutterError.onError = oldHandler);
 
     // Mark onboarding as complete so splash goes to login
-    SharedPreferences.setMockInitialValues({'onboarding_complete': true});
+    SharedPreferences.setMockInitialValues({'pref_onboarding_complete': true});
     await UserPreferences.initialize();
 
     await tester.pumpWidget(buildApp());
