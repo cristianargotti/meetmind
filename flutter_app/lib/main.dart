@@ -1,9 +1,8 @@
-import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:meetmind/config/app_config.dart';
 import 'package:meetmind/config/router.dart';
 import 'package:meetmind/config/theme.dart';
@@ -13,33 +12,44 @@ import 'package:meetmind/services/notification_service.dart';
 import 'package:meetmind/services/subscription_service.dart';
 import 'package:meetmind/services/user_preferences.dart';
 
+/// Sentry DSN — injected via --dart-define=SENTRY_DSN=...
+const _sentryDsn = String.fromEnvironment(
+  'SENTRY_DSN',
+  defaultValue: '',
+);
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Global error boundary — catches uncaught Flutter framework errors
-  FlutterError.onError = (FlutterErrorDetails details) {
-    FlutterError.presentError(details);
-    // TODO: Send to Sentry/Crashlytics when integrated
-    if (kDebugMode) {
-      debugPrint('🔴 FlutterError: ${details.exception}');
-      debugPrint('${details.stack}');
-    }
-  };
+  // Initialize core services before Sentry
+  await AppConfig.initialize();
+  await UserPreferences.initialize();
+  await NotificationService.instance.initialize();
+  await SubscriptionService.instance.initialize();
 
-  // Catch async errors not handled by Flutter framework
-  runZonedGuarded(() async {
-    await AppConfig.initialize();
-    await UserPreferences.initialize();
-    await NotificationService.instance.initialize();
-    await SubscriptionService.instance.initialize();
+  if (_sentryDsn.isNotEmpty) {
+    await SentryFlutter.init(
+      (options) {
+        options.dsn = _sentryDsn;
+        options.environment = kDebugMode ? 'development' : 'production';
+        options.tracesSampleRate = kDebugMode ? 1.0 : 0.2;
+        options.attachScreenshot = true;
+        options.sendDefaultPii = false;
+        options.diagnosticLevel = SentryLevel.warning;
+      },
+      appRunner: () =>
+          runApp(const ProviderScope(child: MeetMindApp())),
+    );
+  } else {
+    // No DSN — fallback to manual error logging (dev/CI)
+    FlutterError.onError = (FlutterErrorDetails details) {
+      FlutterError.presentError(details);
+      if (kDebugMode) {
+        debugPrint('🔴 FlutterError: ${details.exception}');
+      }
+    };
     runApp(const ProviderScope(child: MeetMindApp()));
-  }, (Object error, StackTrace stack) {
-    // TODO: Send to Sentry/Crashlytics when integrated
-    if (kDebugMode) {
-      debugPrint('🔴 Uncaught async error: $error');
-      debugPrint('$stack');
-    }
-  });
+  }
 }
 
 class MeetMindApp extends ConsumerWidget {

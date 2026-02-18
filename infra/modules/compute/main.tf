@@ -111,6 +111,7 @@ resource "aws_apprunner_service" "main" {
           MEETMIND_CORS_ORIGINS     = var.cors_origins
           MEETMIND_LOG_LEVEL        = "INFO"
           MEETMIND_DEBUG            = "false"
+          SENTRY_DSN                = var.sentry_dsn
         }
       }
     }

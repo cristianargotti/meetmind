@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:meetmind/features/ask_aura/ask_aura_screen.dart';
+// Hidden for launch — Sprint 2
+// import 'package:meetmind/features/ask_aura/ask_aura_screen.dart';
 import 'package:meetmind/features/auth/forgot_password_screen.dart';
 import 'package:meetmind/features/auth/login_screen.dart';
-import 'package:meetmind/features/digest/weekly_digest_screen.dart';
+// Hidden for launch — Sprint 3
+// import 'package:meetmind/features/digest/weekly_digest_screen.dart';
 import 'package:meetmind/features/history/history_screen.dart';
 import 'package:meetmind/features/history/meeting_detail_screen.dart';
 import 'package:meetmind/features/home/home_screen.dart';
@@ -95,16 +97,17 @@ GoRouter buildRouter(WidgetRef ref) {
         builder: (context, state) =>
             LegalScreen(type: state.pathParameters['type'] ?? 'privacy'),
       ),
-      GoRoute(
-        path: '/ask-aura',
-        name: 'ask-aura',
-        builder: (context, state) => const AskAuraScreen(),
-      ),
-      GoRoute(
-        path: '/digest',
-        name: 'digest',
-        builder: (context, state) => const WeeklyDigestScreen(),
-      ),
+      // Hidden for launch — Ask Aura (Sprint 2) & Weekly Digest (Sprint 3)
+      // GoRoute(
+      //   path: '/ask-aura',
+      //   name: 'ask-aura',
+      //   builder: (context, state) => const AskAuraScreen(),
+      // ),
+      // GoRoute(
+      //   path: '/digest',
+      //   name: 'digest',
+      //   builder: (context, state) => const WeeklyDigestScreen(),
+      // ),
       GoRoute(
         path: '/onboarding',
         name: 'onboarding',

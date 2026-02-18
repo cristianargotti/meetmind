@@ -68,3 +68,9 @@ variable "cors_origins" {
 variable "vpc_connector_arn" {
   type = string
 }
+
+variable "sentry_dsn" {
+  type      = string
+  sensitive = true
+  default   = ""
+}

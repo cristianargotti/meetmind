@@ -347,8 +347,9 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
           Icons.history),
       _FeatureRow(l10n.paywallFeatInsights, '1', l10n.paywallFeatAll,
           Icons.lightbulb_outline),
-      _FeatureRow(l10n.paywallFeatChat, '—', '✓', Icons.chat_bubble_outline),
-      _FeatureRow(l10n.paywallFeatDigest, '—', '✓', Icons.summarize),
+      // Hidden for launch — Ask Aura (Sprint 2) & Weekly Digest (Sprint 3)
+      // _FeatureRow(l10n.paywallFeatChat, '—', '✓', Icons.chat_bubble_outline),
+      // _FeatureRow(l10n.paywallFeatDigest, '—', '✓', Icons.summarize),
       _FeatureRow(l10n.paywallFeatExport, '—', '✓', Icons.share),
       _FeatureRow(l10n.paywallFeatBriefing, '—', '✓', Icons.event_note),
     ];

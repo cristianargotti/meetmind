@@ -119,3 +119,10 @@ variable "google_client_id" {
   sensitive   = true
   default     = ""
 }
+
+variable "sentry_dsn" {
+  description = "Sentry DSN for error tracking — pass via -var or TF_VAR_"
+  type        = string
+  sensitive   = true
+  default     = ""
+}

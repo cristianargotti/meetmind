@@ -7,7 +7,21 @@ import uuid
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Any
 
+import os
+
+import sentry_sdk
 import structlog
+
+# ─── Sentry Error Tracking ──────────────────────────────────────
+_sentry_dsn = os.environ.get("SENTRY_DSN", "")
+if _sentry_dsn:
+    sentry_sdk.init(
+        dsn=_sentry_dsn,
+        environment=os.environ.get("MEETMIND_ENVIRONMENT", "production"),
+        traces_sample_rate=0.2,
+        send_default_pii=False,
+        enable_tracing=True,
+    )
 from fastapi import Depends, FastAPI, HTTPException, Request, WebSocket
 from pydantic import BaseModel, EmailStr, field_validator
 from slowapi import Limiter, _rate_limit_exceeded_handler

@@ -55,6 +55,7 @@ dependencies:
   # Authentication
   google_sign_in: ^6.2.2
   sign_in_with_apple: ^6.1.4
+  sentry_flutter: ^9.13.0
 
 dev_dependencies:
   flutter_test:

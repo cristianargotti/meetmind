@@ -71,6 +71,7 @@ module "compute" {
   cors_origins     = "https://${var.domain_name}"
 
   vpc_connector_arn = module.networking.vpc_connector_arn
+  sentry_dsn        = var.sentry_dsn
 }
 
 # --- ECR Repository ---
