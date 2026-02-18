@@ -30,6 +30,11 @@ jobs:
       - name: 🔧 AWS credentials (EC2 instance profile)
         run: aws sts get-caller-identity
 
+      - name: ⬢ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
       - name: 🏗️ Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
