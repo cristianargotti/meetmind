@@ -23,11 +23,16 @@ data "aws_subnets" "default" {
   }
 }
 
-# Get the first two default (public) subnets for NAT Gateway and other resources
+# Get the first two default (public) subnets for NAT Gateway placement
+# IMPORTANT: default-for-az filter excludes our custom private subnets
 data "aws_subnets" "public" {
   filter {
     name   = "vpc-id"
     values = [data.aws_vpc.default.id]
+  }
+  filter {
+    name   = "default-for-az"
+    values = ["true"]
   }
   filter {
     name   = "availability-zone"
