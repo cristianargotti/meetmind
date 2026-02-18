@@ -21,9 +21,9 @@ variable "aws_region" {
 }
 
 variable "aws_profile" {
-  description = "AWS CLI profile name"
+  description = "AWS CLI profile name (empty = use instance profile / env credentials)"
   type        = string
-  default     = "mibaggy-co"
+  default     = "" # Empty in CI → uses EC2 instance profile
 }
 
 # --- EC2 ---
@@ -37,11 +37,13 @@ variable "instance_type" {
 variable "key_pair_name" {
   description = "SSH key pair name for EC2 access"
   type        = string
+  default     = "meetmind"
 }
 
 variable "admin_cidr" {
   description = "CIDR block for SSH access (your IP/32, e.g. 190.85.x.x/32)"
   type        = string
+  default     = "0.0.0.0/0" # Override in terraform.tfvars for security
 }
 
 # --- Secrets (passed via -var or .tfvars, never committed) ---

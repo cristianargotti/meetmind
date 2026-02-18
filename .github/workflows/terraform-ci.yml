@@ -3,6 +3,9 @@
 # =============================================================================
 # Runs tf-quality-check.sh on PRs affecting infra/.
 # Posts terraform plan output as PR comment.
+#
+# Required GitHub Secrets:
+#   - MEETMIND_OPENAI_API_KEY: OpenAI API key (for plan validation)
 # =============================================================================
 name: 🏗️ Terraform CI
 
@@ -22,6 +25,10 @@ jobs:
     name: IaC Quality Gate
     runs-on: [self-hosted, linux, meetmind]
     timeout-minutes: 15
+
+    # Inject secrets via TF_VAR_ environment variables
+    env:
+      TF_VAR_openai_api_key: ${{ secrets.MEETMIND_OPENAI_API_KEY }}
 
     steps:
       - name: 📥 Checkout

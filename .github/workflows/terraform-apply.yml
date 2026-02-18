@@ -3,6 +3,10 @@
 # =============================================================================
 # Applies Terraform changes after merge to main.
 # Uses 'production' environment for manual approval gate.
+#
+# Required GitHub Secrets:
+#   - MEETMIND_OPENAI_API_KEY: OpenAI API key (reused from backend deploy)
+#   - SLACK_WEBHOOK_URL: (optional) Slack notifications
 # =============================================================================
 name: 🏗️ Terraform Apply
 
@@ -23,6 +27,11 @@ jobs:
     timeout-minutes: 30
     environment: production # Manual approval required
 
+    # Inject secrets via TF_VAR_ environment variables
+    # Terraform auto-reads TF_VAR_<name> as variable values
+    env:
+      TF_VAR_openai_api_key: ${{ secrets.MEETMIND_OPENAI_API_KEY }}
+
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
@@ -30,13 +39,10 @@ jobs:
       - name: 🔧 AWS credentials (EC2 instance profile)
         run: aws sts get-caller-identity
 
-      - name: ⬢ Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
       - name: 🏗️ Setup Terraform
         uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
 
       - name: 📋 Terraform Init
         working-directory: infra

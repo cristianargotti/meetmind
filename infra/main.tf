@@ -18,8 +18,11 @@ terraform {
 }
 
 provider "aws" {
-  region  = var.aws_region
-  profile = var.aws_profile
+  region = var.aws_region
+
+  # In CI, aws_profile is empty → uses EC2 instance profile.
+  # Locally, set via terraform.tfvars (e.g. "mibaggy-co").
+  profile = var.aws_profile != "" ? var.aws_profile : null
 
   default_tags {
     tags = {
