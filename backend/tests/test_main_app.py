@@ -35,12 +35,26 @@ def authed_client(client: TestClient, auth_headers: dict[str, str]) -> TestClien
 # ─── Health ──────────────────────────────────────────────────────
 
 
-def test_health_check(client: TestClient) -> None:
-    """Health endpoint returns healthy status."""
+@patch("meetmind.main.storage")
+def test_health_check(mock_storage: AsyncMock, client: TestClient) -> None:
+    """Health endpoint returns healthy status when DB is connected."""
+    # Mock the asyncpg pool → acquire() → conn chain
+    from unittest.mock import MagicMock
+
+    conn_mock = AsyncMock()
+    conn_mock.fetchval = AsyncMock(return_value=1)
+    ctx_mock = MagicMock()
+    ctx_mock.__aenter__ = AsyncMock(return_value=conn_mock)
+    ctx_mock.__aexit__ = AsyncMock(return_value=False)
+    pool_mock = MagicMock()
+    pool_mock.acquire.return_value = ctx_mock
+    mock_storage.get_pool = AsyncMock(return_value=pool_mock)
+
     response = client.get("/health")
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "healthy"
+    assert data["database"] == "connected"
 
 
 # ─── Meetings ───────────────────────────────────────────────────
