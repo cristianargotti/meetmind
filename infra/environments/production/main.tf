@@ -37,7 +37,7 @@ module "database" {
   allocated_storage = var.db_allocated_storage
   db_password       = var.db_password
   vpc_id            = module.networking.vpc_id
-  subnet_ids        = module.networking.private_subnet_ids
+  subnet_ids        = module.networking.db_subnet_ids
   security_group_id = module.networking.db_security_group_id
 }
 

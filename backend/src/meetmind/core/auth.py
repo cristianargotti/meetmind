@@ -134,12 +134,23 @@ async def _get_google_public_keys() -> dict[str, Any]:
     if _google_certs_cache and _google_certs_expiry and now < _google_certs_expiry:
         return _google_certs_cache
 
-    async with httpx.AsyncClient() as client:
-        resp = await client.get(GOOGLE_CERTS_URL)
-        resp.raise_for_status()
-        _google_certs_cache = resp.json()
-        # Cache for 6 hours
-        _google_certs_expiry = now + timedelta(hours=6)
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.get(GOOGLE_CERTS_URL)
+            resp.raise_for_status()
+            _google_certs_cache = resp.json()
+            # Cache for 6 hours
+            _google_certs_expiry = now + timedelta(hours=6)
+    except (httpx.ConnectError, httpx.TimeoutException, httpx.HTTPStatusError) as e:
+        logger.error("google_jwks_fetch_failed", error=str(e))
+        if _google_certs_cache:
+            # Use stale cache if available
+            logger.warning("google_jwks_using_stale_cache")
+            return _google_certs_cache
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Unable to verify Google credentials. Please try again.",
+        ) from None
 
     return _google_certs_cache
 
@@ -214,11 +225,21 @@ async def _get_apple_public_keys() -> dict[str, Any]:
     if _apple_certs_cache and _apple_certs_expiry and now < _apple_certs_expiry:
         return _apple_certs_cache
 
-    async with httpx.AsyncClient() as client:
-        resp = await client.get(APPLE_KEYS_URL)
-        resp.raise_for_status()
-        _apple_certs_cache = resp.json()
-        _apple_certs_expiry = now + timedelta(hours=6)
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.get(APPLE_KEYS_URL)
+            resp.raise_for_status()
+            _apple_certs_cache = resp.json()
+            _apple_certs_expiry = now + timedelta(hours=6)
+    except (httpx.ConnectError, httpx.TimeoutException, httpx.HTTPStatusError) as e:
+        logger.error("apple_jwks_fetch_failed", error=str(e))
+        if _apple_certs_cache:
+            logger.warning("apple_jwks_using_stale_cache")
+            return _apple_certs_cache
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Unable to verify Apple credentials. Please try again.",
+        ) from None
 
     return _apple_certs_cache
 

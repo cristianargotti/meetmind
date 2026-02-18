@@ -56,31 +56,33 @@ resource "aws_route53_record" "validation" {
   allow_overwrite = true
 }
 
-# --- CloudFront Alias (Root Domain) ---
+# --- CloudFront Alias (Root Domain) --- COMMENTED until CloudFront enabled
+# These A-record aliases require a CloudFront distribution as target.
+# Website is accessible via S3 bucket URL until then.
 
-resource "aws_route53_record" "root" {
-  zone_id = var.hosted_zone_id
-  name    = var.domain_name
-  type    = "A"
+# resource "aws_route53_record" "root" {
+#   zone_id = var.hosted_zone_id
+#   name    = var.domain_name
+#   type    = "A"
+#
+#   alias {
+#     name                   = var.cdn_domain
+#     zone_id                = var.cdn_hosted_zone_id
+#     evaluate_target_health = false
+#   }
+# }
 
-  alias {
-    name                   = var.cdn_domain
-    zone_id                = var.cdn_hosted_zone_id
-    evaluate_target_health = false
-  }
-}
-
-resource "aws_route53_record" "www" {
-  zone_id = var.hosted_zone_id
-  name    = "www.${var.domain_name}"
-  type    = "A"
-
-  alias {
-    name                   = var.cdn_domain
-    zone_id                = var.cdn_hosted_zone_id
-    evaluate_target_health = false
-  }
-}
+# resource "aws_route53_record" "www" {
+#   zone_id = var.hosted_zone_id
+#   name    = "www.${var.domain_name}"
+#   type    = "A"
+#
+#   alias {
+#     name                   = var.cdn_domain
+#     zone_id                = var.cdn_hosted_zone_id
+#     evaluate_target_health = false
+#   }
+# }
 
 
 # --- Outputs ---

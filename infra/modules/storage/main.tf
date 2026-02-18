@@ -115,57 +115,58 @@ resource "aws_acm_certificate" "website" {
   }
 }
 
-# --- CloudFront Distribution ---
+# --- CloudFront Distribution (COMMENTED - pending AWS account verification) ---
+# Uncomment after resolving AWS Support ticket for CloudFront access.
 
-resource "aws_cloudfront_distribution" "website" {
-  origin {
-    domain_name = aws_s3_bucket_website_configuration.website.website_endpoint
-    origin_id   = "S3-${aws_s3_bucket.website.id}"
-
-    custom_origin_config {
-      http_port              = 80
-      https_port             = 443
-      origin_protocol_policy = "http-only"
-      origin_ssl_protocols   = ["TLSv1.2"]
-    }
-  }
-
-  enabled             = true
-  is_ipv6_enabled     = true
-  default_root_object = "index.html"
-
-  aliases = [var.domain_name, "www.${var.domain_name}"]
-
-  default_cache_behavior {
-    allowed_methods  = ["GET", "HEAD"]
-    cached_methods   = ["GET", "HEAD"]
-    target_origin_id = "S3-${aws_s3_bucket.website.id}"
-
-    forwarded_values {
-      query_string = false
-      cookies { forward = "none" }
-    }
-
-    viewer_protocol_policy = "redirect-to-https"
-    min_ttl                = 0
-    default_ttl            = 3600
-    max_ttl                = 86400
-  }
-
-  viewer_certificate {
-    acm_certificate_arn      = aws_acm_certificate.website.arn
-    ssl_support_method       = "sni-only"
-    minimum_protocol_version = "TLSv1.2_2021"
-  }
-
-  restrictions {
-    geo_restriction {
-      restriction_type = "none"
-    }
-  }
-
-  tags = { Component = "cdn" }
-}
+# resource "aws_cloudfront_distribution" "website" {
+#   origin {
+#     domain_name = aws_s3_bucket_website_configuration.website.website_endpoint
+#     origin_id   = "S3-${aws_s3_bucket.website.id}"
+#
+#     custom_origin_config {
+#       http_port              = 80
+#       https_port             = 443
+#       origin_protocol_policy = "http-only"
+#       origin_ssl_protocols   = ["TLSv1.2"]
+#     }
+#   }
+#
+#   enabled             = true
+#   is_ipv6_enabled     = true
+#   default_root_object = "index.html"
+#
+#   aliases = [var.domain_name, "www.${var.domain_name}"]
+#
+#   default_cache_behavior {
+#     allowed_methods  = ["GET", "HEAD"]
+#     cached_methods   = ["GET", "HEAD"]
+#     target_origin_id = "S3-${aws_s3_bucket.website.id}"
+#
+#     forwarded_values {
+#       query_string = false
+#       cookies { forward = "none" }
+#     }
+#
+#     viewer_protocol_policy = "redirect-to-https"
+#     min_ttl                = 0
+#     default_ttl            = 3600
+#     max_ttl                = 86400
+#   }
+#
+#   viewer_certificate {
+#     acm_certificate_arn      = aws_acm_certificate.website.arn
+#     ssl_support_method       = "sni-only"
+#     minimum_protocol_version = "TLSv1.2_2021"
+#   }
+#
+#   restrictions {
+#     geo_restriction {
+#       restriction_type = "none"
+#     }
+#   }
+#
+#   tags = { Component = "cdn" }
+# }
 
 # --- ACM Validation Records (CloudFront) ---
 
@@ -214,16 +215,17 @@ output "bucket_arn" {
   value = aws_s3_bucket.recordings.arn
 }
 
+# CloudFront outputs (using S3 endpoint until CloudFront is enabled)
 output "cdn_domain_name" {
-  value = aws_cloudfront_distribution.website.domain_name
+  value = aws_s3_bucket_website_configuration.website.website_endpoint
 }
 
 output "cdn_distribution_id" {
-  value = aws_cloudfront_distribution.website.id
+  value = "pending-cloudfront-verification"
 }
 
 output "cdn_hosted_zone_id" {
-  value = aws_cloudfront_distribution.website.hosted_zone_id
+  value = var.hosted_zone_id
 }
 
 output "website_bucket_arn" {

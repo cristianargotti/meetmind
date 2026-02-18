@@ -124,14 +124,12 @@ resource "aws_apprunner_service" "main" {
 
   auto_scaling_configuration_arn = aws_apprunner_auto_scaling_configuration_version.main.arn
 
-  # NOTE: VPC Connector removed for initial deploy — App Runner crashes with
-  # VPC egress on new accounts. Will add back once service is running.
-  # network_configuration {
-  #   egress_configuration {
-  #     egress_type       = "VPC"
-  #     vpc_connector_arn = var.vpc_connector_arn
-  #   }
-  # }
+  network_configuration {
+    egress_configuration {
+      egress_type       = "VPC"
+      vpc_connector_arn = var.vpc_connector_arn
+    }
+  }
 
   health_check_configuration {
     protocol            = "HTTP"
