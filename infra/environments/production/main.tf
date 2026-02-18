@@ -1,6 +1,6 @@
 # =============================================================================
-# Aura Meet — Production Environment
-# Modular composition: networking → secrets → database → compute → dns
+# Aura Meet — Production Environment Configuration
+# Triggers Terraform Apply for Sentry DSN updater composition: networking → secrets → database → compute → dns
 # =============================================================================
 
 locals {
