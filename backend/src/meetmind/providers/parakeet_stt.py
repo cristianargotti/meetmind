@@ -34,29 +34,61 @@ logger = structlog.get_logger(__name__)
 # Global model (shared across all connections, thread-safe)
 _model: Any = None
 _model_lock = threading.Lock()
+_model_error: str | None = None  # Persists last model load error
 
 
 def _get_model() -> Any:
-    """Lazy-load the Parakeet TDT model via onnx-asr (thread-safe singleton)."""
-    global _model
-    if _model is None:
-        with _model_lock:
-            if _model is None:
-                import onnx_asr  # type: ignore[import-untyped,unused-ignore]
+    """Lazy-load the Parakeet TDT model via onnx-asr (thread-safe singleton).
 
-                model_name = getattr(settings, "parakeet_model", "nemo-parakeet-tdt-0.6b-v3")
-                quantization = getattr(settings, "parakeet_quantization", "int8")
+    The model is pre-downloaded during Docker build, so this only loads
+    from disk (~2-5s). If loading fails, the error is stored globally
+    to prevent infinite retry loops.
+    """
+    global _model, _model_error
+    if _model is not None:
+        return _model
+    if _model_error is not None:
+        raise RuntimeError(f"Parakeet model previously failed to load: {_model_error}")
 
-                logger.info(
-                    "parakeet_stt_loading_model",
-                    model=model_name,
-                    quantization=quantization,
-                )
+    with _model_lock:
+        if _model is not None:
+            return _model
+        if _model_error is not None:
+            raise RuntimeError(f"Parakeet model previously failed to load: {_model_error}")
 
-                _model = onnx_asr.load_model(model_name, quantization=quantization)
+        import onnx_asr  # type: ignore[import-untyped,unused-ignore]
 
-                logger.info("parakeet_stt_model_loaded", model=model_name)
+        model_name = getattr(settings, "parakeet_model", "nemo-parakeet-tdt-0.6b-v3")
+        quantization = getattr(settings, "parakeet_quantization", "int8")
+
+        logger.info(
+            "parakeet_stt_loading_model",
+            model=model_name,
+            quantization=quantization,
+        )
+
+        try:
+            _model = onnx_asr.load_model(model_name, quantization=quantization)
+            logger.info("parakeet_stt_model_loaded", model=model_name)
+        except Exception as e:
+            _model_error = str(e)
+            logger.error(
+                "parakeet_stt_model_load_failed",
+                model=model_name,
+                error=_model_error,
+            )
+            raise
     return _model
+
+
+def is_model_ready() -> bool:
+    """Check if the Parakeet model is loaded and ready."""
+    return _model is not None and _model_error is None
+
+
+def get_model_error() -> str | None:
+    """Get the last model load error, if any."""
+    return _model_error
 
 
 @dataclass
@@ -124,13 +156,29 @@ class StreamingTranscriber:
         """Whether the transcriber is currently running."""
         return self._running
 
+    @property
+    def model_ready(self) -> bool:
+        """Whether the STT model is loaded and ready for inference."""
+        return is_model_ready()
+
+    @property
+    def model_error(self) -> str | None:
+        """Last model load error, if any."""
+        return get_model_error()
+
     def start(self) -> None:
         """Start the background transcription thread."""
         if self._running:
             return
 
         # Pre-load model on start (blocks briefly but avoids first-request latency)
-        _get_model()
+        # Model should already be in onnx-asr cache (pre-downloaded in Docker build)
+        try:
+            _get_model()
+        except Exception as e:
+            logger.error("parakeet_start_failed", error=str(e))
+            # Don't start the thread if model can't load
+            return
 
         self._running = True
         self._segment_start_time = time.time()
@@ -319,4 +367,8 @@ class StreamingTranscriber:
                     self.on_transcript(TranscriptSegment(text=full_text, is_partial=True))
 
         except Exception as e:
-            logger.error("parakeet_transcribe_error", error=str(e))
+            logger.error(
+                "parakeet_transcribe_error",
+                error=str(e),
+                buffer_seconds=len(audio) / self.SAMPLE_RATE if audio is not None else 0,
+            )

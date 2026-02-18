@@ -111,8 +111,8 @@ class MeetingNotifier extends StateNotifier<MeetingSession?> {
       await ws.connect(wsUrl: wsUrlWithLang);
       _ref.read(connectionStatusProvider.notifier).state =
           ConnectionStatus.connected;
-      // Server-side STT (Moonshine) — mark STT as ready immediately
-      _ref.read(sttStatusProvider.notifier).state = WhisperModelStatus.loaded;
+      // Server-side STT — mark as loading until backend confirms model is ready
+      _ref.read(sttStatusProvider.notifier).state = WhisperModelStatus.loading;
     } catch (e) {
       _ref.read(connectionStatusProvider.notifier).state =
           ConnectionStatus.error;
@@ -274,6 +274,17 @@ class MeetingNotifier extends StateNotifier<MeetingSession?> {
 
       case 'pong':
         break;
+
+      case 'stt_status':
+        final bool ready = message['ready'] as bool? ?? false;
+        if (ready) {
+          _ref.read(sttStatusProvider.notifier).state = WhisperModelStatus.loaded;
+          debugPrint('[MeetingNotifier] STT engine ready ✅');
+        } else {
+          final String? error = message['error'] as String?;
+          _ref.read(sttStatusProvider.notifier).state = WhisperModelStatus.error;
+          debugPrint('[MeetingNotifier] STT engine failed: $error');
+        }
     }
   }
 

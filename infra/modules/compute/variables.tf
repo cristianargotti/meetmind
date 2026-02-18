@@ -16,12 +16,12 @@ variable "domain_name" {
 
 variable "cpu" {
   type    = number
-  default = 1024
+  default = 2048 # 2 vCPU — required for Parakeet ONNX inference
 }
 
 variable "memory" {
   type    = number
-  default = 2048
+  default = 4096 # 4 GB — Parakeet INT8 model + inference buffers
 }
 
 variable "max_concurrency" {

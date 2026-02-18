@@ -40,15 +40,15 @@ variable "hosted_zone_id" {
 # --- Compute ---
 
 variable "app_runner_cpu" {
-  description = "App Runner vCPU (1024 = 1 vCPU)"
+  description = "App Runner vCPU (1024 = 1 vCPU, 2048 = 2 vCPU)"
   type        = number
-  default     = 1024
+  default     = 2048 # 2 vCPU — required for Parakeet ONNX inference
 }
 
 variable "app_runner_memory" {
   description = "App Runner memory in MB"
   type        = number
-  default     = 2048
+  default     = 4096 # 4 GB — Parakeet INT8 (~800MB) + Python (~400MB) + inference buffers
 }
 
 variable "app_runner_max_concurrency" {

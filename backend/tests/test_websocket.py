@@ -64,6 +64,10 @@ def test_websocket_connect_and_receive_welcome() -> None:
         assert "agents_ready" in data
         assert data["message"] == "MeetMind connected. Send transcript chunks to begin."
 
+        # Backend sends STT status after welcome
+        stt = ws.receive_json()
+        assert stt["type"] == "stt_status"
+
 
 def test_websocket_send_transcript_chunk() -> None:
     """Sending a transcript chunk returns an ack."""
@@ -72,6 +76,7 @@ def test_websocket_send_transcript_chunk() -> None:
 
     with client.websocket_connect(_ws_url(token=token)) as ws:
         ws.receive_json()  # Skip welcome
+        ws.receive_json()  # Skip stt_status
 
         ws.send_text(
             json.dumps(
@@ -95,6 +100,7 @@ def test_websocket_ping_pong() -> None:
 
     with client.websocket_connect(_ws_url(token=token)) as ws:
         ws.receive_json()  # skip welcome
+        ws.receive_json()  # skip stt_status
 
         ws.send_text(json.dumps({"type": "ping"}))
 
@@ -109,6 +115,7 @@ def test_websocket_unknown_message_type() -> None:
 
     with client.websocket_connect(_ws_url(token=token)) as ws:
         ws.receive_json()  # skip welcome
+        ws.receive_json()  # skip stt_status
 
         ws.send_text(json.dumps({"type": "unknown_type", "data": "test"}))
 
@@ -126,6 +133,7 @@ def test_websocket_transcript_with_default_speaker() -> None:
 
     with client.websocket_connect(_ws_url(token=token)) as ws:
         ws.receive_json()  # skip welcome
+        ws.receive_json()  # skip stt_status
 
         ws.send_text(
             json.dumps(
@@ -148,6 +156,7 @@ def test_websocket_multiple_transcript_chunks() -> None:
 
     with client.websocket_connect(_ws_url(token=token)) as ws:
         ws.receive_json()  # skip welcome
+        ws.receive_json()  # skip stt_status
 
         for i in range(3):
             ws.send_text(
@@ -174,6 +183,7 @@ def test_websocket_alias_endpoint() -> None:
         data = ws.receive_json()
         assert data["type"] == "connected"
         assert "connection_id" in data
+        ws.receive_json()  # skip stt_status
 
 
 def test_websocket_binary_audio_chunked_mode() -> None:
@@ -183,6 +193,7 @@ def test_websocket_binary_audio_chunked_mode() -> None:
 
     with client.websocket_connect(_ws_url(token=token)) as ws:
         ws.receive_json()  # skip welcome
+        ws.receive_json()  # skip stt_status
 
         with patch("meetmind.api.websocket.settings") as mock_settings:
             mock_settings.stt_mode = "chunked"

@@ -37,6 +37,17 @@ COPY . /app
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked
 
+# Pre-download Parakeet STT model at build time (baked into image).
+# This avoids runtime downloads which fail in VPC-egress containers.
+# Model: nemo-parakeet-tdt-0.6b-v3 INT8 (~800MB)
+#
+# HF_HOME redirects the HuggingFace cache under /app so it gets COPY'd
+# to the runner stage. Without this, the model ends up in /root/.cache/
+# and is lost in the multi-stage build.
+ENV HF_HOME=/app/.hf_cache
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv run python -c "import onnx_asr; onnx_asr.load_model('nemo-parakeet-tdt-0.6b-v3', quantization='int8'); print('Parakeet model pre-downloaded successfully')"
+
 # =============================================================================
 # RUNNER: Production-ready minimal image
 # =============================================================================
@@ -71,6 +82,9 @@ ENV MEETMIND_ENVIRONMENT=production
 ENV MEETMIND_STT_ENGINE=parakeet
 ENV MEETMIND_LLM_PROVIDER=openai
 ENV MEETMIND_DEBUG=false
+
+# HuggingFace cache — must match builder stage so onnx-asr finds pre-downloaded model
+ENV HF_HOME=/app/.hf_cache
 
 # Use non-root user
 USER meetmind

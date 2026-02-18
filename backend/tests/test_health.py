@@ -33,9 +33,7 @@ def test_health_check(mock_storage: AsyncMock) -> None:
 @patch("meetmind.main.storage")
 def test_health_check_db_down(mock_storage: AsyncMock) -> None:
     """Health check returns degraded status when DB is unreachable."""
-    mock_storage.get_pool = AsyncMock(
-        side_effect=ConnectionError("Connection refused")
-    )
+    mock_storage.get_pool = AsyncMock(side_effect=ConnectionError("Connection refused"))
 
     client = TestClient(app)
     response = client.get("/health")

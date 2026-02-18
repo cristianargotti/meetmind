@@ -458,6 +458,23 @@ async def websocket_transcription(websocket: WebSocket) -> None:
             },
         )
 
+        # Report STT status to client (after welcome, so Flutter sees correct order)
+        streamer = manager._streaming_transcribers.get(connection_id)
+        if streamer is not None:
+            if streamer.is_running:
+                await manager.send_json(connection_id, {"type": "stt_status", "ready": True})
+            else:
+                error_msg = streamer.model_error or "STT engine failed to start"
+                logger.error(
+                    "stt_start_failed",
+                    connection_id=connection_id,
+                    error=error_msg,
+                )
+                await manager.send_json(
+                    connection_id,
+                    {"type": "stt_status", "ready": False, "error": error_msg},
+                )
+
         # Track background tasks to prevent garbage collection
         background_tasks: set[asyncio.Task[None]] = set()
 
