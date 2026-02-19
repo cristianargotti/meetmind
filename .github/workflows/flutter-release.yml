@@ -174,45 +174,110 @@ jobs:
           ARCHIVE=build/ios/archive/Runner.xcarchive
           APP="$ARCHIVE/Products/Applications/Runner.app"
           FRAMEWORKS="$APP/Frameworks"
-          TOOLCHAIN="$(xcode-select -p)/Toolchains/XcodeDefault.xctoolchain"
-          SWIFT_LIBS="$TOOLCHAIN/usr/lib/swift/iphoneos"
           mkdir -p "$ARCHIVE/SwiftSupport/iphoneos"
 
-          echo "📦 Scanning app binary for Swift dependencies..."
-          # Find which Swift libs the app actually links to
-          NEEDED_LIBS=$(otool -L "$APP/Runner" 2>/dev/null | grep -o 'libswift[A-Za-z_]*.dylib' | sort -u || true)
-          # Also scan embedded frameworks
-          for fw in "$FRAMEWORKS"/*.framework; do
-            if [ -d "$fw" ]; then
-              FW_NAME=$(basename "$fw" .framework)
-              if [ -f "$fw/$FW_NAME" ]; then
-                MORE_LIBS=$(otool -L "$fw/$FW_NAME" 2>/dev/null | grep -o 'libswift[A-Za-z_]*.dylib' | sort -u || true)
-                NEEDED_LIBS=$(echo -e "$NEEDED_LIBS\n$MORE_LIBS" | sort -u)
-              fi
+          # Diagnostic: show what the archive contains
+          echo "📦 Frameworks/ contents:"
+          ls "$FRAMEWORKS/" 2>/dev/null | head -10 || echo "  (empty)"
+
+          # ── Approach 1: swift-stdlib-tool (official tool) ─────
+          # Do NOT use --filter-for-swift-os, as it removes all
+          # libs that exist in the OS (= everything for iOS 16+).
+          # Only use --unsigned-destination (not --destination) to
+          # avoid touching the already-built Frameworks/.
+          echo "🔧 Approach 1: swift-stdlib-tool..."
+          xcrun swift-stdlib-tool --copy \
+            --verbose \
+            --platform iphoneos \
+            --toolchain "$(xcode-select -p)/Toolchains/XcodeDefault.xctoolchain" \
+            --scan-executable "$APP/Runner" \
+            --scan-folder "$FRAMEWORKS" \
+            --unsigned-destination "$ARCHIVE/SwiftSupport/iphoneos" \
+            2>&1 || echo "⚠️ swift-stdlib-tool exited with $?"
+
+          SUPPORT_COUNT=$(ls "$ARCHIVE/SwiftSupport/iphoneos/"*.dylib 2>/dev/null | wc -l | tr -d ' ')
+          echo "  → Found $SUPPORT_COUNT dylibs"
+
+          # ── Approach 2: Find dylibs on system ────────────────
+          if [ "$SUPPORT_COUNT" = "0" ]; then
+            echo "🔧 Approach 2: Finding Swift dylibs on system..."
+
+            # Find the actual directory containing libswiftCore.dylib
+            SWIFT_DYLIB_DIR=$(find "$(xcode-select -p)" \
+              -name "libswiftCore.dylib" \
+              -path "*/iphoneos/*" \
+              -not -path "*/swift-5*" \
+              -type f 2>/dev/null | head -1 | xargs dirname 2>/dev/null || true)
+
+            if [ -z "$SWIFT_DYLIB_DIR" ]; then
+              # Try alternate paths
+              SWIFT_DYLIB_DIR=$(find "$(xcode-select -p)" \
+                -name "libswiftCore.dylib" \
+                -type f 2>/dev/null | head -1 | xargs dirname 2>/dev/null || true)
             fi
-          done
 
-          echo "📦 Swift libs needed: $(echo $NEEDED_LIBS | tr '\n' ' ')"
+            echo "  Swift dylib dir: ${SWIFT_DYLIB_DIR:-(not found)}"
 
-          # Copy needed Swift libs from toolchain to SwiftSupport
-          for lib in $NEEDED_LIBS; do
-            if [ -f "$SWIFT_LIBS/$lib" ]; then
-              cp "$SWIFT_LIBS/$lib" "$ARCHIVE/SwiftSupport/iphoneos/"
-              echo "  ✅ $lib"
+            if [ -n "$SWIFT_DYLIB_DIR" ]; then
+              # Scan frameworks to find which Swift libs are needed
+              NEEDED=""
+              for fw in "$FRAMEWORKS"/*.framework; do
+                if [ -d "$fw" ]; then
+                  FW_BIN="$fw/$(basename "$fw" .framework)"
+                  [ -f "$FW_BIN" ] && NEEDED="$NEEDED $(otool -L "$FW_BIN" 2>/dev/null | grep -oE 'libswift\w+\.dylib' || true)"
+                fi
+              done
+              [ -f "$APP/Runner" ] && NEEDED="$NEEDED $(otool -L "$APP/Runner" 2>/dev/null | grep -oE 'libswift\w+\.dylib' || true)"
+
+              NEEDED=$(echo "$NEEDED" | tr ' ' '\n' | sort -u | grep -v '^$' || true)
+              echo "  Needed libs: $(echo $NEEDED | tr '\n' ' ')"
+
+              for lib in $NEEDED; do
+                if [ -f "$SWIFT_DYLIB_DIR/$lib" ]; then
+                  cp "$SWIFT_DYLIB_DIR/$lib" "$ARCHIVE/SwiftSupport/iphoneos/"
+                  echo "  ✅ $lib"
+                fi
+              done
             fi
-          done
 
-          # Fallback: if no libs found, copy essential Swift runtime
-          if [ -z "$(ls -A "$ARCHIVE/SwiftSupport/iphoneos/" 2>/dev/null)" ]; then
-            echo "⚠️ No libs found via otool, copying core Swift runtime..."
-            for lib in libswiftCore.dylib libswiftFoundation.dylib libswiftDarwin.dylib \
-                       libswiftDispatch.dylib libswiftObjectiveC.dylib libswiftCoreFoundation.dylib; do
-              [ -f "$SWIFT_LIBS/$lib" ] && cp "$SWIFT_LIBS/$lib" "$ARCHIVE/SwiftSupport/iphoneos/"
-            done
+            SUPPORT_COUNT=$(ls "$ARCHIVE/SwiftSupport/iphoneos/"*.dylib 2>/dev/null | wc -l | tr -d ' ')
           fi
 
-          echo "📦 SwiftSupport/ contents:"
-          ls "$ARCHIVE/SwiftSupport/iphoneos/" | head -20
+          # ── Approach 3: Copy core Swift runtime from any path ──
+          if [ "$SUPPORT_COUNT" = "0" ]; then
+            echo "🔧 Approach 3: Copying core Swift runtime from SDK..."
+            SDK_PATH=$(xcrun --sdk iphoneos --show-sdk-path 2>/dev/null || true)
+            echo "  SDK: $SDK_PATH"
+
+            # Try all known paths
+            for search_dir in \
+              "$(xcode-select -p)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos" \
+              "$SDK_PATH/usr/lib/swift" \
+              "$(xcode-select -p)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.5/iphoneos"; do
+              if [ -d "$search_dir" ]; then
+                echo "  Checking $search_dir ..."
+                ls "$search_dir"/*.dylib 2>/dev/null | head -5 || echo "    (no .dylib files)"
+                ls "$search_dir"/*.tbd 2>/dev/null | head -3 || echo "    (no .tbd files)"
+                for lib in "$search_dir"/libswift*.dylib; do
+                  if [ -f "$lib" ]; then
+                    cp "$lib" "$ARCHIVE/SwiftSupport/iphoneos/"
+                  fi
+                done
+              fi
+            done
+
+            SUPPORT_COUNT=$(ls "$ARCHIVE/SwiftSupport/iphoneos/"*.dylib 2>/dev/null | wc -l | tr -d ' ')
+          fi
+
+          echo "📦 Final SwiftSupport/ ($SUPPORT_COUNT dylibs):"
+          ls -la "$ARCHIVE/SwiftSupport/iphoneos/" 2>/dev/null | head -20 || echo "  EMPTY!"
+
+          if [ "$SUPPORT_COUNT" = "0" ]; then
+            echo "❌ ERROR: Could not populate SwiftSupport!"
+            echo "Debug: listing all libswiftCore locations on system..."
+            find "$(xcode-select -p)" -name "libswiftCore*" -type f 2>/dev/null || echo "  None found!"
+            exit 1
+          fi
 
           # ── Step 3: Export IPA ─────────────────────────────────
           xcodebuild -exportArchive \
