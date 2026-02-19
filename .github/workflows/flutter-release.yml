@@ -165,37 +165,30 @@ jobs:
 
           echo "✅ Archive completed"
 
-          # ── Step 2: Embed Swift standard libraries ─────────────
-          # When signing is disabled, Xcode skips "Embed Swift
-          # Standard Libraries". We run the same tool Xcode uses
-          # internally: swift-stdlib-tool.
+          # ── Step 2: Sign Swift libs in archive ─────────────────
+          # The archive's CopySwiftLibs phase already copies
+          # libswift_Concurrency.dylib to Frameworks/, but leaves
+          # it unsigned (CODE_SIGNING_ALLOWED=NO skips signing).
+          # We ad-hoc sign them so exportArchive preserves them.
           ARCHIVE=build/ios/archive/Runner.xcarchive
           APP="$ARCHIVE/Products/Applications/Runner.app"
           FRAMEWORKS="$APP/Frameworks"
-          mkdir -p "$FRAMEWORKS"
-          mkdir -p "$ARCHIVE/SwiftSupport/iphoneos"
 
-          echo "📦 Running swift-stdlib-tool to embed Swift libs..."
-          xcrun swift-stdlib-tool --copy \
-            --verbose \
-            --platform iphoneos \
-            --toolchain "$(xcode-select -p)/Toolchains/XcodeDefault.xctoolchain" \
-            --scan-executable "$APP/Runner" \
-            --scan-folder "$FRAMEWORKS" \
-            --destination "$FRAMEWORKS" \
-            --unsigned-destination "$ARCHIVE/SwiftSupport/iphoneos"
+          echo "📦 Frameworks/ in archive before signing:"
+          ls -la "$FRAMEWORKS"/libswift*.dylib 2>/dev/null || echo "  (no Swift dylibs found)"
+          ls -la "$FRAMEWORKS"/*.framework 2>/dev/null | head -5 || true
 
-          echo "📦 Frameworks/ after swift-stdlib-tool:"
-          ls -la "$FRAMEWORKS/" || echo "⚠️ Empty"
-          echo "📦 SwiftSupport/ after swift-stdlib-tool:"
-          ls -la "$ARCHIVE/SwiftSupport/iphoneos/" || echo "⚠️ Empty"
-
-          # Ad-hoc sign embedded Swift libs so exportArchive
-          # doesn't strip them as unsigned code.
+          # Ad-hoc sign all Swift dylibs and frameworks
           for dylib in "$FRAMEWORKS"/libswift*.dylib; do
             if [ -f "$dylib" ]; then
               codesign --force --sign - "$dylib"
               echo "  🔏 Signed $(basename "$dylib")"
+            fi
+          done
+          for fw in "$FRAMEWORKS"/*.framework; do
+            if [ -d "$fw" ]; then
+              codesign --force --sign - "$fw"
+              echo "  🔏 Signed $(basename "$fw")"
             fi
           done
 
