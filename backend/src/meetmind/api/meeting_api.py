@@ -278,10 +278,19 @@ class MeetingManager:
             }
 
         tracker = self._cost_trackers.get(meeting_id)
-        response = await self._copilot_agent.respond(
-            question,
-            transcript_context,
-        )
+
+        try:
+            response = await self._copilot_agent.respond(
+                question,
+                transcript_context,
+            )
+        except Exception as e:
+            logger.warning("copilot_llm_failed", error=str(e))
+            return {
+                "answer": f"⚠️ AI temporarily unavailable: {e}",
+                "error": True,
+                "latency_ms": 0,
+            }
 
         if tracker:
             model_id = (

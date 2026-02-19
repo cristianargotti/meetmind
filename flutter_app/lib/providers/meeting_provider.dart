@@ -361,8 +361,11 @@ class MeetingNotifier extends StateNotifier<MeetingSession?> {
     } catch (e) {
       debugPrint('[MeetingNotifier] Copilot failed: $e');
       if (state != null) {
+        final String errorText = e is ApiException
+            ? 'Server error (${e.statusCode}). Try again.'
+            : 'Connection error. Check your network.';
         final CopilotMessage errorMsg = CopilotMessage(
-          text: 'Connection error. Please try again.',
+          text: errorText,
           sender: CopilotSender.error,
           timestamp: DateTime.now(),
         );
