@@ -152,9 +152,14 @@ jobs:
           </plist>
           PLIST
 
-          # ── Step 1: Archive without signing ────────────────────
-          # GitHub runner can't sign during archive. Xcode 26 with
-          # iOS 16+ handles Swift support natively.
+          # ── Archive WITH signing ───────────────────────────────
+          # CODE_SIGNING_ALLOWED=NO was the root cause of ALL
+          # ITMS-904xx errors — Xcode won't create SwiftSupport/
+          # without signing. We have the distribution certificate
+          # installed + API key for automatic provisioning.
+          echo "📋 Available signing identities:"
+          security find-identity -v -p codesigning | head -5
+
           xcodebuild -workspace ios/Runner.xcworkspace \
             -scheme Runner \
             -configuration Release \
@@ -164,9 +169,7 @@ jobs:
             -authenticationKeyPath ~/private_keys/AuthKey_${API_KEY_ID}.p8 \
             -authenticationKeyID "$API_KEY_ID" \
             -authenticationKeyIssuerID "$API_ISSUER_ID" \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO \
+            DEVELOPMENT_TEAM=9L6258YNVJ \
             archive
 
           echo "✅ Archive completed"
