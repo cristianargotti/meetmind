@@ -167,7 +167,54 @@ jobs:
 
           echo "✅ Archive completed"
 
-          # ── Step 2: Export IPA ─────────────────────────────────
+          # ── Step 2: Create SwiftSupport/ ────────────────────────
+          # With iOS 16+ and CODE_SIGNING_ALLOWED=NO, Xcode skips
+          # creating SwiftSupport/ (no backport libs needed).
+          # But Apple REQUIRES it for any app using Swift frameworks.
+          ARCHIVE=build/ios/archive/Runner.xcarchive
+          APP="$ARCHIVE/Products/Applications/Runner.app"
+          FRAMEWORKS="$APP/Frameworks"
+          TOOLCHAIN="$(xcode-select -p)/Toolchains/XcodeDefault.xctoolchain"
+          SWIFT_LIBS="$TOOLCHAIN/usr/lib/swift/iphoneos"
+          mkdir -p "$ARCHIVE/SwiftSupport/iphoneos"
+
+          echo "📦 Scanning app binary for Swift dependencies..."
+          # Find which Swift libs the app actually links to
+          NEEDED_LIBS=$(otool -L "$APP/Runner" 2>/dev/null | grep -o 'libswift[A-Za-z_]*.dylib' | sort -u || true)
+          # Also scan embedded frameworks
+          for fw in "$FRAMEWORKS"/*.framework; do
+            if [ -d "$fw" ]; then
+              FW_NAME=$(basename "$fw" .framework)
+              if [ -f "$fw/$FW_NAME" ]; then
+                MORE_LIBS=$(otool -L "$fw/$FW_NAME" 2>/dev/null | grep -o 'libswift[A-Za-z_]*.dylib' | sort -u || true)
+                NEEDED_LIBS=$(echo -e "$NEEDED_LIBS\n$MORE_LIBS" | sort -u)
+              fi
+            fi
+          done
+
+          echo "📦 Swift libs needed: $(echo $NEEDED_LIBS | tr '\n' ' ')"
+
+          # Copy needed Swift libs from toolchain to SwiftSupport
+          for lib in $NEEDED_LIBS; do
+            if [ -f "$SWIFT_LIBS/$lib" ]; then
+              cp "$SWIFT_LIBS/$lib" "$ARCHIVE/SwiftSupport/iphoneos/"
+              echo "  ✅ $lib"
+            fi
+          done
+
+          # Fallback: if no libs found, copy essential Swift runtime
+          if [ -z "$(ls -A "$ARCHIVE/SwiftSupport/iphoneos/" 2>/dev/null)" ]; then
+            echo "⚠️ No libs found via otool, copying core Swift runtime..."
+            for lib in libswiftCore.dylib libswiftFoundation.dylib libswiftDarwin.dylib \
+                       libswiftDispatch.dylib libswiftObjectiveC.dylib libswiftCoreFoundation.dylib; do
+              [ -f "$SWIFT_LIBS/$lib" ] && cp "$SWIFT_LIBS/$lib" "$ARCHIVE/SwiftSupport/iphoneos/"
+            done
+          fi
+
+          echo "📦 SwiftSupport/ contents:"
+          ls "$ARCHIVE/SwiftSupport/iphoneos/" | head -20
+
+          # ── Step 3: Export IPA ─────────────────────────────────
           xcodebuild -exportArchive \
             -archivePath build/ios/archive/Runner.xcarchive \
             -exportOptionsPlist ios/ExportOptions.plist \
