@@ -146,7 +146,9 @@ jobs:
           </plist>
           PLIST
 
-          # Archive with xcodebuild (automatic signing via API key)
+          # Archive without signing (GitHub runner lacks provisioning profiles).
+          # ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES ensures Swift runtime libs
+          # are placed in Frameworks/ — fixes ITMS-90429.
           xcodebuild -workspace ios/Runner.xcworkspace \
             -scheme Runner \
             -configuration Release \
@@ -156,6 +158,10 @@ jobs:
             -authenticationKeyPath ~/private_keys/AuthKey_${API_KEY_ID}.p8 \
             -authenticationKeyID "$API_KEY_ID" \
             -authenticationKeyIssuerID "$API_ISSUER_ID" \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES=YES \
             archive
 
           # Export IPA
