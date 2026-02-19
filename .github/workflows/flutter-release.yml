@@ -145,10 +145,12 @@ jobs:
           </dict>
           </plist>
           PLIST
+
           # ── Step 1: Archive without signing ────────────────────
           # GitHub runner can't sign during archive (no dev profiles,
-          # account at max certificates). Archive unsigned — this
-          # has been proven to work (v5.3.0).
+          # account at max certificates). Archive unsigned.
+          # iOS 16+ deployment target means Swift Concurrency is
+          # built into the OS — no libswift_Concurrency.dylib needed.
           xcodebuild -workspace ios/Runner.xcworkspace \
             -scheme Runner \
             -configuration Release \
@@ -165,34 +167,7 @@ jobs:
 
           echo "✅ Archive completed"
 
-          # ── Step 2: Sign Swift libs in archive ─────────────────
-          # The archive's CopySwiftLibs phase already copies
-          # libswift_Concurrency.dylib to Frameworks/, but leaves
-          # it unsigned (CODE_SIGNING_ALLOWED=NO skips signing).
-          # We ad-hoc sign them so exportArchive preserves them.
-          ARCHIVE=build/ios/archive/Runner.xcarchive
-          APP="$ARCHIVE/Products/Applications/Runner.app"
-          FRAMEWORKS="$APP/Frameworks"
-
-          echo "📦 Frameworks/ in archive before signing:"
-          ls -la "$FRAMEWORKS"/libswift*.dylib 2>/dev/null || echo "  (no Swift dylibs found)"
-          ls -la "$FRAMEWORKS"/*.framework 2>/dev/null | head -5 || true
-
-          # Ad-hoc sign all Swift dylibs and frameworks
-          for dylib in "$FRAMEWORKS"/libswift*.dylib; do
-            if [ -f "$dylib" ]; then
-              codesign --force --sign - "$dylib"
-              echo "  🔏 Signed $(basename "$dylib")"
-            fi
-          done
-          for fw in "$FRAMEWORKS"/*.framework; do
-            if [ -d "$fw" ]; then
-              codesign --force --sign - "$fw"
-              echo "  🔏 Signed $(basename "$fw")"
-            fi
-          done
-
-          # ── Step 3: Export IPA ─────────────────────────────────
+          # ── Step 2: Export IPA ─────────────────────────────────
           xcodebuild -exportArchive \
             -archivePath build/ios/archive/Runner.xcarchive \
             -exportOptionsPlist ios/ExportOptions.plist \
