@@ -62,7 +62,7 @@ jobs:
 
   ios:
     name: 🍎 iOS IPA
-    runs-on: macos-latest # Standard GitHub runner (usually macos-12 or 13)
+    runs-on: macos-15
     timeout-minutes: 30
     defaults:
       run:
@@ -77,6 +77,12 @@ jobs:
         with:
           channel: stable
           cache: true
+
+      - name: 🛠️ Select Xcode 26
+        run: |
+          sudo xcode-select -s /Applications/Xcode_26.2.app/Contents/Developer
+          xcodebuild -version
+          xcrun --sdk iphoneos --show-sdk-version
 
       - name: 📦 Get dependencies
         run: flutter pub get
@@ -147,10 +153,8 @@ jobs:
           PLIST
 
           # ── Step 1: Archive without signing ────────────────────
-          # GitHub runner can't sign during archive (no dev profiles,
-          # account at max certificates). Archive unsigned.
-          # iOS 16+ deployment target means Swift Concurrency is
-          # built into the OS — no libswift_Concurrency.dylib needed.
+          # GitHub runner can't sign during archive. Xcode 26 with
+          # iOS 16+ handles Swift support natively.
           xcodebuild -workspace ios/Runner.xcworkspace \
             -scheme Runner \
             -configuration Release \
@@ -167,119 +171,14 @@ jobs:
 
           echo "✅ Archive completed"
 
-          # ── Step 2: Create SwiftSupport/ ────────────────────────
-          # With iOS 16+ and CODE_SIGNING_ALLOWED=NO, Xcode skips
-          # creating SwiftSupport/ (no backport libs needed).
-          # But Apple REQUIRES it for any app using Swift frameworks.
+          # Diagnostic: show archive contents
           ARCHIVE=build/ios/archive/Runner.xcarchive
-          APP="$ARCHIVE/Products/Applications/Runner.app"
-          FRAMEWORKS="$APP/Frameworks"
-          mkdir -p "$ARCHIVE/SwiftSupport/iphoneos"
+          echo "📦 Frameworks/:"
+          ls "$ARCHIVE/Products/Applications/Runner.app/Frameworks/" 2>/dev/null | head -10 || echo "  (empty)"
+          echo "📦 SwiftSupport/:"
+          ls "$ARCHIVE/SwiftSupport/iphoneos/" 2>/dev/null | head -10 || echo "  (not present)"
 
-          # Diagnostic: show what the archive contains
-          echo "📦 Frameworks/ contents:"
-          ls "$FRAMEWORKS/" 2>/dev/null | head -10 || echo "  (empty)"
-
-          # ── Approach 1: swift-stdlib-tool (official tool) ─────
-          # Do NOT use --filter-for-swift-os, as it removes all
-          # libs that exist in the OS (= everything for iOS 16+).
-          # Only use --unsigned-destination (not --destination) to
-          # avoid touching the already-built Frameworks/.
-          echo "🔧 Approach 1: swift-stdlib-tool..."
-          xcrun swift-stdlib-tool --copy \
-            --verbose \
-            --platform iphoneos \
-            --toolchain "$(xcode-select -p)/Toolchains/XcodeDefault.xctoolchain" \
-            --scan-executable "$APP/Runner" \
-            --scan-folder "$FRAMEWORKS" \
-            --unsigned-destination "$ARCHIVE/SwiftSupport/iphoneos" \
-            2>&1 || echo "⚠️ swift-stdlib-tool exited with $?"
-
-          SUPPORT_COUNT=$(ls "$ARCHIVE/SwiftSupport/iphoneos/"*.dylib 2>/dev/null | wc -l | tr -d ' ')
-          echo "  → Found $SUPPORT_COUNT dylibs"
-
-          # ── Approach 2: Find dylibs on system ────────────────
-          if [ "$SUPPORT_COUNT" = "0" ]; then
-            echo "🔧 Approach 2: Finding Swift dylibs on system..."
-
-            # Find the actual directory containing libswiftCore.dylib
-            SWIFT_DYLIB_DIR=$(find "$(xcode-select -p)" \
-              -name "libswiftCore.dylib" \
-              -path "*/iphoneos/*" \
-              -not -path "*/swift-5*" \
-              -type f 2>/dev/null | head -1 | xargs dirname 2>/dev/null || true)
-
-            if [ -z "$SWIFT_DYLIB_DIR" ]; then
-              # Try alternate paths
-              SWIFT_DYLIB_DIR=$(find "$(xcode-select -p)" \
-                -name "libswiftCore.dylib" \
-                -type f 2>/dev/null | head -1 | xargs dirname 2>/dev/null || true)
-            fi
-
-            echo "  Swift dylib dir: ${SWIFT_DYLIB_DIR:-(not found)}"
-
-            if [ -n "$SWIFT_DYLIB_DIR" ]; then
-              # Scan frameworks to find which Swift libs are needed
-              NEEDED=""
-              for fw in "$FRAMEWORKS"/*.framework; do
-                if [ -d "$fw" ]; then
-                  FW_BIN="$fw/$(basename "$fw" .framework)"
-                  [ -f "$FW_BIN" ] && NEEDED="$NEEDED $(otool -L "$FW_BIN" 2>/dev/null | grep -oE 'libswift\w+\.dylib' || true)"
-                fi
-              done
-              [ -f "$APP/Runner" ] && NEEDED="$NEEDED $(otool -L "$APP/Runner" 2>/dev/null | grep -oE 'libswift\w+\.dylib' || true)"
-
-              NEEDED=$(echo "$NEEDED" | tr ' ' '\n' | sort -u | grep -v '^$' || true)
-              echo "  Needed libs: $(echo $NEEDED | tr '\n' ' ')"
-
-              for lib in $NEEDED; do
-                if [ -f "$SWIFT_DYLIB_DIR/$lib" ]; then
-                  cp "$SWIFT_DYLIB_DIR/$lib" "$ARCHIVE/SwiftSupport/iphoneos/"
-                  echo "  ✅ $lib"
-                fi
-              done
-            fi
-
-            SUPPORT_COUNT=$(ls "$ARCHIVE/SwiftSupport/iphoneos/"*.dylib 2>/dev/null | wc -l | tr -d ' ')
-          fi
-
-          # ── Approach 3: Copy core Swift runtime from any path ──
-          if [ "$SUPPORT_COUNT" = "0" ]; then
-            echo "🔧 Approach 3: Copying core Swift runtime from SDK..."
-            SDK_PATH=$(xcrun --sdk iphoneos --show-sdk-path 2>/dev/null || true)
-            echo "  SDK: $SDK_PATH"
-
-            # Try all known paths
-            for search_dir in \
-              "$(xcode-select -p)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos" \
-              "$SDK_PATH/usr/lib/swift" \
-              "$(xcode-select -p)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.5/iphoneos"; do
-              if [ -d "$search_dir" ]; then
-                echo "  Checking $search_dir ..."
-                ls "$search_dir"/*.dylib 2>/dev/null | head -5 || echo "    (no .dylib files)"
-                ls "$search_dir"/*.tbd 2>/dev/null | head -3 || echo "    (no .tbd files)"
-                for lib in "$search_dir"/libswift*.dylib; do
-                  if [ -f "$lib" ]; then
-                    cp "$lib" "$ARCHIVE/SwiftSupport/iphoneos/"
-                  fi
-                done
-              fi
-            done
-
-            SUPPORT_COUNT=$(ls "$ARCHIVE/SwiftSupport/iphoneos/"*.dylib 2>/dev/null | wc -l | tr -d ' ')
-          fi
-
-          echo "📦 Final SwiftSupport/ ($SUPPORT_COUNT dylibs):"
-          ls -la "$ARCHIVE/SwiftSupport/iphoneos/" 2>/dev/null | head -20 || echo "  EMPTY!"
-
-          if [ "$SUPPORT_COUNT" = "0" ]; then
-            echo "❌ ERROR: Could not populate SwiftSupport!"
-            echo "Debug: listing all libswiftCore locations on system..."
-            find "$(xcode-select -p)" -name "libswiftCore*" -type f 2>/dev/null || echo "  None found!"
-            exit 1
-          fi
-
-          # ── Step 3: Export IPA ─────────────────────────────────
+          # ── Step 2: Export IPA ─────────────────────────────────
           xcodebuild -exportArchive \
             -archivePath build/ios/archive/Runner.xcarchive \
             -exportOptionsPlist ios/ExportOptions.plist \
