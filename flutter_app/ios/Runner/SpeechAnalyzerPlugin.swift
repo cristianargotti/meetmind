@@ -172,7 +172,7 @@ class SpeechAnalyzerPlugin: NSObject {
             let recordingFormat = inputNode.outputFormat(forBus: 0)
 
             let speechLocale = Locale(identifier: locale)
-            let transcriber = SpeechTranscriber(preset: .default, locale: speechLocale)
+            let transcriber = SpeechTranscriber(locale: speechLocale, preset: .progressiveLiveTranscription)
 
             let analyzer = SpeechAnalyzer(modules: [transcriber])
 
