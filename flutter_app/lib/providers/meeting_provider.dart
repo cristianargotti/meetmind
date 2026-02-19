@@ -49,6 +49,7 @@ class MeetingNotifier extends StateNotifier<MeetingSession?> {
   StreamSubscription<SttTranscript>? _sttSub;
   Timer? _durationTimer;
   Timer? _transcriptBatchTimer;
+  Timer? _partialClearTimer;
 
   // Buffer transcript segments for batched REST calls
   final List<Map<String, String>> _pendingSegments = [];
@@ -149,6 +150,11 @@ class MeetingNotifier extends StateNotifier<MeetingSession?> {
     } catch (_) {
       // Non-critical — don't block meeting end
     }
+
+    // Clear session so next visit creates a fresh meeting
+    _flushFailures = 0;
+    _partialClearTimer?.cancel();
+    state = null;
   }
 
   /// Pause recording.
@@ -427,7 +433,15 @@ class MeetingNotifier extends StateNotifier<MeetingSession?> {
         if (state != null) {
           state = state!.copyWith(partialTranscript: transcript.text.trim());
         }
+        // Auto-clear partial after 2s of silence (no new partial)
+        _partialClearTimer?.cancel();
+        _partialClearTimer = Timer(const Duration(seconds: 2), () {
+          if (state != null && state!.partialTranscript.isNotEmpty) {
+            state = state!.copyWith(partialTranscript: '');
+          }
+        });
       } else if (transcript.type == TranscriptType.finalResult) {
+        _partialClearTimer?.cancel();
         final String text = transcript.text.trim();
         if (text.isNotEmpty) {
           // Add finalized text to transcript + queue for backend
@@ -445,6 +459,7 @@ class MeetingNotifier extends StateNotifier<MeetingSession?> {
   void dispose() {
     _durationTimer?.cancel();
     _transcriptBatchTimer?.cancel();
+    _partialClearTimer?.cancel();
     _sttSub?.cancel();
     super.dispose();
   }

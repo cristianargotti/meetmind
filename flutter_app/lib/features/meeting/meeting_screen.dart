@@ -224,7 +224,7 @@ class _MeetingTabBar extends StatelessWidget {
 }
 
 /// Transcript tab — insights panel + transcript list + input.
-class _TranscriptTab extends StatelessWidget {
+class _TranscriptTab extends StatefulWidget {
   const _TranscriptTab({
     required this.meeting,
     required this.scrollController,
@@ -240,25 +240,55 @@ class _TranscriptTab extends StatelessWidget {
   final VoidCallback onToggleRecording;
 
   @override
+  State<_TranscriptTab> createState() => _TranscriptTabState();
+}
+
+class _TranscriptTabState extends State<_TranscriptTab> {
+  int _lastSegmentCount = 0;
+
+  @override
+  void didUpdateWidget(covariant _TranscriptTab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final int newCount = widget.meeting?.segments.length ?? 0;
+    if (newCount > _lastSegmentCount) {
+      _lastSegmentCount = newCount;
+      _scrollToBottom();
+    }
+  }
+
+  void _scrollToBottom() {
+    Future<void>.delayed(const Duration(milliseconds: 100), () {
+      if (widget.scrollController.hasClients) {
+        widget.scrollController.animateTo(
+          widget.scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Column(
       children: <Widget>[
         Expanded(
-          child: meeting == null || meeting!.segments.isEmpty
+          child: widget.meeting == null || widget.meeting!.segments.isEmpty
               ? const EmptyTranscriptState()
               : TranscriptList(
-                  segments: meeting!.segments,
-                  scrollController: scrollController,
+                  segments: widget.meeting!.segments,
+                  scrollController: widget.scrollController,
                 ),
         ),
         // Live partial transcript from STT
-        if (meeting != null && meeting!.partialTranscript.isNotEmpty)
-          PartialTranscriptBar(text: meeting!.partialTranscript),
+        if (widget.meeting != null &&
+            widget.meeting!.partialTranscript.isNotEmpty)
+          PartialTranscriptBar(text: widget.meeting!.partialTranscript),
         InputBar(
-          controller: textController,
-          isRecording: meeting?.status == MeetingStatus.recording,
-          onSend: onSend,
-          onToggleRecording: onToggleRecording,
+          controller: widget.textController,
+          isRecording: widget.meeting?.status == MeetingStatus.recording,
+          onSend: widget.onSend,
+          onToggleRecording: widget.onToggleRecording,
         ),
       ],
     );
