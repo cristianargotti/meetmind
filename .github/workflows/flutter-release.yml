@@ -121,7 +121,13 @@ jobs:
           echo "$API_KEY" > ~/private_keys/AuthKey_${API_KEY_ID}.p8
           echo "✅ Certificate + API key installed"
 
-      - name: 🏗️ Build IPA
+      - name: 🏗️ Build Dart code
+        run: |
+          flutter build ios --release --no-codesign \
+            --dart-define=REVENUECAT_IOS_KEY=${{ secrets.REVENUECAT_IOS_KEY }} \
+            --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN }}
+
+      - name: 📦 Archive & Export IPA
         env:
           API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
@@ -146,21 +152,55 @@ jobs:
           </plist>
           PLIST
 
+          # ── CRITICAL: Clean DerivedData ──────────────────────────
+          # flutter build ios --no-codesign caches build artifacts with
+          # CODE_SIGNING_ALLOWED=NO. If xcodebuild archive reuses them,
+          # SwiftSupport/ won't be created. Force a clean rebuild.
+          echo "🧹 Cleaning DerivedData to purge unsigned cache..."
+          rm -rf ~/Library/Developer/Xcode/DerivedData/Runner-*
+          rm -rf build/ios/archive
+
           echo "📋 Available signing identities:"
           security find-identity -v -p codesigning | head -5
 
-          # ── Single-command build → archive → sign → export ─────
-          # flutter build ipa handles the ENTIRE pipeline atomically.
-          # This avoids the bug where separate "flutter build ios --no-codesign"
-          # + "xcodebuild archive" left SwiftSupport/ empty because the
-          # first step cached unsigned artifacts.
-          flutter build ipa --release \
-            --export-options-plist=ios/ExportOptions.plist \
-            --dart-define=REVENUECAT_IOS_KEY=${{ secrets.REVENUECAT_IOS_KEY }} \
-            --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN }}
+          # ── Archive WITH signing + ALWAYS_EMBED_SWIFT ────────────
+          # ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES=YES forces Xcode to
+          # create SwiftSupport/ even for iOS 16+ where Swift is in OS.
+          # This is the definitive fix for ITMS-90426.
+          xcodebuild -workspace ios/Runner.xcworkspace \
+            -scheme Runner \
+            -configuration Release \
+            -archivePath build/ios/archive/Runner.xcarchive \
+            -destination 'generic/platform=iOS' \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath ~/private_keys/AuthKey_${API_KEY_ID}.p8 \
+            -authenticationKeyID "$API_KEY_ID" \
+            -authenticationKeyIssuerID "$API_ISSUER_ID" \
+            DEVELOPMENT_TEAM=9L6258YNVJ \
+            ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES=YES \
+            archive
 
-          echo "✅ IPA built successfully"
-          ls -la build/ios/ipa/*.ipa 2>/dev/null || echo "⚠️ IPA not found in default path"
+          echo "✅ Archive completed"
+
+          # Diagnostic: verify SwiftSupport exists
+          ARCHIVE=build/ios/archive/Runner.xcarchive
+          echo "📦 Frameworks/:"
+          ls "$ARCHIVE/Products/Applications/Runner.app/Frameworks/" 2>/dev/null | head -10 || echo "  (empty)"
+          echo "📦 SwiftSupport/:"
+          ls "$ARCHIVE/SwiftSupport/iphoneos/" 2>/dev/null | head -10 || echo "  ⚠️ NOT PRESENT"
+
+          # ── Export IPA ─────────────────────────────────────────────
+          xcodebuild -exportArchive \
+            -archivePath build/ios/archive/Runner.xcarchive \
+            -exportOptionsPlist ios/ExportOptions.plist \
+            -exportPath build/ios/ipa \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath ~/private_keys/AuthKey_${API_KEY_ID}.p8 \
+            -authenticationKeyID "$API_KEY_ID" \
+            -authenticationKeyIssuerID "$API_ISSUER_ID"
+
+          echo "✅ IPA exported successfully"
+          ls -la build/ios/ipa/*.ipa 2>/dev/null || echo "⚠️ No IPA found"
 
       - name: 📤 Upload IPA (artifact backup)
         uses: actions/upload-artifact@v4
