@@ -145,13 +145,10 @@ jobs:
           </dict>
           </plist>
           PLIST
-          # ── Archive WITH signing ──────────────────────────────
-          # Signing must be enabled so Xcode embeds Swift stdlib
-          # in Frameworks/ (fixes ITMS-90429). API key auth lets
-          # xcodebuild auto-download provisioning profiles.
-          echo "📋 Installed signing identities:"
-          security find-identity -v -p codesigning
-
+          # ── Step 1: Archive without signing ────────────────────
+          # GitHub runner can't sign during archive (no dev profiles,
+          # account at max certificates). Archive unsigned — this
+          # has been proven to work (v5.3.0).
           xcodebuild -workspace ios/Runner.xcworkspace \
             -scheme Runner \
             -configuration Release \
@@ -161,15 +158,48 @@ jobs:
             -authenticationKeyPath ~/private_keys/AuthKey_${API_KEY_ID}.p8 \
             -authenticationKeyID "$API_KEY_ID" \
             -authenticationKeyIssuerID "$API_ISSUER_ID" \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
             archive
 
           echo "✅ Archive completed"
 
-          # Verify Swift libs are in the archive
-          echo "📦 Frameworks in archive:"
-          ls -la build/ios/archive/Runner.xcarchive/Products/Applications/Runner.app/Frameworks/ | head -20 || echo "⚠️ No Frameworks dir found"
+          # ── Step 2: Embed Swift standard libraries ─────────────
+          # When signing is disabled, Xcode skips "Embed Swift
+          # Standard Libraries". We run the same tool Xcode uses
+          # internally: swift-stdlib-tool.
+          ARCHIVE=build/ios/archive/Runner.xcarchive
+          APP="$ARCHIVE/Products/Applications/Runner.app"
+          FRAMEWORKS="$APP/Frameworks"
+          mkdir -p "$FRAMEWORKS"
+          mkdir -p "$ARCHIVE/SwiftSupport/iphoneos"
 
-          # Export IPA (re-signing + upload)
+          echo "📦 Running swift-stdlib-tool to embed Swift libs..."
+          xcrun swift-stdlib-tool --copy \
+            --verbose \
+            --platform iphoneos \
+            --toolchain "$(xcode-select -p)/Toolchains/XcodeDefault.xctoolchain" \
+            --scan-executable "$APP/Runner" \
+            --scan-folder "$FRAMEWORKS" \
+            --destination "$FRAMEWORKS" \
+            --unsigned-destination "$ARCHIVE/SwiftSupport/iphoneos"
+
+          echo "📦 Frameworks/ after swift-stdlib-tool:"
+          ls -la "$FRAMEWORKS/" || echo "⚠️ Empty"
+          echo "📦 SwiftSupport/ after swift-stdlib-tool:"
+          ls -la "$ARCHIVE/SwiftSupport/iphoneos/" || echo "⚠️ Empty"
+
+          # Ad-hoc sign embedded Swift libs so exportArchive
+          # doesn't strip them as unsigned code.
+          for dylib in "$FRAMEWORKS"/libswift*.dylib; do
+            if [ -f "$dylib" ]; then
+              codesign --force --sign - "$dylib"
+              echo "  🔏 Signed $(basename "$dylib")"
+            fi
+          done
+
+          # ── Step 3: Export IPA ─────────────────────────────────
           xcodebuild -exportArchive \
             -archivePath build/ios/archive/Runner.xcarchive \
             -exportOptionsPlist ios/ExportOptions.plist \
