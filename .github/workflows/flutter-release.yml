@@ -152,17 +152,9 @@ jobs:
           </plist>
           PLIST
 
-          # Keep DerivedData from flutter build (compiled objects).
-          # Only clean previous archive output.
           rm -rf build/ios/archive
 
-          echo "📋 Available signing identities:"
-          security find-identity -v -p codesigning | head -5
-
-          # ── Archive WITH signing + ALWAYS_EMBED_SWIFT ────────────
-          # ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES=YES forces Xcode to
-          # create SwiftSupport/ even for iOS 16+ where Swift is in OS.
-          # This is the definitive fix for ITMS-90426.
+          # ── Step 1: Archive (unsigned — proven to compile) ─────────
           xcodebuild -workspace ios/Runner.xcworkspace \
             -scheme Runner \
             -configuration Release \
@@ -172,20 +164,60 @@ jobs:
             -authenticationKeyPath ~/private_keys/AuthKey_${API_KEY_ID}.p8 \
             -authenticationKeyID "$API_KEY_ID" \
             -authenticationKeyIssuerID "$API_ISSUER_ID" \
-            DEVELOPMENT_TEAM=9L6258YNVJ \
-            ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES=YES \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
             archive
 
           echo "✅ Archive completed"
 
-          # Diagnostic: verify SwiftSupport exists
-          ARCHIVE=build/ios/archive/Runner.xcarchive
-          echo "📦 Frameworks/:"
-          ls "$ARCHIVE/Products/Applications/Runner.app/Frameworks/" 2>/dev/null | head -10 || echo "  (empty)"
-          echo "📦 SwiftSupport/:"
-          ls "$ARCHIVE/SwiftSupport/iphoneos/" 2>/dev/null | head -10 || echo "  ⚠️ NOT PRESENT"
+          # ── Step 2: Inject SwiftSupport/ into archive ──────────────
+          # The unsigned archive has no SwiftSupport/. We use
+          # swift-stdlib-tool to scan ONLY the Runner.app binary and
+          # copy the required Swift dylibs into SwiftSupport/.
+          ARCHIVE="build/ios/archive/Runner.xcarchive"
+          APP="$ARCHIVE/Products/Applications/Runner.app"
+          SWIFT_SUPPORT="$ARCHIVE/SwiftSupport/iphoneos"
+          TOOLCHAIN="$(xcode-select -p)/Toolchains/XcodeDefault.xctoolchain"
 
-          # ── Export IPA ─────────────────────────────────────────────
+          echo "📦 Frameworks/ in app:"
+          ls "$APP/Frameworks/" 2>/dev/null | head -20 || echo "  (empty)"
+
+          # Create SwiftSupport using swift-stdlib-tool
+          mkdir -p "$SWIFT_SUPPORT"
+          xcrun swift-stdlib-tool \
+            --copy \
+            --scan-executable "$APP/Runner" \
+            --scan-folder "$APP/Frameworks" \
+            --platform iphoneos \
+            --toolchain "$TOOLCHAIN" \
+            --unsigned-destination "$SWIFT_SUPPORT" \
+            --filter-for-swift-os \
+            --back-deploy-swift-concurrency \
+            --back-deploy-swift-span 2>&1 || true
+
+          echo "📦 SwiftSupport/ after injection:"
+          ls "$SWIFT_SUPPORT/" 2>/dev/null || echo "  (empty — no backport dylibs needed)"
+
+          # If SwiftSupport/ is empty (iOS 16+, no backport needed),
+          # copy the compatibility span dylib as minimum content
+          if [ -z "$(ls -A "$SWIFT_SUPPORT" 2>/dev/null)" ]; then
+            echo "ℹ️ SwiftSupport empty — adding compatibility dylib..."
+            COMPAT="$TOOLCHAIN/usr/lib/swift-6.2/iphoneos/libswiftCompatibilitySpan.dylib"
+            if [ -f "$COMPAT" ]; then
+              cp "$COMPAT" "$SWIFT_SUPPORT/"
+              echo "✅ Added libswiftCompatibilitySpan.dylib"
+            else
+              echo "⚠️ No compatibility dylib found"
+              ls "$TOOLCHAIN/usr/lib/swift-6.2/iphoneos/" 2>/dev/null || true
+              ls "$TOOLCHAIN/usr/lib/swift/iphoneos/" 2>/dev/null || true
+            fi
+          fi
+
+          echo "📦 Final SwiftSupport/:"
+          ls -la "$SWIFT_SUPPORT/" 2>/dev/null || echo "  STILL EMPTY"
+
+          # ── Step 3: Export IPA ─────────────────────────────────────
           xcodebuild -exportArchive \
             -archivePath build/ios/archive/Runner.xcarchive \
             -exportOptionsPlist ios/ExportOptions.plist \
@@ -196,7 +228,13 @@ jobs:
             -authenticationKeyIssuerID "$API_ISSUER_ID"
 
           echo "✅ IPA exported successfully"
-          ls -la build/ios/ipa/*.ipa 2>/dev/null || echo "⚠️ No IPA found"
+
+          # Verify IPA contains SwiftSupport
+          IPA=$(ls build/ios/ipa/*.ipa 2>/dev/null | head -1)
+          if [ -n "$IPA" ]; then
+            echo "📦 IPA SwiftSupport contents:"
+            unzip -l "$IPA" | grep -i "SwiftSupport" | head -10 || echo "  ⚠️ NOT in IPA"
+          fi
 
       - name: 📤 Upload IPA (artifact backup)
         uses: actions/upload-artifact@v4
