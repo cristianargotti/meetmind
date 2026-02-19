@@ -152,12 +152,8 @@ jobs:
           </plist>
           PLIST
 
-          # ── CRITICAL: Clean DerivedData ──────────────────────────
-          # flutter build ios --no-codesign caches build artifacts with
-          # CODE_SIGNING_ALLOWED=NO. If xcodebuild archive reuses them,
-          # SwiftSupport/ won't be created. Force a clean rebuild.
-          echo "🧹 Cleaning DerivedData to purge unsigned cache..."
-          rm -rf ~/Library/Developer/Xcode/DerivedData/Runner-*
+          # Keep DerivedData from flutter build (compiled objects).
+          # Only clean previous archive output.
           rm -rf build/ios/archive
 
           echo "📋 Available signing identities:"
