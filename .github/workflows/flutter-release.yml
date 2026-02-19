@@ -145,8 +145,13 @@ jobs:
           </dict>
           </plist>
           PLIST
+          # ── Archive WITH signing ──────────────────────────────
+          # Signing must be enabled so Xcode embeds Swift stdlib
+          # in Frameworks/ (fixes ITMS-90429). API key auth lets
+          # xcodebuild auto-download provisioning profiles.
+          echo "📋 Installed signing identities:"
+          security find-identity -v -p codesigning
 
-          # Archive without signing (GitHub runner lacks provisioning profiles).
           xcodebuild -workspace ios/Runner.xcworkspace \
             -scheme Runner \
             -configuration Release \
@@ -156,39 +161,15 @@ jobs:
             -authenticationKeyPath ~/private_keys/AuthKey_${API_KEY_ID}.p8 \
             -authenticationKeyID "$API_KEY_ID" \
             -authenticationKeyIssuerID "$API_ISSUER_ID" \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO \
             archive
 
-          # ── Fix ITMS-90429: embed Swift runtime libs ──────────────
-          # When signing is disabled during archive, Xcode skips
-          # embedding Swift stdlib. We copy them manually before export.
-          ARCHIVE=build/ios/archive/Runner.xcarchive
-          APP="$ARCHIVE/Products/Applications/Runner.app"
-          FRAMEWORKS="$APP/Frameworks"
-          mkdir -p "$FRAMEWORKS"
+          echo "✅ Archive completed"
 
-          TOOLCHAIN=$(xcode-select -p)/Toolchains/XcodeDefault.xctoolchain
-          SWIFT_LIBS="$TOOLCHAIN/usr/lib/swift-5.5/iphoneos"
-          # Fallback for newer Xcode versions
-          [ -d "$SWIFT_LIBS" ] || SWIFT_LIBS="$TOOLCHAIN/usr/lib/swift/iphoneos"
+          # Verify Swift libs are in the archive
+          echo "📦 Frameworks in archive:"
+          ls -la build/ios/archive/Runner.xcarchive/Products/Applications/Runner.app/Frameworks/ | head -20 || echo "⚠️ No Frameworks dir found"
 
-          echo "📦 Swift libs source: $SWIFT_LIBS"
-          echo "📦 Target Frameworks: $FRAMEWORKS"
-
-          # Copy Swift concurrency and related libs if missing
-          for lib in libswift_Concurrency.dylib libswiftCore.dylib libswift_StringProcessing.dylib libswift_RegexParser.dylib; do
-            if [ -f "$SWIFT_LIBS/$lib" ] && [ ! -f "$FRAMEWORKS/$lib" ]; then
-              cp "$SWIFT_LIBS/$lib" "$FRAMEWORKS/"
-              echo "  ✅ Copied $lib"
-            fi
-          done
-
-          echo "📦 Frameworks dir contents:"
-          ls -la "$FRAMEWORKS/" | head -20
-
-          # Export IPA (signing + provisioning happens here)
+          # Export IPA (re-signing + upload)
           xcodebuild -exportArchive \
             -archivePath build/ios/archive/Runner.xcarchive \
             -exportOptionsPlist ios/ExportOptions.plist \
