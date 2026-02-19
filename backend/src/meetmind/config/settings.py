@@ -34,9 +34,6 @@ class Settings(BaseSettings):
     openai_copilot_model: str = "llama-3.3-70b-versatile"
     openai_deep_model: str = "llama-3.3-70b-versatile"
 
-    # Deepgram (cloud STT fallback)
-    deepgram_api_key: str = ""
-
     # Screening
     screening_interval_seconds: int = 5
 
@@ -56,29 +53,6 @@ class Settings(BaseSettings):
     apple_team_id: str = ""
     apple_bundle_id: str = "com.meetmind.meetmind"
     apple_service_id: str = ""  # For web Sign in with Apple
-
-    # STT Engine selection ("parakeet", "moonshine", "whisper", or "qwen")
-    stt_engine: str = "parakeet"
-
-    # Moonshine Voice (real-time streaming, ONNX-based, no GPU needed)
-    moonshine_language: str = "es"
-
-    # Qwen3-ASR (primary STT — lightweight, 52 languages)
-    qwen_asr_model: str = "Qwen/Qwen3-ASR-0.6B"
-
-    # NVIDIA Parakeet TDT via onnx-asr (primary — 25 languages, 30x real-time CPU)
-    parakeet_model: str = "nemo-parakeet-tdt-0.6b-v3"
-    parakeet_quantization: str = "int8"
-
-    # Whisper STT (legacy fallback)
-    whisper_model: str = "small"
-    whisper_language: str = "es"
-    stt_mode: str = "streaming"  # "streaming" (real-time) or "chunked" (legacy)
-
-    # Speaker Diarization (pyannote)
-    enable_diarization: bool = True
-    diarization_model: str = "pyannote/speaker-diarization-3.1"
-    huggingface_token: str = ""
 
     # Server
     host: str = "0.0.0.0"

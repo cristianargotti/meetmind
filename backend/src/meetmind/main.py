@@ -22,7 +22,7 @@ if _sentry_dsn:
         send_default_pii=False,
         enable_tracing=True,
     )
-from fastapi import Depends, FastAPI, HTTPException, Request, WebSocket
+from fastapi import Depends, FastAPI, HTTPException, Request
 from pydantic import BaseModel, EmailStr, field_validator
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -32,7 +32,7 @@ from starlette.middleware.cors import CORSMiddleware
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator
 
-from meetmind.api.websocket import manager, websocket_transcription
+from meetmind.api.meeting_api import meeting_manager
 from meetmind.config.logging import setup_logging
 from meetmind.config.settings import settings
 from meetmind.core import storage
@@ -124,7 +124,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     # Initialize AI agents (graceful fallback if no credentials)
     try:
-        manager.init_agents()
+        meeting_manager.init_agents()
         logger.info("ai_agents_ready")
     except Exception as e:
         logger.warning("ai_agents_failed", error=str(e))
@@ -671,16 +671,102 @@ async def get_stats(
     return await storage.get_stats(user_id=current_user["user_id"])
 
 
-# ─── WebSocket ───────────────────────────────────────────────────
+# ─── Meeting AI (REST — replaces WebSocket) ─────────────────────
 
 
-@app.websocket("/ws/transcription")
-async def ws_transcription(websocket: WebSocket) -> None:
-    """WebSocket endpoint for real-time meeting transcription."""
-    await websocket_transcription(websocket)
+class TranscriptRequest(BaseModel):
+    """Transcript ingestion request."""
+
+    segments: list[dict[str, Any]]
+    language: str = "es"
 
 
-@app.websocket("/ws")
-async def ws_alias(websocket: WebSocket) -> None:
-    """WebSocket alias for Chrome Extension compatibility."""
-    await websocket_transcription(websocket)
+class CopilotRequest(BaseModel):
+    """Copilot question request."""
+
+    question: str
+    transcript_context: str
+
+
+class SummaryRequest(BaseModel):
+    """Summary generation request."""
+
+    full_transcript: str
+    language: str = "es"
+
+
+@app.post("/api/meetings/{meeting_id}/transcript")
+@limiter.limit("30/minute")
+async def ingest_transcript(
+    request: Request,
+    meeting_id: str,
+    body: TranscriptRequest,
+    current_user: dict[str, Any] = _auth_dep,
+) -> dict[str, Any]:
+    """Ingest transcript segments and trigger AI screening.
+
+    Called periodically by the client with on-device STT results.
+
+    Args:
+        meeting_id: The meeting to add transcript to.
+        body: Transcript segments and language.
+        current_user: Injected by auth dependency.
+
+    Returns:
+        Screening/analysis results if triggered.
+    """
+    return await meeting_manager.ingest_transcript(
+        meeting_id=meeting_id,
+        segments=body.segments,
+        language=body.language,
+    )
+
+
+@app.post("/api/meetings/{meeting_id}/copilot")
+@limiter.limit("10/minute")
+async def copilot_query(
+    request: Request,
+    meeting_id: str,
+    body: CopilotRequest,
+    current_user: dict[str, Any] = _auth_dep,
+) -> dict[str, Any]:
+    """Ask the AI copilot a question about the meeting.
+
+    Args:
+        meeting_id: The meeting for cost tracking.
+        body: Question and transcript context.
+        current_user: Injected by auth dependency.
+
+    Returns:
+        AI answer with metadata.
+    """
+    return await meeting_manager.run_copilot(
+        meeting_id=meeting_id,
+        question=body.question,
+        transcript_context=body.transcript_context,
+    )
+
+
+@app.post("/api/meetings/{meeting_id}/summary")
+@limiter.limit("5/minute")
+async def generate_summary(
+    request: Request,
+    meeting_id: str,
+    body: SummaryRequest,
+    current_user: dict[str, Any] = _auth_dep,
+) -> dict[str, Any]:
+    """Generate a post-meeting summary.
+
+    Args:
+        meeting_id: The meeting to summarize.
+        body: Full transcript and language.
+        current_user: Injected by auth dependency.
+
+    Returns:
+        Summary with key points, action items, and decisions.
+    """
+    return await meeting_manager.run_summary(
+        meeting_id=meeting_id,
+        full_transcript=body.full_transcript,
+        language=body.language,
+    )
