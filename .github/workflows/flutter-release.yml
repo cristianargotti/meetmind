@@ -121,13 +121,7 @@ jobs:
           echo "$API_KEY" > ~/private_keys/AuthKey_${API_KEY_ID}.p8
           echo "✅ Certificate + API key installed"
 
-      - name: 🏗️ Build & Archive
-        run: |
-          flutter build ios --release --no-codesign \
-            --dart-define=REVENUECAT_IOS_KEY=${{ secrets.REVENUECAT_IOS_KEY }} \
-            --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN }}
-
-      - name: 📦 Archive & Export IPA
+      - name: 🏗️ Build IPA
         env:
           API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
@@ -152,46 +146,21 @@ jobs:
           </plist>
           PLIST
 
-          # ── Archive WITH signing ───────────────────────────────
-          # CODE_SIGNING_ALLOWED=NO was the root cause of ALL
-          # ITMS-904xx errors — Xcode won't create SwiftSupport/
-          # without signing. We have the distribution certificate
-          # installed + API key for automatic provisioning.
           echo "📋 Available signing identities:"
           security find-identity -v -p codesigning | head -5
 
-          xcodebuild -workspace ios/Runner.xcworkspace \
-            -scheme Runner \
-            -configuration Release \
-            -archivePath build/ios/archive/Runner.xcarchive \
-            -destination 'generic/platform=iOS' \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath ~/private_keys/AuthKey_${API_KEY_ID}.p8 \
-            -authenticationKeyID "$API_KEY_ID" \
-            -authenticationKeyIssuerID "$API_ISSUER_ID" \
-            DEVELOPMENT_TEAM=9L6258YNVJ \
-            archive
+          # ── Single-command build → archive → sign → export ─────
+          # flutter build ipa handles the ENTIRE pipeline atomically.
+          # This avoids the bug where separate "flutter build ios --no-codesign"
+          # + "xcodebuild archive" left SwiftSupport/ empty because the
+          # first step cached unsigned artifacts.
+          flutter build ipa --release \
+            --export-options-plist=ios/ExportOptions.plist \
+            --dart-define=REVENUECAT_IOS_KEY=${{ secrets.REVENUECAT_IOS_KEY }} \
+            --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN }}
 
-          echo "✅ Archive completed"
-
-          # Diagnostic: show archive contents
-          ARCHIVE=build/ios/archive/Runner.xcarchive
-          echo "📦 Frameworks/:"
-          ls "$ARCHIVE/Products/Applications/Runner.app/Frameworks/" 2>/dev/null | head -10 || echo "  (empty)"
-          echo "📦 SwiftSupport/:"
-          ls "$ARCHIVE/SwiftSupport/iphoneos/" 2>/dev/null | head -10 || echo "  (not present)"
-
-          # ── Step 2: Export IPA ─────────────────────────────────
-          xcodebuild -exportArchive \
-            -archivePath build/ios/archive/Runner.xcarchive \
-            -exportOptionsPlist ios/ExportOptions.plist \
-            -exportPath build/ios/ipa \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath ~/private_keys/AuthKey_${API_KEY_ID}.p8 \
-            -authenticationKeyID "$API_KEY_ID" \
-            -authenticationKeyIssuerID "$API_ISSUER_ID"
-
-          echo "✅ IPA exported successfully"
+          echo "✅ IPA built successfully"
+          ls -la build/ios/ipa/*.ipa 2>/dev/null || echo "⚠️ IPA not found in default path"
 
       - name: 📤 Upload IPA (artifact backup)
         uses: actions/upload-artifact@v4
