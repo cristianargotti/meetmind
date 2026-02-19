@@ -121,9 +121,26 @@ class MeetingNotifier extends StateNotifier<MeetingSession?> {
     // Flush remaining transcripts
     await _flushTranscripts();
 
+    final DateTime endTime = DateTime.now();
+    final int durationSecs = endTime.difference(state!.startTime).inSeconds;
+
+    // Persist meeting end to backend
+    try {
+      final MeetingApiService api = _ref.read(meetingApiProvider);
+      await api.endMeeting(
+        meetingId: state!.id,
+        title: state!.title,
+        durationSecs: durationSecs,
+      );
+      debugPrint('[MeetingNotifier] Meeting ended on backend');
+    } catch (e) {
+      debugPrint('[MeetingNotifier] End meeting API failed: $e');
+      // Non-critical — local state still updates
+    }
+
     state = state!.copyWith(
       status: MeetingStatus.stopped,
-      endTime: DateTime.now(),
+      endTime: endTime,
     );
 
     // Track meeting usage for free-tier limits

@@ -719,6 +719,7 @@ async def ingest_transcript(
         meeting_id=meeting_id,
         segments=body.segments,
         language=body.language,
+        user_id=current_user.get("user_id"),
     )
 
 

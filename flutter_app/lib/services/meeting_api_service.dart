@@ -106,6 +106,36 @@ class MeetingApiService {
     return await _get('/api/stats');
   }
 
+  /// End a meeting and finalize its metadata on the backend.
+  ///
+  /// Returns final meeting data with stats.
+  Future<Map<String, dynamic>> endMeeting({
+    required String meetingId,
+    String? title,
+    int? durationSecs,
+  }) async {
+    final Map<String, dynamic> body = <String, dynamic>{};
+    final List<String> queryParams = <String>[];
+    if (title != null) queryParams.add('title=${Uri.encodeComponent(title)}');
+    if (durationSecs != null) queryParams.add('duration_secs=$durationSecs');
+    final String queryString =
+        queryParams.isNotEmpty ? '?${queryParams.join('&')}' : '';
+
+    final uri =
+        Uri.parse('$_baseUrl/api/meetings/$meetingId/end$queryString');
+    final response = await _client
+        .post(uri, headers: _headers, body: jsonEncode(body))
+        .timeout(const Duration(seconds: 15));
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    }
+    throw ApiException(
+      'POST /api/meetings/$meetingId/end failed',
+      response.statusCode,
+    );
+  }
+
   // ─── AI Features (REST replaces WebSocket) ────────────────────
 
   /// Send transcript segments to backend for AI screening.

@@ -193,6 +193,7 @@ async def create_meeting(
             """
             INSERT INTO meetings (id, language, status, user_id)
             VALUES ($1, $2, 'active', $3)
+            ON CONFLICT (id) DO NOTHING
             RETURNING *
             """,
             meeting_id,

@@ -204,6 +204,7 @@ class HomeScreen extends ConsumerWidget {
                           label: l10n.homeToday,
                           value: todayCount,
                           color: MeetMindTheme.accent,
+                          onTap: () => context.push('/history'),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -213,6 +214,9 @@ class HomeScreen extends ConsumerWidget {
                           label: l10n.homeInsights,
                           value: insightCount,
                           color: MeetMindTheme.success,
+                          onTap: meeting != null
+                              ? () => context.push('/meeting')
+                              : null,
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -222,6 +226,7 @@ class HomeScreen extends ConsumerWidget {
                           label: l10n.homeActions,
                           value: actionCount,
                           color: MeetMindTheme.warning,
+                          onTap: () => context.push('/history'),
                         ),
                       ),
                     ]
@@ -538,36 +543,42 @@ class _StatCard extends StatelessWidget {
     required this.label,
     required this.value,
     required this.color,
+    this.onTap,
   });
 
   final IconData icon;
   final String label;
   final String value;
   final Color color;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Icon(icon, color: color, size: 24),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.w700,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              Icon(icon, color: color, size: 24),
+              const SizedBox(height: 8),
+              Text(
+                value,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: const TextStyle(color: Colors.white54, fontSize: 12),
-            ),
-          ],
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: const TextStyle(color: Colors.white54, fontSize: 12),
+              ),
+            ],
+          ),
         ),
       ),
     );

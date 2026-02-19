@@ -67,16 +67,18 @@ class MeetingManager:
         """Check if AI agents are initialized."""
         return self._screening_agent is not None
 
-    def get_or_create_session(
+    async def get_or_create_session(
         self,
         meeting_id: str,
         language: str = "es",
+        user_id: str | None = None,
     ) -> None:
-        """Ensure a meeting session exists.
+        """Ensure a meeting session exists (in-memory + DB).
 
         Args:
             meeting_id: The unique meeting identifier.
             language: Language code (e.g. 'es', 'en').
+            user_id: Owner's user ID for DB persistence.
         """
         if meeting_id not in self._transcripts:
             transcript = TranscriptManager(
@@ -96,6 +98,21 @@ class MeetingManager:
             }
             self._languages[meeting_id] = lang_map.get(language, language)
 
+            # Persist meeting to DB (idempotent — ignores if exists)
+            try:
+                await storage.create_meeting(
+                    meeting_id=meeting_id,
+                    language=language,
+                    user_id=user_id,
+                )
+            except Exception as e:
+                # Meeting may already exist — that's fine
+                logger.debug(
+                    "meeting_create_skipped",
+                    meeting_id=meeting_id,
+                    reason=str(e),
+                )
+
     def cleanup_session(self, meeting_id: str) -> None:
         """Remove session state for a completed meeting.
 
@@ -111,6 +128,7 @@ class MeetingManager:
         meeting_id: str,
         segments: list[dict[str, Any]],
         language: str = "es",
+        user_id: str | None = None,
     ) -> dict[str, Any]:
         """Ingest transcript segments and run screening if needed.
 
@@ -118,11 +136,12 @@ class MeetingManager:
             meeting_id: The meeting ID to add segments to.
             segments: List of {text, speaker} dicts from the client.
             language: Language code for AI responses.
+            user_id: Owner's user ID for DB persistence.
 
         Returns:
             Dict with screening/analysis results (if triggered).
         """
-        self.get_or_create_session(meeting_id, language)
+        await self.get_or_create_session(meeting_id, language, user_id=user_id)
         transcript = self._transcripts[meeting_id]
         tracker = self._cost_trackers.get(meeting_id)
         lang = self._languages.get(meeting_id, "español")
