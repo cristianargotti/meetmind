@@ -172,10 +172,9 @@ class SpeechAnalyzerPlugin: NSObject {
             let recordingFormat = inputNode.outputFormat(forBus: 0)
 
             let speechLocale = Locale(identifier: locale)
-            let transcriber = SpeechTranscriber(locale: speechLocale)
+            let transcriber = SpeechTranscriber(preset: .default, locale: speechLocale)
 
-            let analyzer = SpeechAnalyzer()
-            analyzer.add(transcriber)
+            let analyzer = SpeechAnalyzer(modules: [transcriber])
 
             inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) {
                 [weak analyzer] buffer, when in
