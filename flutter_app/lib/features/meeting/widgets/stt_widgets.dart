@@ -2,25 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import 'package:meetmind/config/theme.dart';
-import 'package:meetmind/services/whisper_stt_service.dart';
+import 'package:meetmind/services/stt_service.dart';
 
-/// STT model status badge shown in the app bar.
+/// STT status badge shown in the app bar.
 class SttBadge extends StatelessWidget {
   const SttBadge({required this.status, super.key});
 
-  final WhisperModelStatus status;
+  final SttModelStatus status;
 
   @override
   Widget build(BuildContext context) {
     final (Color color, String label, IconData icon) = switch (status) {
-      WhisperModelStatus.unloaded => (Colors.white24, 'STT OFF', Icons.mic_off),
-      WhisperModelStatus.loading => (
-          MeetMindTheme.warning,
-          'Loading',
-          Icons.download,
-        ),
-      WhisperModelStatus.loaded => (MeetMindTheme.success, 'STT ON', Icons.mic),
-      WhisperModelStatus.error => (
+      SttModelStatus.unloaded => (Colors.white24, 'STT OFF', Icons.mic_off),
+      SttModelStatus.ready => (MeetMindTheme.success, 'STT ON', Icons.mic),
+      SttModelStatus.error => (
           MeetMindTheme.error,
           'Error',
           Icons.error_outline,
@@ -200,10 +195,17 @@ class LanguageSelector extends StatelessWidget {
   final ValueChanged<String> onChanged;
 
   static const List<({String code, String label, String flag})> languages = [
-    (code: 'auto', label: 'Auto', flag: '🌐'),
+    (code: 'auto', label: 'Auto-detect', flag: '🌐'),
     (code: 'es', label: 'Español', flag: '🇨🇴'),
-    (code: 'pt', label: 'Português', flag: '🇧🇷'),
     (code: 'en', label: 'English', flag: '🇺🇸'),
+    (code: 'pt', label: 'Português', flag: '🇧🇷'),
+    (code: 'fr', label: 'Français', flag: '🇫🇷'),
+    (code: 'de', label: 'Deutsch', flag: '🇩🇪'),
+    (code: 'it', label: 'Italiano', flag: '🇮🇹'),
+    (code: 'ja', label: '日本語', flag: '🇯🇵'),
+    (code: 'ko', label: '한국어', flag: '🇰🇷'),
+    (code: 'zh', label: '中文', flag: '🇨🇳'),
+    (code: 'ru', label: 'Русский', flag: '🇷🇺'),
   ];
 
   @override

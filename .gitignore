@@ -72,3 +72,4 @@ infra/*.tfvars
 infra/**/*.tfvars
 infra/**/.terraform/
 infra/**/*.tfstate*
+flutter_app/native/build-sim/

@@ -64,6 +64,8 @@
 
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Aura Meet needs microphone access to transcribe meeting audio in real-time.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Aura Meet uses on-device speech recognition to transcribe your meetings in real-time. Your audio is processed locally and never sent to external servers.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

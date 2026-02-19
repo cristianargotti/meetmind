@@ -8,13 +8,11 @@ terraform {
     }
   }
 
-  # TODO: Enable remote state after creating S3 bucket
-  # backend "s3" {
-  #   bucket  = "meetmind-terraform-state"
-  #   key     = "meetmind/terraform.tfstate"
-  #   region  = "us-east-1"
-  #   profile = "mibaggy-co"
-  # }
+  backend "s3" {
+    bucket = "meetmind-terraform-state"
+    key    = "meetmind/terraform.tfstate"
+    region = "us-east-1"
+  }
 }
 
 provider "aws" {

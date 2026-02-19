@@ -93,9 +93,12 @@ class AuthService {
           // Profile fetch failed — keep cached user data
         }
 
-        // Identify in RevenueCat
+        // Identify in RevenueCat + check for override accounts
         if (_user != null && _user!['id'] != null) {
           await SubscriptionService.instance.logIn(_user!['id'].toString());
+          SubscriptionService.instance.grantProOverride(
+            _user!['email'] as String?,
+          );
         }
       } catch (_) {
         // Refresh failed — clear everything
@@ -132,9 +135,12 @@ class AuthService {
 
     await _persistTokens();
 
-    // Identify in RevenueCat
+    // Identify in RevenueCat + check for override accounts
     if (_user != null && _user!['id'] != null) {
       await SubscriptionService.instance.logIn(_user!['id'].toString());
+      SubscriptionService.instance.grantProOverride(
+        _user!['email'] as String?,
+      );
     }
 
     return _user!;
@@ -169,9 +175,12 @@ class AuthService {
     _user = data['user'] as Map<String, dynamic>;
     await _persistTokens();
 
-    // Identify in RevenueCat
+    // Identify in RevenueCat + check for override accounts
     if (_user != null && _user!['id'] != null) {
       await SubscriptionService.instance.logIn(_user!['id'].toString());
+      SubscriptionService.instance.grantProOverride(
+        _user!['email'] as String?,
+      );
     }
 
     return _user!;
@@ -198,9 +207,12 @@ class AuthService {
     _user = data['user'] as Map<String, dynamic>;
     await _persistTokens();
 
-    // Identify in RevenueCat
+    // Identify in RevenueCat + check for override accounts
     if (_user != null && _user!['id'] != null) {
       await SubscriptionService.instance.logIn(_user!['id'].toString());
+      SubscriptionService.instance.grantProOverride(
+        _user!['email'] as String?,
+      );
     }
 
     return _user!;

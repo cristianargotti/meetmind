@@ -153,7 +153,7 @@ class HomeScreen extends ConsumerWidget {
                 ],
               ).animate().fadeIn(duration: 400.ms).slideX(begin: -0.05),
 
-              const SizedBox(height: 40),
+              const SizedBox(height: 24),
 
               // Quick Start Card — tappable to start meeting
               GestureDetector(
@@ -177,7 +177,7 @@ class HomeScreen extends ConsumerWidget {
               // Free tier usage banner
               const FreeLimitBanner(),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
 
               // Stats Row — derive from current session
               Builder(
@@ -232,7 +232,7 @@ class HomeScreen extends ConsumerWidget {
                 },
               ),
 
-              const SizedBox(height: 32),
+              const SizedBox(height: 20),
 
               // Recent Meetings Header
               Text(
@@ -399,6 +399,7 @@ class HomeScreen extends ConsumerWidget {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(16),

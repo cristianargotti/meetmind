@@ -3,7 +3,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:meetmind/config/theme.dart';
 import 'package:meetmind/features/meeting/widgets/copilot_panel.dart';
 import 'package:meetmind/features/meeting/widgets/input_bar.dart';
 import 'package:meetmind/features/meeting/widgets/insight_widgets.dart';
@@ -12,7 +11,7 @@ import 'package:meetmind/features/meeting/widgets/summary_panel.dart';
 import 'package:meetmind/features/meeting/widgets/transcript_widgets.dart';
 import 'package:meetmind/models/meeting_models.dart';
 import 'package:meetmind/providers/meeting_provider.dart';
-import 'package:meetmind/services/whisper_stt_service.dart';
+import 'package:meetmind/services/stt_service.dart';
 
 /// Active meeting screen — real-time transcription + AI insights.
 class MeetingScreen extends ConsumerStatefulWidget {
@@ -55,10 +54,7 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
   @override
   Widget build(BuildContext context) {
     final MeetingSession? meeting = ref.watch(meetingProvider);
-    final ConnectionStatus connectionStatus = ref.watch(
-      connectionStatusProvider,
-    );
-    final WhisperModelStatus sttStatus = ref.watch(sttStatusProvider);
+    final SttModelStatus sttStatus = ref.watch(sttStatusProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -69,8 +65,6 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
         ),
         actions: [
           SttBadge(status: sttStatus),
-          const SizedBox(width: 4),
-          _ConnectionBadge(status: connectionStatus),
           const SizedBox(width: 8),
           if (meeting != null)
             Padding(
@@ -267,63 +261,6 @@ class _TranscriptTab extends StatelessWidget {
           onToggleRecording: onToggleRecording,
         ),
       ],
-    );
-  }
-}
-
-/// Connection status badge.
-class _ConnectionBadge extends ConsumerWidget {
-  const _ConnectionBadge({required this.status});
-
-  final ConnectionStatus status;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final Color color;
-    final String label;
-    final IconData icon;
-
-    switch (status) {
-      case ConnectionStatus.connected:
-        color = MeetMindTheme.success;
-        label = 'Live';
-        icon = Icons.wifi;
-      case ConnectionStatus.connecting:
-        color = MeetMindTheme.warning;
-        label = 'Connecting';
-        icon = Icons.sync;
-      case ConnectionStatus.disconnected:
-        color = Colors.white38;
-        label = 'Offline';
-        icon = Icons.wifi_off;
-      case ConnectionStatus.error:
-        color = MeetMindTheme.error;
-        label = 'Error';
-        icon = Icons.error_outline;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 12, color: color),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: color,
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

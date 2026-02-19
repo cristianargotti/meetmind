@@ -126,7 +126,13 @@ class SubscriptionService {
   static const _weekStartKey = 'meeting_week_start';
   static const _weekCountKey = 'meeting_week_count';
 
+  /// Emails that automatically receive Pro access (Apple App Review, QA, etc.).
+  static const _overrideProEmails = {
+    'review@aurameet.live',
+  };
+
   bool _initialized = false;
+  bool _configured = false;
   SubscriptionState _state = const SubscriptionState();
   final _stateController = StreamController<SubscriptionState>.broadcast();
 
@@ -148,6 +154,7 @@ class SubscriptionService {
         _updateState(_state.copyWith(tier: SubscriptionTier.free));
         await _loadWeeklyUsage();
         _initialized = true;
+        _configured = false;
         return;
       }
 
@@ -163,6 +170,7 @@ class SubscriptionService {
       await _loadWeeklyUsage();
 
       _initialized = true;
+      _configured = true;
       debugPrint('✅ RevenueCat initialized');
     } catch (e) {
       debugPrint('⚠️ RevenueCat init failed: $e');
@@ -171,8 +179,26 @@ class SubscriptionService {
     }
   }
 
+  /// Grant Pro access for override accounts (Apple Review, QA).
+  ///
+  /// Call after authentication with the user's email.
+  /// Returns `true` if the email matched an override account.
+  bool grantProOverride(String? email) {
+    if (email == null) return false;
+    if (_overrideProEmails.contains(email.toLowerCase())) {
+      debugPrint('🔓 Pro override granted for $email');
+      _updateState(_state.copyWith(
+        tier: SubscriptionTier.pro,
+        isActive: true,
+      ));
+      return true;
+    }
+    return false;
+  }
+
   /// Refresh entitlements from RevenueCat.
   Future<void> refreshEntitlements() async {
+    if (!_configured) return;
     try {
       final customerInfo = await Purchases.getCustomerInfo();
       _processCustomerInfo(customerInfo);
@@ -183,6 +209,7 @@ class SubscriptionService {
 
   /// Get available packages for purchase.
   Future<List<Package>> getOfferings() async {
+    if (!_configured) return [];
     try {
       final offerings = await Purchases.getOfferings();
       return offerings.current?.availablePackages ?? [];
@@ -194,6 +221,7 @@ class SubscriptionService {
 
   /// Purchase a package.
   Future<bool> purchasePackage(Package package) async {
+    if (!_configured) return false;
     try {
       final customerInfo = await Purchases.purchasePackage(package);
       _processCustomerInfo(customerInfo);
@@ -213,6 +241,7 @@ class SubscriptionService {
 
   /// Restore previous purchases.
   Future<bool> restorePurchases() async {
+    if (!_configured) return false;
     try {
       final customerInfo = await Purchases.restorePurchases();
       _processCustomerInfo(customerInfo);
@@ -246,6 +275,7 @@ class SubscriptionService {
 
   /// Identify user (call after authentication).
   Future<void> logIn(String userId) async {
+    if (!_configured) return;
     try {
       final customerInfo = await Purchases.logIn(userId);
       _processCustomerInfo(customerInfo.customerInfo);
@@ -256,6 +286,7 @@ class SubscriptionService {
 
   /// Reset user identity (call on logout).
   Future<void> logOut() async {
+    if (!_configured) return;
     try {
       final customerInfo = await Purchases.logOut();
       _processCustomerInfo(customerInfo);

@@ -1,57 +1,36 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:meetmind/config/app_config.dart';
 import 'package:meetmind/models/meeting_models.dart';
-import 'package:meetmind/services/audio_service.dart';
-import 'package:meetmind/services/model_manager.dart';
+import 'package:meetmind/services/meeting_api_service.dart';
 import 'package:meetmind/services/notification_service.dart';
 import 'package:meetmind/services/permission_service.dart';
+import 'package:meetmind/services/stt_service.dart';
 import 'package:meetmind/services/subscription_service.dart';
 import 'package:meetmind/services/user_preferences.dart';
-import 'package:meetmind/services/websocket_service.dart';
-import 'package:meetmind/services/whisper_stt_service.dart';
 import 'package:uuid/uuid.dart';
 
-/// Provider for the WebSocket service (singleton).
-final Provider<WebSocketService> webSocketProvider = Provider<WebSocketService>(
-  (Ref ref) {
-    final WebSocketService service = WebSocketService();
-    ref.onDispose(service.dispose);
-    return service;
-  },
-);
-
-/// Provider for the audio service (singleton).
-final Provider<AudioService> audioProvider = Provider<AudioService>((Ref ref) {
-  final AudioService service = AudioService();
+/// Provider for the meeting REST API service (singleton).
+final Provider<MeetingApiService> meetingApiProvider =
+    Provider<MeetingApiService>((Ref ref) {
+  final MeetingApiService service = MeetingApiService();
   ref.onDispose(service.dispose);
   return service;
 });
 
-/// Provider for the Whisper STT service (singleton).
-final Provider<WhisperSttService> whisperProvider = Provider<WhisperSttService>(
-  (Ref ref) {
-    final WhisperSttService service = WhisperSttService();
-    ref.onDispose(service.dispose);
-    return service;
-  },
-);
-
-/// Provider for the model manager.
-final Provider<ModelManager> modelManagerProvider = Provider<ModelManager>(
-  (Ref ref) => ModelManager(),
+/// Provider for the STT service (singleton — Apple native speech).
+final Provider<SttService> sttProvider = Provider<SttService>(
+  (Ref ref) => SttService.instance,
 );
 
 /// Provider for the permission service.
 final Provider<PermissionService> permissionProvider =
     Provider<PermissionService>((Ref ref) => const PermissionService());
 
-/// Provider for STT model status.
-final StateProvider<WhisperModelStatus> sttStatusProvider =
-    StateProvider<WhisperModelStatus>((Ref ref) => WhisperModelStatus.unloaded);
+/// Provider for STT status.
+final StateProvider<SttModelStatus> sttStatusProvider =
+    StateProvider<SttModelStatus>((Ref ref) => SttModelStatus.unloaded);
 
 /// Provider for the current meeting session.
 final StateNotifierProvider<MeetingNotifier, MeetingSession?> meetingProvider =
@@ -59,31 +38,20 @@ final StateNotifierProvider<MeetingNotifier, MeetingSession?> meetingProvider =
   return MeetingNotifier(ref);
 });
 
-/// Provider for connection status.
-final StateProvider<ConnectionStatus> connectionStatusProvider =
-    StateProvider<ConnectionStatus>((Ref ref) {
-  return ConnectionStatus.disconnected;
-});
-
-/// Provider for whether AI agents are available on the backend.
-final StateProvider<bool> agentsReadyProvider = StateProvider<bool>((Ref ref) {
-  return false;
-});
-
-/// Meeting session state manager.
+/// Meeting session state manager — Apple STT + REST API.
+///
+/// Speech is transcribed on-device by Apple's native SFSpeechRecognizer.
+/// Transcript text is sent to the backend REST API for AI features.
 class MeetingNotifier extends StateNotifier<MeetingSession?> {
   MeetingNotifier(this._ref) : super(null);
 
   final Ref _ref;
-  StreamSubscription<Map<String, Object?>>? _messageSub;
-  StreamSubscription<List<int>>? _audioSub;
-  StreamSubscription<WhisperTranscript>? _sttSub;
+  StreamSubscription<SttTranscript>? _sttSub;
   Timer? _durationTimer;
+  Timer? _transcriptBatchTimer;
 
-  // Audio accumulation buffer for STT
-  final List<int> _audioBuffer = [];
-  static const int _sttChunkSamples =
-      1600; // 100ms at 16kHz (real-time streaming)
+  // Buffer transcript segments for batched REST calls
+  final List<Map<String, String>> _pendingSegments = [];
 
   /// Start a new meeting session.
   Future<void> startMeeting({String title = 'New Meeting'}) async {
@@ -97,28 +65,6 @@ class MeetingNotifier extends StateNotifier<MeetingSession?> {
       throw MeetingException('Microphone permission ${permResult.name}');
     }
 
-    final WebSocketService ws = _ref.read(webSocketProvider);
-
-    // Connect to backend
-    _ref.read(connectionStatusProvider.notifier).state =
-        ConnectionStatus.connecting;
-
-    try {
-      // Include user's transcription language preference in WS URL
-      final langCode = UserPreferences.instance.transcriptionLanguage.code;
-      final baseWsUrl = _ref.read(appConfigProvider).wsUrl;
-      final wsUrlWithLang = '$baseWsUrl?lang=$langCode';
-      await ws.connect(wsUrl: wsUrlWithLang);
-      _ref.read(connectionStatusProvider.notifier).state =
-          ConnectionStatus.connected;
-      // Server-side STT — mark as loading until backend confirms model is ready
-      _ref.read(sttStatusProvider.notifier).state = WhisperModelStatus.loading;
-    } catch (e) {
-      _ref.read(connectionStatusProvider.notifier).state =
-          ConnectionStatus.error;
-      rethrow;
-    }
-
     // Create session
     const Uuid uuid = Uuid();
     state = MeetingSession(
@@ -128,14 +74,27 @@ class MeetingNotifier extends StateNotifier<MeetingSession?> {
       status: MeetingStatus.recording,
     );
 
-    // Listen for backend messages
-    _messageSub = ws.messages.listen(_handleMessage);
+    // Start Apple STT — initialize if needed, then listen
+    final SttService stt = _ref.read(sttProvider);
+    if (stt.status == SttModelStatus.unloaded) {
+      final String lang = UserPreferences.instance.transcriptionLanguage.code;
+      await stt.initialize(language: lang == 'auto' ? 'es' : lang);
+    }
 
-    // Start audio capture
-    await _startAudioCapture();
+    if (stt.status == SttModelStatus.ready) {
+      _ref.read(sttStatusProvider.notifier).state = SttModelStatus.ready;
+      _listenToStt();
+    } else {
+      debugPrint(
+        '[MeetingNotifier] STT not available — user can type manually.',
+      );
+    }
 
-    // Listen for STT transcripts
-    _listenToStt();
+    // Batch transcript segments every 5s for REST API
+    _transcriptBatchTimer = Timer.periodic(
+      const Duration(seconds: 5),
+      (_) => _flushTranscripts(),
+    );
 
     // Start duration timer for UI updates
     _durationTimer = Timer.periodic(const Duration(seconds: 1), (_) {
@@ -150,15 +109,17 @@ class MeetingNotifier extends StateNotifier<MeetingSession?> {
     if (state == null) return;
 
     _durationTimer?.cancel();
-    _messageSub?.cancel();
+    _transcriptBatchTimer?.cancel();
     _sttSub?.cancel();
-    await _stopAudioCapture();
 
-    final WebSocketService ws = _ref.read(webSocketProvider);
-    await ws.disconnect();
+    // Stop STT
+    final SttService stt = _ref.read(sttProvider);
+    if (stt.isListening) {
+      stt.stopStream();
+    }
 
-    _ref.read(connectionStatusProvider.notifier).state =
-        ConnectionStatus.disconnected;
+    // Flush remaining transcripts
+    await _flushTranscripts();
 
     state = state!.copyWith(
       status: MeetingStatus.stopped,
@@ -177,8 +138,11 @@ class MeetingNotifier extends StateNotifier<MeetingSession?> {
   Future<void> pauseMeeting() async {
     if (state == null) return;
 
-    final AudioService audio = _ref.read(audioProvider);
-    await audio.pauseRecording();
+    // Pause STT (Apple plugin handles mic directly)
+    final SttService stt = _ref.read(sttProvider);
+    if (stt.isListening) {
+      stt.stopStream();
+    }
 
     state = state!.copyWith(status: MeetingStatus.paused);
   }
@@ -187,214 +151,146 @@ class MeetingNotifier extends StateNotifier<MeetingSession?> {
   Future<void> resumeMeeting() async {
     if (state == null) return;
 
-    final AudioService audio = _ref.read(audioProvider);
-    await audio.resumeRecording();
+    // Resume STT
+    final SttService stt = _ref.read(sttProvider);
+    if (stt.status == SttModelStatus.ready) {
+      stt.startStream();
+    }
 
     state = state!.copyWith(status: MeetingStatus.recording);
   }
 
-  /// Send a transcript chunk to the backend.
+  /// Add a transcript segment locally and queue for backend.
   void addTranscript(String text, {String speaker = 'user'}) {
-    final WebSocketService ws = _ref.read(webSocketProvider);
-    ws.sendTranscript(text, speaker: speaker);
+    if (state == null || text.trim().isEmpty) return;
 
-    // Also add locally for immediate UI feedback
-    if (state != null) {
-      final TranscriptSegment segment = TranscriptSegment(
-        text: text,
-        speaker: speaker,
-        timestamp: DateTime.now(),
-      );
-      state = state!.copyWith(segments: [...state!.segments, segment]);
-    }
-  }
-
-  /// Handle incoming WebSocket messages.
-  void _handleMessage(Map<String, Object?> message) {
-    final String? type = message['type'] as String?;
-
-    switch (type) {
-      case 'connected':
-        final bool agentsReady = message['agents_ready'] as bool? ?? false;
-        _ref.read(agentsReadyProvider.notifier).state = agentsReady;
-        debugPrint('[MeetingNotifier] Connected, agents=$agentsReady');
-
-      case 'transcript_ack':
-        final String? text = message['text'] as String?;
-        final bool isPartial = message['partial'] as bool? ?? false;
-        final String speaker = message['speaker'] as String? ?? 'unknown';
-
-        if (text != null && text.isNotEmpty && state != null) {
-          if (isPartial) {
-            // Live preview of partial transcription
-            state = state!.copyWith(partialTranscript: text);
-          } else {
-            // Finalized transcription — add as segment
-            final TranscriptSegment segment = TranscriptSegment(
-              text: text,
-              speaker: speaker,
-              timestamp: DateTime.now(),
-            );
-            state = state!.copyWith(
-              segments: [...state!.segments, segment],
-              partialTranscript: '',
-            );
-          }
-        }
-
-        debugPrint(
-          '[MeetingNotifier] Ack: '
-          'text=${text?.substring(0, (text.length > 50 ? 50 : text.length))}, '
-          'partial=$isPartial, '
-          'speaker=$speaker',
-        );
-
-      case 'screening':
-        _handleScreening(message);
-
-      case 'analysis':
-        _handleAnalysis(message);
-
-      case 'copilot_response':
-        _handleCopilotResponse(message);
-
-      case 'meeting_summary':
-        _handleMeetingSummary(message);
-
-      case 'cost_update':
-        _handleCostUpdate(message);
-
-      case 'budget_exceeded':
-        _handleBudgetExceeded();
-
-      case 'screening_pending':
-        if (state != null) {
-          state = state!.copyWith(isScreening: true);
-        }
-
-      case 'pong':
-        break;
-
-      case 'stt_status':
-        final bool ready = message['ready'] as bool? ?? false;
-        if (ready) {
-          _ref.read(sttStatusProvider.notifier).state = WhisperModelStatus.loaded;
-          debugPrint('[MeetingNotifier] STT engine ready ✅');
-        } else {
-          final String? error = message['error'] as String?;
-          _ref.read(sttStatusProvider.notifier).state = WhisperModelStatus.error;
-          debugPrint('[MeetingNotifier] STT engine failed: $error');
-        }
-    }
-  }
-
-  /// Handle a screening result from the backend.
-  void _handleScreening(Map<String, Object?> message) {
-    if (state == null) return;
-
-    final ScreeningResult result = ScreeningResult.fromJson(message);
-    debugPrint(
-      '[MeetingNotifier] Screening: '
-      'relevant=${result.isRelevant}, '
-      'reason=${result.reason}',
-    );
-
-    state = state!.copyWith(isScreening: false, lastScreeningResult: result);
-  }
-
-  /// Handle an analysis insight from the backend.
-  void _handleAnalysis(Map<String, Object?> message) {
-    if (state == null) return;
-
-    final Map<String, Object?>? insightData =
-        message['insight'] as Map<String, Object?>?;
-    if (insightData == null) return;
-
-    final AIInsight insight = AIInsight.fromJson(insightData);
-    debugPrint(
-      '[MeetingNotifier] Insight: ${insight.categoryEmoji} '
-      '${insight.title}',
-    );
-
-    state = state!.copyWith(insights: [...state!.insights, insight]);
-
-    // Show push notification if app is in background
-    final AppLifecycleState? lifecycle = WidgetsBinding.instance.lifecycleState;
-    if (lifecycle == AppLifecycleState.paused ||
-        lifecycle == AppLifecycleState.inactive) {
-      NotificationService.instance.showInsightNotification(
-        title: '${insight.categoryEmoji} ${insight.title}',
-        body: insight.analysis.isNotEmpty
-            ? insight.analysis
-            : 'New insight detected in your meeting',
-      );
-    }
-  }
-
-  /// Handle a copilot response from the backend.
-  void _handleCopilotResponse(Map<String, Object?> message) {
-    if (state == null) return;
-
-    final String answer = message['answer'] as String? ?? '';
-    final bool isError = message['error'] as bool? ?? false;
-    final int? latencyMs = message['latency_ms'] as int?;
-    final String? modelTier = message['model_tier'] as String?;
-
-    final CopilotMessage aiMsg = CopilotMessage(
-      text: answer,
-      sender: isError ? CopilotSender.error : CopilotSender.ai,
+    // Add locally for immediate UI feedback
+    final TranscriptSegment segment = TranscriptSegment(
+      text: text,
+      speaker: speaker,
       timestamp: DateTime.now(),
-      latencyMs: latencyMs,
-      modelTier: modelTier,
     );
+    state = state!.copyWith(segments: [...state!.segments, segment]);
 
-    state = state!.copyWith(
-      copilotMessages: [...state!.copilotMessages, aiMsg],
-      isCopilotLoading: false,
-    );
+    // Queue for batched REST call
+    _pendingSegments.add(<String, String>{
+      'text': text,
+      'speaker': speaker,
+    });
   }
 
-  /// Handle meeting summary from the backend.
-  void _handleMeetingSummary(Map<String, Object?> message) {
-    if (state == null) return;
+  /// Flush pending transcript segments to backend via REST.
+  ///
+  /// Resilient to backend outages:
+  /// - Re-queues on transient errors (network, 500) up to 3 times
+  /// - Drops segments on permanent errors (401, 403, 404)
+  /// - Prevents infinite log spam from backend issues
+  int _flushFailures = 0;
+  static const int _maxFlushRetries = 3;
 
-    final bool isError = message['error'] as bool? ?? false;
-    final Map<String, Object?>? summaryData =
-        message['summary'] as Map<String, Object?>?;
+  Future<void> _flushTranscripts() async {
+    if (_pendingSegments.isEmpty || state == null) return;
 
-    if (isError || summaryData == null) {
-      debugPrint('[MeetingNotifier] Summary error');
-      state = state!.copyWith(isSummaryLoading: false);
+    // If we've failed too many times in a row, drop the queue
+    if (_flushFailures >= _maxFlushRetries) {
+      final int dropped = _pendingSegments.length;
+      _pendingSegments.clear();
+      _flushFailures = 0;
+      debugPrint(
+        '[MeetingNotifier] Dropped $dropped segments after '
+        '$_maxFlushRetries consecutive failures — backend unreachable',
+      );
       return;
     }
 
-    final MeetingSummary summary = MeetingSummary.fromJson(summaryData);
-    debugPrint('[MeetingNotifier] Summary: ${summary.title}');
+    final List<Map<String, String>> batch = List<Map<String, String>>.from(
+      _pendingSegments,
+    );
+    _pendingSegments.clear();
 
-    state = state!.copyWith(meetingSummary: summary, isSummaryLoading: false);
-  }
+    try {
+      final MeetingApiService api = _ref.read(meetingApiProvider);
+      final String langCode =
+          UserPreferences.instance.transcriptionLanguage.code;
+      final Map<String, dynamic> result = await api.sendTranscript(
+        meetingId: state!.id,
+        segments: batch,
+        language: langCode,
+      );
 
-  /// Handle cost update from the backend.
-  void _handleCostUpdate(Map<String, Object?> message) {
-    if (state == null) return;
-    state = state!.copyWith(costData: CostData.fromJson(message));
-  }
+      // Success — reset failure counter
+      _flushFailures = 0;
 
-  /// Handle budget exceeded notification.
-  void _handleBudgetExceeded() {
-    if (state == null) return;
-    final CostData current = state!.costData ??
-        const CostData(
-          totalCostUsd: 0,
-          budgetUsd: 0.50,
-          budgetRemainingUsd: 0,
-          budgetPct: 1.0,
+      // Process screening results if returned
+      final Map<String, dynamic>? screening =
+          result['screening'] as Map<String, dynamic>?;
+      if (screening != null) {
+        _handleScreeningResult(screening);
+      }
+    } on ApiException catch (e) {
+      // Permanent errors: don't re-queue, just drop
+      if (e.statusCode == 401 || e.statusCode == 403 || e.statusCode == 404) {
+        _flushFailures++;
+        debugPrint(
+          '[MeetingNotifier] Transcript flush ${e.statusCode} '
+          '(failure $_flushFailures/$_maxFlushRetries) — '
+          '${_flushFailures >= _maxFlushRetries ? "will drop queue" : "will retry"}',
         );
-    state = state!.copyWith(costData: current.withBudgetExceeded());
+        // Re-queue for retry if under limit
+        if (_flushFailures < _maxFlushRetries) {
+          _pendingSegments.insertAll(0, batch);
+        }
+      } else {
+        // Transient errors (500, timeout): re-queue
+        _flushFailures++;
+        _pendingSegments.insertAll(0, batch);
+        debugPrint('[MeetingNotifier] Transcript flush transient error: $e');
+      }
+    } catch (e) {
+      // Network errors etc: re-queue with limit
+      _flushFailures++;
+      if (_flushFailures < _maxFlushRetries) {
+        _pendingSegments.insertAll(0, batch);
+      }
+      debugPrint('[MeetingNotifier] Transcript flush failed: $e');
+    }
   }
 
-  /// Send a copilot query to the backend.
-  void sendCopilotQuery(String question) {
+  /// Handle screening result from REST response.
+  void _handleScreeningResult(Map<String, dynamic> data) {
+    if (state == null) return;
+
+    final ScreeningResult result = ScreeningResult.fromJson(
+      data.map((String k, dynamic v) => MapEntry(k, v as Object?)),
+    );
+    state = state!.copyWith(isScreening: false, lastScreeningResult: result);
+
+    // Check for analysis insight
+    final Map<String, dynamic>? analysisData =
+        data['analysis'] as Map<String, dynamic>?;
+    if (analysisData != null) {
+      final AIInsight insight = AIInsight.fromJson(
+        analysisData.map((String k, dynamic v) => MapEntry(k, v as Object?)),
+      );
+      state = state!.copyWith(insights: [...state!.insights, insight]);
+
+      // Show push notification if app is in background
+      final AppLifecycleState? lifecycle =
+          WidgetsBinding.instance.lifecycleState;
+      if (lifecycle == AppLifecycleState.paused ||
+          lifecycle == AppLifecycleState.inactive) {
+        NotificationService.instance.showInsightNotification(
+          title: '${insight.categoryEmoji} ${insight.title}',
+          body: insight.analysis.isNotEmpty
+              ? insight.analysis
+              : 'New insight detected in your meeting',
+        );
+      }
+    }
+  }
+
+  /// Send a copilot query to the backend via REST.
+  Future<void> sendCopilotQuery(String question) async {
     if (state == null || question.trim().isEmpty) return;
 
     // Add user message to chat
@@ -408,92 +304,107 @@ class MeetingNotifier extends StateNotifier<MeetingSession?> {
       isCopilotLoading: true,
     );
 
-    // Send via WebSocket
-    _ref.read(webSocketProvider).sendCopilotQuery(question);
+    try {
+      final MeetingApiService api = _ref.read(meetingApiProvider);
+      final String context = state!.segments
+          .map((TranscriptSegment s) => '[${s.speaker}] ${s.text}')
+          .join('\n');
 
-    // Safety timeout — if backend doesn't respond in 30s, clear loading
-    Future<void>.delayed(const Duration(seconds: 30), () {
-      if (state != null && state!.isCopilotLoading) {
-        final CopilotMessage timeoutMsg = CopilotMessage(
-          text:
-              'No response received. Please check your connection and try again.',
+      final Map<String, dynamic> response = await api.askCopilot(
+        meetingId: state!.id,
+        question: question,
+        transcriptContext: context,
+      );
+
+      final String answer = response['answer'] as String? ?? '';
+      final bool isError = response['error'] as bool? ?? false;
+      final int? latencyMs = response['latency_ms'] as int?;
+      final String? modelTier = response['model_tier'] as String?;
+
+      final CopilotMessage aiMsg = CopilotMessage(
+        text: answer,
+        sender: isError ? CopilotSender.error : CopilotSender.ai,
+        timestamp: DateTime.now(),
+        latencyMs: latencyMs,
+        modelTier: modelTier,
+      );
+
+      if (state != null) {
+        state = state!.copyWith(
+          copilotMessages: [...state!.copilotMessages, aiMsg],
+          isCopilotLoading: false,
+        );
+      }
+    } catch (e) {
+      debugPrint('[MeetingNotifier] Copilot failed: $e');
+      if (state != null) {
+        final CopilotMessage errorMsg = CopilotMessage(
+          text: 'Connection error. Please try again.',
           sender: CopilotSender.error,
           timestamp: DateTime.now(),
         );
         state = state!.copyWith(
-          copilotMessages: [...state!.copilotMessages, timeoutMsg],
+          copilotMessages: [...state!.copilotMessages, errorMsg],
           isCopilotLoading: false,
         );
       }
-    });
+    }
   }
 
-  /// Request a meeting summary from the backend.
-  void requestSummary() {
+  /// Request a meeting summary from the backend via REST.
+  Future<void> requestSummary() async {
     if (state == null) return;
     state = state!.copyWith(isSummaryLoading: true);
-    _ref.read(webSocketProvider).sendSummaryRequest();
-  }
 
-  /// Start audio capture and send to backend via WebSocket.
-  Future<void> _startAudioCapture() async {
     try {
-      final AudioService audio = _ref.read(audioProvider);
-      final Stream<List<int>> audioStream = await audio.startRecording();
+      final MeetingApiService api = _ref.read(meetingApiProvider);
+      final String langCode =
+          UserPreferences.instance.transcriptionLanguage.code;
+      final String fullTranscript = state!.segments
+          .map((TranscriptSegment s) => '[${s.speaker}] ${s.text}')
+          .join('\n');
 
-      _audioBuffer.clear();
-
-      _audioSub = audioStream.listen(
-        (List<int> data) {
-          _audioBuffer.addAll(data);
-
-          // Stream audio in small chunks (~100ms) for real-time STT
-          if (_audioBuffer.length >= _sttChunkSamples * 2) {
-            // PCM16 = 2 bytes per sample
-            _processAudioChunk();
-          }
-        },
-        onError: (Object error) {
-          debugPrint('[MeetingNotifier] Audio error: $error');
-        },
+      final Map<String, dynamic> response = await api.generateSummary(
+        meetingId: state!.id,
+        fullTranscript: fullTranscript,
+        language: langCode,
       );
+
+      final bool isError = response['error'] as bool? ?? false;
+      final Map<String, dynamic>? summaryData =
+          response['summary'] as Map<String, dynamic>?;
+
+      if (isError || summaryData == null) {
+        debugPrint('[MeetingNotifier] Summary error');
+        if (state != null) {
+          state = state!.copyWith(isSummaryLoading: false);
+        }
+        return;
+      }
+
+      final MeetingSummary summary = MeetingSummary.fromJson(
+        summaryData.map((String k, dynamic v) => MapEntry(k, v as Object?)),
+      );
+      if (state != null) {
+        state = state!.copyWith(
+          meetingSummary: summary,
+          isSummaryLoading: false,
+        );
+      }
     } catch (e) {
-      debugPrint('[MeetingNotifier] Audio capture failed: $e');
-      // Meeting continues without audio — user can still type
+      debugPrint('[MeetingNotifier] Summary failed: $e');
+      if (state != null) {
+        state = state!.copyWith(isSummaryLoading: false);
+      }
     }
   }
 
-  /// Send accumulated audio to backend via WebSocket.
-  void _processAudioChunk() {
-    if (_audioBuffer.isEmpty) return;
-
-    final WebSocketService ws = _ref.read(webSocketProvider);
-    if (ws.status != ConnectionStatus.connected) {
-      _audioBuffer.clear();
-      return;
-    }
-
-    // Send raw PCM bytes to server for STT (use Uint8List for zero-copy)
-    ws.sendAudio(Uint8List.fromList(_audioBuffer));
-    _audioBuffer.clear();
-  }
-
-  /// Listen to STT transcript stream (no-op when using server-side STT).
+  /// Listen to Apple STT transcript stream.
   void _listenToStt() {
-    // Server-side STT: transcripts arrive via WebSocket messages
-    // handled in _handleMessage (transcript_ack with text field).
-    // On-device STT would be initialized here if the model was loaded.
-    final WhisperSttService stt = _ref.read(whisperProvider);
-    if (stt.status != WhisperModelStatus.loaded) {
-      debugPrint(
-        '[MeetingNotifier] On-device STT not loaded, using server-side STT',
-      );
-      return;
-    }
-
+    final SttService stt = _ref.read(sttProvider);
     stt.startStream();
 
-    _sttSub = stt.transcripts.listen((WhisperTranscript transcript) {
+    _sttSub = stt.transcripts.listen((SttTranscript transcript) {
       if (transcript.type == TranscriptType.partial) {
         // Update partial text in UI (live preview)
         if (state != null) {
@@ -502,7 +413,7 @@ class MeetingNotifier extends StateNotifier<MeetingSession?> {
       } else if (transcript.type == TranscriptType.finalResult) {
         final String text = transcript.text.trim();
         if (text.isNotEmpty) {
-          // Send finalized text to backend
+          // Add finalized text to transcript + queue for backend
           addTranscript(text, speaker: 'stt');
           // Clear partial
           if (state != null) {
@@ -513,27 +424,10 @@ class MeetingNotifier extends StateNotifier<MeetingSession?> {
     });
   }
 
-  /// Stop audio capture.
-  Future<void> _stopAudioCapture() async {
-    _audioSub?.cancel();
-    _audioSub = null;
-    _audioBuffer.clear();
-
-    final AudioService audio = _ref.read(audioProvider);
-    await audio.stopRecording();
-
-    // Stop STT streaming
-    final WhisperSttService stt = _ref.read(whisperProvider);
-    if (stt.isStreaming) {
-      stt.stopStream();
-    }
-  }
-
   @override
   void dispose() {
     _durationTimer?.cancel();
-    _messageSub?.cancel();
-    _audioSub?.cancel();
+    _transcriptBatchTimer?.cancel();
     _sttSub?.cancel();
     super.dispose();
   }

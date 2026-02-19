@@ -7,6 +7,7 @@ resource "aws_ssm_parameter" "openai_api_key" {
   description = "OpenAI API Key for MeetMind LLM provider"
   type        = "SecureString"
   value       = var.openai_api_key
+  overwrite   = true
 
   tags = {
     Component = "secrets"
@@ -21,7 +22,8 @@ resource "aws_ssm_parameter" "huggingface_token" {
   name        = "/${var.project_name}/${var.environment}/huggingface-token"
   description = "HuggingFace token for pyannote diarization models"
   type        = "SecureString"
-  value       = var.huggingface_token
+  value       = var.huggingface_token != "" ? var.huggingface_token : "unused"
+  overwrite   = true
 
   tags = {
     Component = "secrets"

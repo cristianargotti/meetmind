@@ -2,15 +2,16 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:meetmind/config/app_config.dart';
 import 'package:meetmind/config/router.dart';
 import 'package:meetmind/config/theme.dart';
 import 'package:meetmind/l10n/generated/app_localizations.dart';
 import 'package:meetmind/providers/preferences_provider.dart';
 import 'package:meetmind/services/notification_service.dart';
+import 'package:meetmind/services/stt_service.dart';
 import 'package:meetmind/services/subscription_service.dart';
 import 'package:meetmind/services/user_preferences.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 /// Sentry DSN — injected via --dart-define=SENTRY_DSN=...
 const _sentryDsn = String.fromEnvironment(
@@ -26,6 +27,9 @@ Future<void> main() async {
   await UserPreferences.initialize();
   await NotificationService.instance.initialize();
   await SubscriptionService.instance.initialize();
+
+  // Initialize Apple STT in background (fire-and-forget)
+  _initializeStt();
 
   if (_sentryDsn.isNotEmpty) {
     await SentryFlutter.init(
@@ -49,6 +53,24 @@ Future<void> main() async {
       }
     };
     runApp(const ProviderScope(child: MeetMindApp()));
+  }
+}
+
+/// Initialize Apple's on-device speech recognition.
+///
+/// No model download needed — Apple's speech engine is built into iOS.
+/// This just checks availability and requests permission.
+Future<void> _initializeStt() async {
+  try {
+    String lang = UserPreferences.instance.transcriptionLanguage.code;
+    if (lang == 'auto') lang = 'es';
+
+    final SttService stt = SttService.instance;
+    final bool available = await stt.initialize(language: lang);
+    debugPrint('[SttInit] ${available ? "Ready" : "Not available"} (lang=$lang)');
+  } catch (e) {
+    // Never crash the app — STT just won't be available
+    debugPrint('[SttInit] Failed (non-fatal): $e');
   }
 }
 

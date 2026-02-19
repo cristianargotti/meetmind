@@ -11,7 +11,12 @@
 #include "whisper_bridge.h"
 #include "whisper.h"
 
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#endif
+
 #include <cstring>
+#include <cstdio>
 #include <mutex>
 #include <string>
 #include <vector>
@@ -53,13 +58,23 @@ static whisper_full_params make_params(const whisper_bridge_context *ctx) {
 
     params.n_threads   = ctx->n_threads;
     params.no_context  = true;
-    params.single_segment = false;
+    params.single_segment = true;   // one segment for streaming chunks
     params.print_special  = false;
     params.print_progress = false;
     params.print_realtime = false;
     params.print_timestamps = false;
     params.translate    = false;
-    params.no_timestamps = true;
+    params.no_timestamps = false;   // timestamps needed for proper segmentation
+
+    // Don't suppress anything — let all speech through
+    params.suppress_blank = false;
+
+    // Lower the no_speech threshold aggressively
+    // Default is 0.6 which is too high for quiet mic input
+    params.no_speech_thold = 0.01f;
+
+    // Safety limit on tokens
+    params.max_tokens = 64;
 
     // Language
     if (ctx->language == "auto") {
@@ -112,7 +127,11 @@ BRIDGE_API whisper_bridge_context *whisper_bridge_init(const char *model_path) {
     }
 
     struct whisper_context_params cparams = whisper_context_default_params();
+#if TARGET_OS_SIMULATOR
+    cparams.use_gpu = false;  // Metal not available on simulator
+#else
     cparams.use_gpu = true;
+#endif
 
     struct whisper_context *wctx = whisper_init_from_file_with_params(
         model_path, cparams
@@ -189,7 +208,9 @@ BRIDGE_API whisper_bridge_result whisper_bridge_transcribe(
     whisper_full_params params = make_params(ctx);
 
     int ret = whisper_full(ctx->wctx, params, audio_data, audio_len);
+    fprintf(stderr, "[whisper_bridge] whisper_full ret=%d audio_len=%d\n", ret, audio_len);
     if (ret != 0) {
+        fprintf(stderr, "[whisper_bridge] whisper_full FAILED\n");
         return empty;
     }
 
@@ -201,6 +222,13 @@ BRIDGE_API whisper_bridge_result whisper_bridge_transcribe(
     int n_segments = whisper_full_n_segments(ctx->wctx);
     int lang_id = whisper_full_lang_id(ctx->wctx);
     float lang_prob = 0.0f;
+    fprintf(stderr, "[whisper_bridge] n_segments=%d lang_id=%d duration=%lldms\n",
+            n_segments, lang_id, duration_ms);
+
+    if (n_segments > 0) {
+        const char *seg0 = whisper_full_get_segment_text(ctx->wctx, 0);
+        fprintf(stderr, "[whisper_bridge] seg[0] = \"%s\"\n", seg0 ? seg0 : "(null)");
+    }
 
     return make_result(ctx, n_segments, lang_id, lang_prob, duration_ms);
 }

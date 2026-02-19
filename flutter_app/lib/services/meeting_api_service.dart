@@ -106,6 +106,50 @@ class MeetingApiService {
     return await _get('/api/stats');
   }
 
+  // ─── AI Features (REST replaces WebSocket) ────────────────────
+
+  /// Send transcript segments to backend for AI screening.
+  ///
+  /// Returns screening/analysis results if triggered.
+  Future<Map<String, dynamic>> sendTranscript({
+    required String meetingId,
+    required List<Map<String, String>> segments,
+    String language = 'es',
+  }) async {
+    return await _post('/api/meetings/$meetingId/transcript', {
+      'segments': segments,
+      'language': language,
+    });
+  }
+
+  /// Ask the AI copilot a question about the meeting.
+  ///
+  /// Returns AI answer with metadata.
+  Future<Map<String, dynamic>> askCopilot({
+    required String meetingId,
+    required String question,
+    required String transcriptContext,
+  }) async {
+    return await _post('/api/meetings/$meetingId/copilot', {
+      'question': question,
+      'transcript_context': transcriptContext,
+    });
+  }
+
+  /// Generate a post-meeting summary.
+  ///
+  /// Returns summary with key points, action items, decisions.
+  Future<Map<String, dynamic>> generateSummary({
+    required String meetingId,
+    required String fullTranscript,
+    String language = 'es',
+  }) async {
+    return await _post('/api/meetings/$meetingId/summary', {
+      'full_transcript': fullTranscript,
+      'language': language,
+    });
+  }
+
   // ─── Internal ─────────────────────────────────────────────────
 
   /// Perform a GET request and parse JSON response.
@@ -119,6 +163,22 @@ class MeetingApiService {
       return jsonDecode(response.body) as Map<String, dynamic>;
     }
     throw ApiException('GET $path failed', response.statusCode);
+  }
+
+  /// Perform a POST request and parse JSON response.
+  Future<Map<String, dynamic>> _post(
+    String path,
+    Map<String, dynamic> body,
+  ) async {
+    final uri = Uri.parse('$_baseUrl$path');
+    final response = await _client
+        .post(uri, headers: _headers, body: jsonEncode(body))
+        .timeout(const Duration(seconds: 60));
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    }
+    throw ApiException('POST $path failed', response.statusCode);
   }
 
   /// Dispose the HTTP client.

@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// Application configuration persisted via SharedPreferences.
 ///
 /// Environment defaults:
-///   - Development: `ws://192.168.0.12:8000`
+///   - Development: `http://192.168.0.12:8000`
 ///   - Production: configured via Settings or build-time env vars
 class AppConfig {
   AppConfig._({required SharedPreferences prefs}) : _prefs = prefs;
@@ -48,11 +48,8 @@ class AppConfig {
   /// Backend port.
   int get port => _prefs.getInt(_keyPort) ?? defaultPort;
 
-  /// WebSocket protocol (`ws` or `wss`).
+  /// API protocol (`ws`/`wss` mapped to `http`/`https` in services).
   String get protocol => _prefs.getString(_keyProtocol) ?? defaultProtocol;
-
-  /// Full WebSocket URL for the transcription endpoint.
-  String get wsUrl => '$protocol://$host:$port/ws/transcription';
 
   /// Display-friendly backend URL (for Settings screen).
   String get displayUrl => '$host:$port';
@@ -69,7 +66,7 @@ class AppConfig {
     await _prefs.setInt(_keyPort, value);
   }
 
-  /// Update WebSocket protocol.
+  /// Update API protocol.
   Future<void> setProtocol(String value) async {
     await _prefs.setString(_keyProtocol, value.trim());
   }

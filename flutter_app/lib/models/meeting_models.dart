@@ -1,6 +1,3 @@
-/// WebSocket connection status.
-enum ConnectionStatus { disconnected, connecting, connected, error }
-
 /// Meeting session state.
 enum MeetingStatus { idle, recording, paused, stopped }
 
