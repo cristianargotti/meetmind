@@ -188,12 +188,12 @@ jobs:
 
           echo "✅ Archive completed (WITH signing)"
 
-          # Diagnostic
+          # ── Archive forensics ───────────────────────────────────
           ARCHIVE=build/ios/archive/Runner.xcarchive
-          echo "📦 Frameworks/:"
-          ls "$ARCHIVE/Products/Applications/Runner.app/Frameworks/" 2>/dev/null | head -10 || echo "  (empty)"
-          echo "📦 SwiftSupport/:"
-          ls "$ARCHIVE/SwiftSupport/iphoneos/" 2>/dev/null | head -10 || echo "  ⚠️ NOT PRESENT"
+          echo "== Archive Frameworks =="
+          find "$ARCHIVE" -path "*Runner.app/Frameworks*" -maxdepth 6 -type f 2>/dev/null | head -200
+          echo "== Archive SwiftSupport =="
+          find "$ARCHIVE" -path "*SwiftSupport*" -type f 2>/dev/null | head -50 || echo "  ⚠️ NOT PRESENT"
 
           # ── Export IPA ───────────────────────────────────────────
           xcodebuild -exportArchive \
@@ -207,11 +207,17 @@ jobs:
 
           echo "✅ IPA exported"
 
-          # Verify
+          # ── IPA forensics ────────────────────────────────────────
           IPA=$(ls build/ios/ipa/*.ipa 2>/dev/null | head -1)
           if [ -n "$IPA" ]; then
-            echo "📦 IPA SwiftSupport:"
-            unzip -l "$IPA" | grep -i "SwiftSupport" | head -10 || echo "  ⚠️ NOT in IPA"
+            echo "== SwiftSupport in IPA =="
+            unzip -l "$IPA" | grep -E "SwiftSupport/iphoneos/.*dylib" || echo "  NONE"
+            echo "== Runner Frameworks in IPA =="
+            unzip -l "$IPA" | grep -E "Payload/Runner.app/Frameworks/.*dylib" || echo "  NONE"
+            echo "== Span dylib location =="
+            unzip -l "$IPA" | grep -i "libswiftCompatibilitySpan.dylib" || echo "  NOT FOUND"
+            echo "== Full IPA structure (top-level) =="
+            unzip -l "$IPA" | head -30
           fi
 
       - name: 📤 Upload IPA (artifact backup)
