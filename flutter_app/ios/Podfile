@@ -40,10 +40,9 @@ post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
 
-    # Force minimum deployment target to iOS 13.0 for all pods
-    # This fixes build errors with Xcode 15/16 where pods target outdated iOS versions (e.g. 9.0)
+    # Force minimum deployment target to iOS 16.0 for all pods
     target.build_configurations.each do |config|
-      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '16.0'
       
       # Fix for "Disabling previews because SWIFT_VERSION is set"
       config.build_settings['SWIFT_OPTIMIZATION_LEVEL'] = '-Onone' if config.name == 'Debug'

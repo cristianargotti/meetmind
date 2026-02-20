@@ -1,10 +1,7 @@
 import Flutter
 import UIKit
 import AVFoundation
-
-#if compiler(>=6.2)
 import Speech
-#endif
 
 /// Native plugin bridging Apple's SpeechAnalyzer API (iOS 26+) to Flutter.
 ///
