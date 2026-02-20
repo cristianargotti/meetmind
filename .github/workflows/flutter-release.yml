@@ -121,13 +121,16 @@ jobs:
           echo "$API_KEY" > ~/private_keys/AuthKey_${API_KEY_ID}.p8
           echo "✅ Certificate + API key installed"
 
-      - name: 🏗️ Build Dart code
+      - name: 🏗️ Pre-compile Dart code
         run: |
+          # This step generates Generated.xcconfig with DART_DEFINES
+          # and pre-compiles Dart/Flutter code. The --no-codesign flag
+          # only affects THIS step's xcodebuild invocation.
           flutter build ios --release --no-codesign \
             --dart-define=REVENUECAT_IOS_KEY=${{ secrets.REVENUECAT_IOS_KEY }} \
             --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN }}
 
-      - name: 📦 Archive & Export IPA
+      - name: 📦 Archive & Export IPA (SIGNED)
         env:
           API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
@@ -152,9 +155,25 @@ jobs:
           </plist>
           PLIST
 
+          # ── CRITICAL: Clean DerivedData ──────────────────────────
+          # flutter build ios --no-codesign cached build products with
+          # CODE_SIGNING_ALLOWED=NO. We MUST clear them so xcodebuild
+          # compiles FROM SCRATCH with signing enabled.
+          # Generated.xcconfig (with DART_DEFINES) is in ios/Flutter/
+          # and is NOT affected by this cleanup.
+          echo "🧹 Cleaning DerivedData..."
+          rm -rf ~/Library/Developer/Xcode/DerivedData/Runner-*
           rm -rf build/ios/archive
 
-          # ── Step 1: Archive (unsigned — proven to compile) ─────────
+          echo "📋 Signing identities:"
+          security find-identity -v -p codesigning | head -5
+
+          # ── Archive FROM SCRATCH with signing ────────────────────
+          # No CODE_SIGNING_ALLOWED=NO! Xcode will:
+          # 1. Compile everything fresh (using DART_DEFINES from xcconfig)
+          # 2. Sign with the distribution certificate
+          # 3. Run CopySwiftLibs → creates SwiftSupport/
+          # 4. Download provisioning profile via API key auth
           xcodebuild -workspace ios/Runner.xcworkspace \
             -scheme Runner \
             -configuration Release \
@@ -164,26 +183,19 @@ jobs:
             -authenticationKeyPath ~/private_keys/AuthKey_${API_KEY_ID}.p8 \
             -authenticationKeyID "$API_KEY_ID" \
             -authenticationKeyIssuerID "$API_ISSUER_ID" \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO \
+            DEVELOPMENT_TEAM=9L6258YNVJ \
             archive
 
-          echo "✅ Archive completed"
+          echo "✅ Archive completed (WITH signing)"
 
-          # ── Step 2: Inject SwiftSupport/ into archive ──────────────
-          # The unsigned archive has no SwiftSupport/. We use
-          # swift-stdlib-tool to scan ONLY the Runner.app binary and
-          # copy the required Swift dylibs into SwiftSupport/.
-          ARCHIVE="build/ios/archive/Runner.xcarchive"
-          APP="$ARCHIVE/Products/Applications/Runner.app"
-          SWIFT_SUPPORT="$ARCHIVE/SwiftSupport/iphoneos"
-          TOOLCHAIN="$(xcode-select -p)/Toolchains/XcodeDefault.xctoolchain"
+          # Diagnostic
+          ARCHIVE=build/ios/archive/Runner.xcarchive
+          echo "📦 Frameworks/:"
+          ls "$ARCHIVE/Products/Applications/Runner.app/Frameworks/" 2>/dev/null | head -10 || echo "  (empty)"
+          echo "📦 SwiftSupport/:"
+          ls "$ARCHIVE/SwiftSupport/iphoneos/" 2>/dev/null | head -10 || echo "  ⚠️ NOT PRESENT"
 
-          echo "📦 Frameworks/ in app:"
-          ls "$ARCHIVE/Products/Applications/Runner.app/Frameworks/" 2>/dev/null | head -20 || echo "  (empty)"
-
-          # ── Step 2: Export IPA ────────────────────────────────────
+          # ── Export IPA ───────────────────────────────────────────
           xcodebuild -exportArchive \
             -archivePath build/ios/archive/Runner.xcarchive \
             -exportOptionsPlist ios/ExportOptions.plist \
@@ -195,77 +207,12 @@ jobs:
 
           echo "✅ IPA exported"
 
-          # ── Step 3: Inject SwiftSupport/ INTO the IPA ─────────────
-          # xcodebuild -exportArchive strips SwiftSupport/ from archive.
-          # We inject it directly into the .ipa ZIP file after export.
+          # Verify
           IPA=$(ls build/ios/ipa/*.ipa 2>/dev/null | head -1)
-          TOOLCHAIN="$(xcode-select -p)/Toolchains/XcodeDefault.xctoolchain"
-          APP="$ARCHIVE/Products/Applications/Runner.app"
-
           if [ -n "$IPA" ]; then
-            echo "📦 IPA before injection:"
-            unzip -l "$IPA" | grep -i "SwiftSupport" | head -5 || echo "  (none)"
-
-            # Create SwiftSupport dir
-            WORKDIR=$(mktemp -d)
-            mkdir -p "$WORKDIR/SwiftSupport/iphoneos"
-
-            # Use swift-stdlib-tool to find required dylibs
-            xcrun swift-stdlib-tool \
-              --copy \
-              --scan-executable "$APP/Runner" \
-              --scan-folder "$APP/Frameworks" \
-              --platform iphoneos \
-              --toolchain "$TOOLCHAIN" \
-              --unsigned-destination "$WORKDIR/SwiftSupport/iphoneos" \
-              --filter-for-swift-os \
-              --back-deploy-swift-concurrency \
-              --back-deploy-swift-span 2>&1 || true
-
-            # Fallback: if empty, copy compatibility dylib
-            if [ -z "$(ls -A "$WORKDIR/SwiftSupport/iphoneos" 2>/dev/null)" ]; then
-              echo "ℹ️ swift-stdlib-tool found no dylibs, using fallback..."
-              # Copy ALL Swift dylibs from Frameworks/ that exist in toolchain
-              for fw in "$APP/Frameworks"/libswift*.dylib; do
-                if [ -f "$fw" ]; then
-                  BASENAME=$(basename "$fw")
-                  # Look for this dylib in toolchain
-                  TOOLCHAIN_LIB="$TOOLCHAIN/usr/lib/swift/iphoneos/$BASENAME"
-                  TOOLCHAIN_LIB2="$TOOLCHAIN/usr/lib/swift-6.2/iphoneos/$BASENAME"
-                  if [ -f "$TOOLCHAIN_LIB" ]; then
-                    cp "$TOOLCHAIN_LIB" "$WORKDIR/SwiftSupport/iphoneos/"
-                    echo "  ✅ Copied $BASENAME (from swift/)"
-                  elif [ -f "$TOOLCHAIN_LIB2" ]; then
-                    cp "$TOOLCHAIN_LIB2" "$WORKDIR/SwiftSupport/iphoneos/"
-                    echo "  ✅ Copied $BASENAME (from swift-6.2/)"
-                  fi
-                fi
-              done
-
-              # If still empty, copy compatibility span as minimum
-              if [ -z "$(ls -A "$WORKDIR/SwiftSupport/iphoneos" 2>/dev/null)" ]; then
-                COMPAT="$TOOLCHAIN/usr/lib/swift-6.2/iphoneos/libswiftCompatibilitySpan.dylib"
-                if [ -f "$COMPAT" ]; then
-                  cp "$COMPAT" "$WORKDIR/SwiftSupport/iphoneos/"
-                  echo "  ✅ Added libswiftCompatibilitySpan.dylib (minimum)"
-                fi
-              fi
-            fi
-
-            echo "📦 SwiftSupport to inject:"
-            ls -la "$WORKDIR/SwiftSupport/iphoneos/" 2>/dev/null
-
-            # Inject into IPA (IPA is a ZIP file)
-            cd "$WORKDIR"
-            zip -r "$OLDPWD/$IPA" SwiftSupport/
-            cd "$OLDPWD"
-            rm -rf "$WORKDIR"
-
-            echo "📦 IPA after injection:"
-            unzip -l "$IPA" | grep -i "SwiftSupport" | head -10 || echo "  ⚠️ STILL NOT IN IPA"
+            echo "📦 IPA SwiftSupport:"
+            unzip -l "$IPA" | grep -i "SwiftSupport" | head -10 || echo "  ⚠️ NOT in IPA"
           fi
-
-          echo "✅ IPA ready for upload"
 
       - name: 📤 Upload IPA (artifact backup)
         uses: actions/upload-artifact@v4
