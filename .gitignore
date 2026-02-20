@@ -55,6 +55,16 @@ credentials.json
 # ==== Misc ====
 .pub-cache/
 
+# ==== Debug & CI artifacts ====
+build_log.txt
+*_log.txt
+successful_*
+failed_*
+job_log.txt
+
+# ==== VS Code ====
+.vscode/
+
 # ==== Terraform ====
 *.tfvars
 *.tfvars.json
