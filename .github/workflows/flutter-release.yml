@@ -83,6 +83,8 @@ jobs:
           sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
           xcodebuild -version
           xcrun --sdk iphoneos --show-sdk-version
+          # Download iOS platform if not preinstalled
+          xcodebuild -downloadPlatform iOS || true
 
       - name: 📦 Get dependencies
         run: flutter pub get
