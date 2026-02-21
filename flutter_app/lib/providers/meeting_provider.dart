@@ -79,7 +79,7 @@ class MeetingNotifier extends StateNotifier<MeetingSession?> {
     final SttService stt = _ref.read(sttProvider);
     if (stt.status == SttModelStatus.unloaded) {
       final String lang = UserPreferences.instance.transcriptionLanguage.code;
-      await stt.initialize(language: lang == 'auto' ? 'es' : lang);
+      await stt.initialize(language: lang);
     }
 
     if (stt.status == SttModelStatus.ready) {

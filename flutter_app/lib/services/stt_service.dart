@@ -27,6 +27,9 @@ class SttService {
   /// True when using SpeechAnalyzer (iOS 26+), false for legacy engine.
   bool _useAnalyzer = false;
   StreamSubscription<SttTranscript>? _analyzerSub;
+  StreamSubscription<SttTranscript>? _analyzerAutoDetectSub;
+  String _analyzerDetectedLang = 'es';
+  int _analyzerLangConsecutive = 0;
 
   // ─── Legacy engine ─────────────────────────────────────────────────
   final SpeechToText _speech = SpeechToText();
@@ -99,6 +102,7 @@ class SttService {
       final bool analyzerAvailable =
           await SpeechAnalyzerService.isAvailable();
       if (analyzerAvailable) {
+        _autoDetectMode = (language == 'auto');
         final bool ok = await SpeechAnalyzerService.instance.initialize(
           language: language == 'auto' ? 'es' : language,
         );
@@ -107,7 +111,7 @@ class SttService {
           _isInitialized = true;
           _status = SttModelStatus.ready;
           debugPrint('[SttInit] Using SpeechAnalyzer (iOS 26+, no limit)');
-          debugPrint('[SttInit] Ready (lang=$language)');
+          debugPrint('[SttInit] Ready (lang=$language, autoDetect=$_autoDetectMode)');
           return true;
         }
       }
@@ -161,6 +165,9 @@ class SttService {
 
     if (_useAnalyzer) {
       SpeechAnalyzerService.instance.startStream();
+      if (_autoDetectMode) {
+        _startAnalyzerAutoDetect();
+      }
       return;
     }
 
@@ -177,6 +184,7 @@ class SttService {
   /// Stop listening.
   void stopStream() {
     if (_useAnalyzer) {
+      _analyzerAutoDetectSub?.cancel();
       SpeechAnalyzerService.instance.stopStream();
       return;
     }
@@ -209,10 +217,108 @@ class SttService {
     }
   }
 
-  /// Dispose the service.
+  // ─── SpeechAnalyzer auto-detect ──────────────────────────────────────
+
+  /// Number of consecutive same-language detections needed to switch.
+  static const int _analyzerSwitchThreshold = 3;
+
+  /// Start listening to analyzer transcripts for auto language detection.
+  void _startAnalyzerAutoDetect() {
+    _analyzerLangConsecutive = 0;
+    _analyzerDetectedLang = 'es';
+
+    _analyzerAutoDetectSub?.cancel();
+    _analyzerAutoDetectSub =
+        SpeechAnalyzerService.instance.transcripts.listen((transcript) {
+      if (transcript.type != TranscriptType.finalResult) return;
+      if (transcript.text.trim().length < 10) return; // Too short to detect
+
+      final String detected = _detectLanguageFromText(transcript.text);
+      final String currentLang =
+          SpeechAnalyzerService.instance.currentLocale.split('-').first.split('_').first;
+
+      if (detected == currentLang) {
+        // Same language — reset counter
+        _analyzerLangConsecutive = 0;
+        return;
+      }
+
+      if (detected == _analyzerDetectedLang) {
+        _analyzerLangConsecutive++;
+      } else {
+        _analyzerDetectedLang = detected;
+        _analyzerLangConsecutive = 1;
+      }
+
+      debugPrint('[SttAutoDetect] Detected=$detected, current=$currentLang, '
+          'consecutive=$_analyzerLangConsecutive/$_analyzerSwitchThreshold');
+
+      if (_analyzerLangConsecutive >= _analyzerSwitchThreshold) {
+        debugPrint('[SttAutoDetect] 🌐 Switching to $detected');
+        _analyzerLangConsecutive = 0;
+        SpeechAnalyzerService.instance.setLanguage(detected);
+      }
+    });
+  }
+
+  /// Simple text-based language detection using common word patterns.
+  /// Returns 'es', 'en', or 'pt'.
+  static String _detectLanguageFromText(String text) {
+    final String lower = text.toLowerCase();
+    final List<String> words = lower.split(RegExp(r'\s+'));
+
+    // Common function words (articles, prepositions, conjunctions)
+    const List<String> esWords = [
+      'el', 'la', 'los', 'las', 'un', 'una', 'de', 'del', 'en', 'que',
+      'es', 'por', 'con', 'para', 'como', 'pero', 'más', 'este', 'esta',
+      'eso', 'fue', 'son', 'hay', 'tiene', 'está', 'vamos', 'muy',
+      'también', 'porque', 'yo', 'nosotros', 'ustedes', 'todo', 'todos',
+      'entonces', 'bueno', 'pues', 'sí', 'ahora', 'aquí', 'bien',
+    ];
+    const List<String> enWords = [
+      'the', 'a', 'an', 'is', 'are', 'was', 'were', 'be', 'been', 'have',
+      'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should',
+      'can', 'may', 'might', 'shall', 'must', 'not', 'and', 'but', 'or',
+      'if', 'then', 'than', 'that', 'this', 'these', 'those', 'what',
+      'which', 'who', 'when', 'where', 'how', 'all', 'each', 'every',
+      'with', 'from', 'about', 'into', 'through', 'just', 'also', 'very',
+    ];
+    const List<String> ptWords = [
+      'o', 'a', 'os', 'as', 'um', 'uma', 'de', 'do', 'da', 'dos', 'das',
+      'em', 'no', 'na', 'nos', 'nas', 'que', 'com', 'por', 'para',
+      'como', 'mais', 'mas', 'também', 'quando', 'muito', 'são', 'foi',
+      'tem', 'ter', 'ser', 'estar', 'não', 'sim', 'isso', 'este', 'esta',
+      'esse', 'essa', 'aqui', 'então', 'porque', 'eu', 'nós', 'você',
+      'vocês', 'ele', 'ela', 'eles', 'elas', 'bem', 'bom', 'agora',
+    ];
+
+    int esScore = 0;
+    int enScore = 0;
+    int ptScore = 0;
+
+    for (final String word in words) {
+      if (esWords.contains(word)) esScore++;
+      if (enWords.contains(word)) enScore++;
+      if (ptWords.contains(word)) ptScore++;
+    }
+
+    // Disambiguate overlapping words (de, que, com, etc.)
+    // Use unique markers for each language
+    if (lower.contains('ñ') || lower.contains('ción')) esScore += 3;
+    if (lower.contains('ão') || lower.contains('ção') || lower.contains('não')) ptScore += 3;
+    if (lower.contains('th') || lower.contains("n't") || lower.contains("'s")) enScore += 3;
+
+    debugPrint('[SttAutoDetect] Scores: es=$esScore, en=$enScore, pt=$ptScore');
+
+    if (enScore > esScore && enScore > ptScore) return 'en';
+    if (ptScore > esScore && ptScore > enScore) return 'pt';
+    return 'es'; // Default to Spanish
+  }
+
   void dispose() {
     if (_useAnalyzer) {
       _analyzerSub?.cancel();
+      _analyzerAutoDetectSub?.cancel();
       SpeechAnalyzerService.instance.dispose();
       return;
     }

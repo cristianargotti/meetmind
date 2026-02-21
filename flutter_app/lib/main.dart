@@ -62,8 +62,7 @@ Future<void> main() async {
 /// This just checks availability and requests permission.
 Future<void> _initializeStt() async {
   try {
-    String lang = UserPreferences.instance.transcriptionLanguage.code;
-    if (lang == 'auto') lang = 'es';
+    final String lang = UserPreferences.instance.transcriptionLanguage.code;
 
     final SttService stt = SttService.instance;
     final bool available = await stt.initialize(language: lang);
