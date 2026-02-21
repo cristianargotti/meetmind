@@ -76,22 +76,50 @@ jobs:
           channel: stable
           cache: true
 
-      - name: 🛠️ Select Xcode (26.x)
+      # ✅ REEMPLAZADO: selección robusta de Xcode 26 + validación hard-fail
+      - name: 🛠️ Select Xcode 26 (REQUIRED BY APPLE)
         run: |
-          # Prefer Xcode 26.2 if present, else 26.0, else fall back to whatever is installed.
-          if [ -d /Applications/Xcode_26.2.app ]; then
-            sudo xcode-select -s /Applications/Xcode_26.2.app/Contents/Developer
-          elif [ -d /Applications/Xcode_26.0.app ]; then
-            sudo xcode-select -s /Applications/Xcode_26.0.app/Contents/Developer
-          else
-            echo "⚠️ Xcode 26.x not found in /Applications. Installed Xcodes:"
-            ls -1 /Applications | grep -E "^Xcode" || true
+          echo "📦 Installed Xcodes:"
+          ls -1 /Applications | grep -i "^Xcode" || true
+
+          # Try common Xcode 26 names on GitHub runners
+          CANDIDATES=(
+            "/Applications/Xcode_26.2.app"
+            "/Applications/Xcode_26.1.app"
+            "/Applications/Xcode_26.0.app"
+            "/Applications/Xcode_26.app"
+            "/Applications/Xcode26.app"
+          )
+
+          SELECTED=""
+          for X in "${CANDIDATES[@]}"; do
+            if [ -d "$X" ]; then
+              SELECTED="$X"
+              break
+            fi
+          done
+
+          if [ -z "$SELECTED" ]; then
+            echo "❌ Xcode 26.x not found in /Applications."
             exit 1
           fi
 
+          echo "✅ Selecting: $SELECTED"
+          sudo xcode-select -s "$SELECTED/Contents/Developer"
+
+          echo "✅ Xcode:"
           xcodebuild -version
-          xcrun --sdk iphoneos --show-sdk-version
-          xcodebuild -downloadPlatform iOS || true
+
+          echo "✅ iOS SDK:"
+          SDK=$(xcrun --sdk iphoneos --show-sdk-version)
+          echo "$SDK"
+
+          # Hard fail if SDK < 26 (Apple requirement for uploads after 2026-04-28)
+          MAJOR=${SDK%%.*}
+          if [ "$MAJOR" -lt 26 ]; then
+            echo "❌ iOS SDK is $SDK, need 26.0+"
+            exit 1
+          fi
 
       - name: 📦 Get dependencies
         run: flutter pub get
@@ -138,7 +166,6 @@ jobs:
           API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
         run: |
-          # ✅ Correct ExportOptions.plist for App Store/TestFlight export
           cat > ios/ExportOptions.plist << 'PLIST'
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -192,8 +219,7 @@ jobs:
             -allowProvisioningUpdates \
             -authenticationKeyPath ~/private_keys/AuthKey_${API_KEY_ID}.p8 \
             -authenticationKeyID "$API_KEY_ID" \
-            -authenticationKeyIssuerID "$API_ISSUER_ID" \
-            CODE_SIGNING_ALLOWED=YES
+            -authenticationKeyIssuerID "$API_ISSUER_ID"
 
           echo "✅ IPA exported"
 
@@ -203,8 +229,6 @@ jobs:
             unzip -l "$IPA" | grep -E "SwiftSupport/iphoneos/.*dylib" || echo "  NONE"
             echo "== Runner Frameworks in IPA =="
             unzip -l "$IPA" | grep -E "Payload/Runner.app/Frameworks/.*dylib" || echo "  NONE"
-            echo "== Span dylib location =="
-            unzip -l "$IPA" | grep -i "libswiftCompatibilitySpan.dylib" || echo "  NOT FOUND"
             echo "== Full IPA structure (top-level) =="
             unzip -l "$IPA" | head -30
           fi
