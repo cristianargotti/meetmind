@@ -84,9 +84,9 @@ class MeetMindApp extends ConsumerWidget {
     return MaterialApp.router(
       title: 'Aura Meet',
       debugShowCheckedModeBanner: false,
-      theme: MeetMindTheme.light,
+      theme: MeetMindTheme.dark,
       darkTheme: MeetMindTheme.dark,
-      themeMode: themeMode,
+      themeMode: ThemeMode.dark, // Dark-only for launch; light theme Sprint 2
       locale: locale,
       localizationsDelegates: const [
         AppLocalizations.delegate,

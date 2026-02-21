@@ -100,46 +100,10 @@ class SettingsScreen extends ConsumerWidget {
 
           const SizedBox(height: 24),
 
-          // ─── Appearance ─────────────────────────
-          _SectionHeader(title: l10n.settingsAppearance),
-          Card(
-            child: ListTile(
-              leading: const Icon(
-                Icons.palette_outlined,
-                color: MeetMindTheme.primary,
-              ),
-              title: Text(l10n.settingsThemeMode),
-              trailing: SegmentedButton<ThemeMode>(
-                segments: [
-                  ButtonSegment(
-                    value: ThemeMode.dark,
-                    label: Text(l10n.settingsThemeDark),
-                    icon: const Icon(Icons.dark_mode, size: 16),
-                  ),
-                  ButtonSegment(
-                    value: ThemeMode.light,
-                    label: Text(l10n.settingsThemeLight),
-                    icon: const Icon(Icons.light_mode, size: 16),
-                  ),
-                  ButtonSegment(
-                    value: ThemeMode.system,
-                    label: Text(l10n.settingsThemeSystem),
-                    icon: const Icon(Icons.settings_brightness, size: 16),
-                  ),
-                ],
-                selected: {prefs.themeMode},
-                onSelectionChanged: (Set<ThemeMode> value) {
-                  prefsNotifier.setThemeMode(value.first);
-                },
-                style: const ButtonStyle(
-                  visualDensity: VisualDensity.compact,
-                  textStyle: WidgetStatePropertyAll(TextStyle(fontSize: 11)),
-                ),
-              ),
-            ),
-          ),
+          // Hidden for launch — Appearance (light theme not ready)
+          // Will re-enable in Sprint 2 with a proper light theme.
 
-          const SizedBox(height: 24),
+
 
           // ─── Audio ──────────────────────────────
           _SectionHeader(title: l10n.settingsAudio),
