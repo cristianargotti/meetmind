@@ -81,24 +81,12 @@ jobs:
           echo "📦 Installed Xcodes:"
           ls -1 /Applications | grep -i "^Xcode" || true
 
-          CANDIDATES=(
-            "/Applications/Xcode_26.3.app"
-            "/Applications/Xcode_26.2.app"
-            "/Applications/Xcode_26.1.app"
-            "/Applications/Xcode_26.0.app"
-            "/Applications/Xcode_26.app"
-          )
+          # Find any Xcode 26.x (handles _Release_Candidate, _beta, etc.)
+          SELECTED=$(ls -1d /Applications/Xcode*26* 2>/dev/null | sort -rV | head -1)
 
-          SELECTED=""
-          for X in "${CANDIDATES[@]}"; do
-            if [ -d "$X" ]; then
-              SELECTED="$X"
-              break
-            fi
-          done
-
-          if [ -z "$SELECTED" ]; then
+          if [ -z "$SELECTED" ] || [ ! -d "$SELECTED" ]; then
             echo "❌ Xcode 26.x not found in /Applications."
+            ls -1 /Applications | grep -i xcode || true
             exit 1
           fi
 
