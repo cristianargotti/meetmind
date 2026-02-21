@@ -25,7 +25,7 @@ Aura Meet tiene una arquitectura modular (Hexagonal Architecture + Provider Fact
 | Aspecto | Lo que dicen los docs | Lo que hay en el código |
 |---|---|---|
 | **Instancia EC2** | c8g.xlarge Graviton4 ($79/mo) | **t3.small x86** (Amazon Linux 2023) — mucho más barato |
-| **STT Engine** | "Parakeet TDT 1.1B" | **4 engines implementados:** Parakeet TDT 0.6B, Moonshine, Qwen3-ASR 0.6B, Whisper (`stt_engine` env var) |
+| **STT Engine** | "Parakeet TDT 1.1B" | **Server-side:** Parakeet TDT 0.6B, Qwen3-ASR 0.6B. **On-device (iOS 26+):** Apple SpeechAnalyzer (`stt_engine` env var) |
 | **Modelos Bedrock** | Nova Micro/Pro (VISION_2026) | **Haiku 3.5 + Sonnet 4.5 + Opus 4** (aún no migrado a Nova) |
 | **Pricing Flutter** | $9.99 Pro (VISION) / $7.99 (BUSINESS_PLAN) | **$14.99/mo Pro, $19.99/user Team, $39.99/user Business** (en `subscription_service.dart`) |
 | **Database** | "PostgreSQL embedded" | **asyncpg + PostgreSQL 17 con pgvector** (schema completo: meetings, segments, insights, summaries, action_items) |
@@ -37,7 +37,7 @@ Aura Meet tiene una arquitectura modular (Hexagonal Architecture + Provider Fact
 | **Onboarding** | "Falta" | **✅ Feature folder existe** (`features/onboarding/`) |
 | **Speaker Diarization** | "Falta" | **✅ `diarization.py` implementado** (pyannote 3.1) |
 | **LLM Providers** | "Bedrock o OpenAI" | **Correcto** — Factory pattern con `LLMProvider` Protocol. OpenAI provider usa `AsyncOpenAI` |
-| **Whisper on-device** | "whisper.cpp via dart:ffi" | **✅ `whisper_stt_service.dart`** (11KB) + `model_manager.dart` (7KB) |
+| **STT on-device** | "whisper.cpp via dart:ffi" | **✅ Reemplazado por Apple SpeechAnalyzer** (iOS 26+, unlimited, 30+ locales, auto language detect) |
 
 > [!IMPORTANT]
 > **Hallazgo clave: El `OpenAIProvider` usa la librería `openai` de Python con `AsyncOpenAI`.** Esto significa que podemos apuntar a CUALQUIER API compatible con OpenAI (Groq, Together, OpenRouter, Cerebras) cambiando solo `base_url` y `api_key`. **Cero código nuevo.**

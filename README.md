@@ -1,30 +1,31 @@
-# 🧠 MeetMind
+# 🧠 Aura Meet
 
-> The most powerful meeting AI tool — on-device transcription, real-time AI insights, proactive participation as "Digital Cris".
+> The most powerful meeting AI tool — on-device transcription (unlimited), real-time AI insights, multilingual auto-detect.
 
 ## Architecture
 
 ```
-📱 Flutter App (Dart) ──► dart:ffi ──► whisper.cpp ──► Whisper Base (on-device STT)
-       │                                    └──► CoreML/Metal (iOS) + NNAPI (Android)
+📱 Flutter App (Dart) ──► Apple SpeechAnalyzer (iOS 26+, on-device, unlimited)
+       │                         └──► SpeechTranscriber (es/en/pt/fr/de/it/ko/zh/ja)
+       │                         └──► Auto language detection (text-based heuristics)
        │
-       └──► WebSocket ──► ☁️ FastAPI Backend (Python)
-                                  │
-                                  ├──► 🔀 Provider Factory (configurable)
-                                  │         ├──► AWS Bedrock (Haiku/Sonnet/Opus)
-                                  │         └──► OpenAI (gpt-4o-mini/gpt-4o)
-                                  │
-                                  ├──► Screening Agent (fast relevance check)
-                                  ├──► Analysis Agent (insight generation)
-                                  ├──► Copilot Agent (conversational assistant)
-                                  └──► Summary Agent (structured reports)
+       └──► REST API ──► ☁️ FastAPI Backend (Python)
+                                   │
+                                   ├──► 🔀 Provider Factory (configurable)
+                                   │         ├──► AWS Bedrock (Haiku/Sonnet/Opus)
+                                   │         └──► OpenAI-compatible (Groq/DeepSeek)
+                                   │
+                                   ├──► Screening Agent (fast relevance check)
+                                   ├──► Analysis Agent (insight generation)
+                                   ├──► Copilot Agent (conversational assistant)
+                                   └──► Summary Agent (structured reports)
 
 🌐 Chrome Extension (MV3) ──► tabCapture ──► MediaRecorder (5s chunks)
                                                     │
                                                     ▼
                                             ☁️ FastAPI Backend
                                                     │
-                                      ffmpeg ──► faster-whisper ──► AI Pipeline
+                                              STT ──► AI Pipeline
 ```
 
 ## Quick Start
@@ -85,7 +86,7 @@ flutter build apk --release --obfuscate --split-debug-info=build/debug-info
 # 1. Open chrome://extensions/
 # 2. Enable Developer Mode
 # 3. Load unpacked → select chrome_extension/
-# 4. Start backend, then click 🧠 MeetMind icon
+# 4. Start backend, then click 🧠 Aura Meet icon
 ```
 
 ### Quality Gates
@@ -97,19 +98,18 @@ flutter build apk --release --obfuscate --split-debug-info=build/debug-info
 
 ```
 meetmind/
-├── flutter_app/              # 📱 Flutter (Dart) — Mobile + Web
+├── flutter_app/              # 📱 Flutter (Dart) — iOS + Android
 │   ├── lib/
 │   │   ├── config/           # Theme, Router
 │   │   ├── features/         # Features (Home, Meeting, History, Settings, Ask Aura)
 │   │   ├── models/           # Domain models (Freezed-style)
 │   │   ├── providers/        # Riverpod state management
-│   │   ├── services/         # WebSocket, RevenueCat, Export, Audio
-│   │   └── native/           # dart:ffi whisper.cpp bridge
-│   └── native/               # C++ plugin (whisper.cpp + CMake)
+│   │   └── services/         # STT, RevenueCat, Export, Audio
+│   └── ios/Runner/           # Native iOS plugin (SpeechAnalyzer)
 ├── backend/                  # ☁️ FastAPI (Python 3.12) — Hexagonal Architecture
 │   └── src/meetmind/
 │       ├── agents/           # AI agents (Screening, Analysis, Copilot)
-│       ├── providers/        # Factory: Bedrock, OpenAI-compatible, 4 STT engines
+│       ├── providers/        # Factory: Bedrock, OpenAI-compatible
 │       ├── core/             # Domain logic (Transcript, Storage)
 │       ├── api/              # HTTP + WebSocket endpoints
 │       ├── config/           # Settings (Pydantic)
@@ -127,14 +127,15 @@ meetmind/
 
 | Component | Technology | Rationale |
 |-----------|------------|-----------|
-| Mobile/Web | **Flutter** (Dart) 3.41.1 | AOT native, `dart:ffi` → C++ |
-| STT on-device | **whisper.cpp** / **Moonshine** | CoreML/Metal, 99 languages |
-| STT server | **Parakeet TDT 0.6B** / **Qwen3-ASR** | CPU int8, local processing (4 engines) |
+| Mobile | **Flutter** (Dart) 3.41.x | AOT native, cross-platform |
+| STT on-device | **Apple SpeechAnalyzer** (iOS 26+) | Unlimited, no 60s limit, on-device |
+| Auto language | **Text-based heuristics** | Auto-detect es/en/pt |
 | Backend | **FastAPI** (Python 3.12) | Hexagonal Architecture |
 | AI Providers | **Groq** / **Bedrock** / **OpenAI** | Switchable via `LLMProvider` factory |
 | Database | **PostgreSQL** + **pgvector** | Relational + Semantic Search (RAG) |
 | State mgmt | **Riverpod** | Compile-safe DI |
 | Extension | **Manifest V3** | `tabCapture` + Offscreen |
+| CI/CD | **GitHub Actions** | Auto build APK + IPA on tag push |
 
 ## Quality
 
