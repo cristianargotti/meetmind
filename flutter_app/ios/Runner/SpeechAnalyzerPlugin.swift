@@ -288,7 +288,7 @@ class SpeechAnalyzerPlugin: NSObject {
                                 self.sendEvent([
                                     "type": isFinal ? "final" : "partial",
                                     "text": text,
-                                    "confidence": isFinal ? 0.9 : 0.8,
+                                    "confidence": isFinal ? 1.0 : 0.5,
                                     "locale": locale,
                                 ])
                             }

@@ -113,7 +113,6 @@ class ExportService {
     bool fullExport = true,
   }) async {
     final text = formatMeetingText(meeting, fullExport: fullExport);
-    // ignore: deprecated_member_use
-    await Share.share(text);
+    await SharePlus.instance.share(ShareParams(text: text));
   }
 }

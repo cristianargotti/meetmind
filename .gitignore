@@ -83,3 +83,4 @@ infra/**/*.tfvars
 infra/**/.terraform/
 infra/**/*.tfstate*
 flutter_app/native/build-sim/
+flutter_app/ios/ExportOptions.plist

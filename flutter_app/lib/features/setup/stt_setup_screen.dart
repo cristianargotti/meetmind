@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meetmind/config/theme.dart';
 import 'package:meetmind/providers/meeting_provider.dart';
 import 'package:meetmind/services/stt_service.dart';
+import 'package:meetmind/services/user_preferences.dart';
 
 /// STT setup screen — replaces the old model download screen.
 ///
@@ -129,7 +130,9 @@ class _SttSetupScreenState extends ConsumerState<SttSetupScreen> {
 
     try {
       final SttService stt = ref.read(sttProvider);
-      final bool available = await stt.initialize(language: 'es');
+      final String lang =
+          UserPreferences.instance.transcriptionLanguage.code;
+      final bool available = await stt.initialize(language: lang);
 
       if (mounted) {
         ref.read(sttStatusProvider.notifier).state =
