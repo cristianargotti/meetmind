@@ -148,6 +148,27 @@ jobs:
             --dart-define=REVENUECAT_IOS_KEY=${{ secrets.REVENUECAT_IOS_KEY }} \
             --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN }}
 
+      - name: 🩹 Fix CocoaPods privacy bundle (Xcode 26.3+)
+        run: |
+          echo "🔧 Creating placeholder executables in privacy bundles..."
+          # Xcode 26.3+ CopySwiftLibs scans for a non-existent binary inside
+          # *_privacy.bundle. Create empty placeholder files to satisfy the scan.
+          find ios/Pods -name "*_privacy.bundle" -type d 2>/dev/null | while read bundle; do
+            name=$(basename "$bundle" .bundle)
+            if [ ! -f "$bundle/$name" ]; then
+              touch "$bundle/$name"
+              echo "  ✅ Created: $bundle/$name"
+            fi
+          done
+          # Also create in DerivedData if already generated
+          find ~/Library/Developer/Xcode/DerivedData -name "*_privacy.bundle" -type d 2>/dev/null | while read bundle; do
+            name=$(basename "$bundle" .bundle)
+            if [ ! -f "$bundle/$name" ]; then
+              touch "$bundle/$name"
+            fi
+          done
+          echo "✅ Privacy bundle fix applied"
+
       - name: 📦 Archive & Export IPA (SIGNED)
         env:
           API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}

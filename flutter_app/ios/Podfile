@@ -40,7 +40,7 @@ post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
 
-    # Force minimum deployment target for all pods
+    # Force minimum deployment target to iOS 16.0 for all pods
     target.build_configurations.each do |config|
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '26.0'
       
@@ -51,17 +51,6 @@ post_install do |installer|
         '$(inherited)',
         'PERMISSION_MICROPHONE=1',
       ]
-    end
-
-    # Fix: Xcode 26 + CocoaPods privacy resource bundle build errors.
-    # Removes the "Copy Bundle Resources" phase from *_privacy targets
-    # that reference a non-existent binary inside the .bundle.
-    if target.name.end_with?('_privacy')
-      target.build_phases.each do |phase|
-        if phase.is_a?(Xcodeproj::Project::Object::PBXResourcesBuildPhase)
-          phase.files.clear
-        end
-      end
     end
   end
 end
