@@ -76,19 +76,17 @@ jobs:
           channel: stable
           cache: true
 
-      # ✅ REEMPLAZADO: selección robusta de Xcode 26 + validación hard-fail
       - name: 🛠️ Select Xcode 26 (REQUIRED BY APPLE)
         run: |
           echo "📦 Installed Xcodes:"
           ls -1 /Applications | grep -i "^Xcode" || true
 
-          # Try common Xcode 26 names on GitHub runners
           CANDIDATES=(
+            "/Applications/Xcode_26.3.app"
             "/Applications/Xcode_26.2.app"
             "/Applications/Xcode_26.1.app"
             "/Applications/Xcode_26.0.app"
             "/Applications/Xcode_26.app"
-            "/Applications/Xcode26.app"
           )
 
           SELECTED=""
@@ -107,14 +105,15 @@ jobs:
           echo "✅ Selecting: $SELECTED"
           sudo xcode-select -s "$SELECTED/Contents/Developer"
 
+          # 🔒 Pin Xcode for ALL subsequent steps (prevents fallback to Xcode.app)
+          echo "DEVELOPER_DIR=$SELECTED/Contents/Developer" >> $GITHUB_ENV
+
           echo "✅ Xcode:"
           xcodebuild -version
-
           echo "✅ iOS SDK:"
           SDK=$(xcrun --sdk iphoneos --show-sdk-version)
           echo "$SDK"
 
-          # Hard fail if SDK < 26 (Apple requirement for uploads after 2026-04-28)
           MAJOR=${SDK%%.*}
           if [ "$MAJOR" -lt 26 ]; then
             echo "❌ iOS SDK is $SDK, need 26.0+"
@@ -155,7 +154,7 @@ jobs:
           echo "$API_KEY" > ~/private_keys/AuthKey_${API_KEY_ID}.p8
           echo "✅ Certificate + API key installed"
 
-      - name: 🏗️ Pre-compile Dart code
+      - name: 🏗️ Pre-compile Dart code (NO CODESIGN)
         run: |
           flutter build ios --release --no-codesign \
             --dart-define=REVENUECAT_IOS_KEY=${{ secrets.REVENUECAT_IOS_KEY }} \
@@ -166,13 +165,23 @@ jobs:
           API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
         run: |
+          echo "✅ Xcode in use (archive step):"
+          xcodebuild -version
+          echo "✅ iOS SDK in use (archive step):"
+          xcrun --sdk iphoneos --show-sdk-version
+          echo "✅ DEVELOPER_DIR:"
+          echo "$DEVELOPER_DIR"
+
+          # ✅ Correct ExportOptions for TestFlight/App Store Connect
           cat > ios/ExportOptions.plist << 'PLIST'
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
           <dict>
             <key>method</key>
-            <string>app-store</string>
+            <string>app-store-connect</string>
+            <key>destination</key>
+            <string>upload</string>
             <key>signingStyle</key>
             <string>automatic</string>
             <key>teamID</key>
@@ -185,13 +194,15 @@ jobs:
           </plist>
           PLIST
 
-          echo "🧹 Cleaning DerivedData..."
+          echo "🧹 Cleaning DerivedData + previous archives..."
           rm -rf ~/Library/Developer/Xcode/DerivedData/Runner-*
           rm -rf build/ios/archive
+          rm -rf build/ios/ipa
 
           echo "📋 Signing identities:"
-          security find-identity -v -p codesigning | head -5
+          security find-identity -v -p codesigning | head -20
 
+          # ⚠️ Force Swift stdlibs embedding (helps fix ITMS-90426 when Swift exists)
           xcodebuild -workspace ios/Runner.xcworkspace \
             -scheme Runner \
             -configuration Release \
@@ -202,16 +213,22 @@ jobs:
             -authenticationKeyID "$API_KEY_ID" \
             -authenticationKeyIssuerID "$API_ISSUER_ID" \
             DEVELOPMENT_TEAM=9L6258YNVJ \
+            ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES=YES \
             archive
 
           echo "✅ Archive completed (WITH signing)"
 
           ARCHIVE=build/ios/archive/Runner.xcarchive
-          echo "== Archive Frameworks =="
-          find "$ARCHIVE" -path "*Runner.app/Frameworks*" -maxdepth 6 -type f 2>/dev/null | head -200
-          echo "== Archive SwiftSupport =="
-          find "$ARCHIVE" -path "*SwiftSupport*" -type f 2>/dev/null | head -50 || echo "  ⚠️ NOT PRESENT"
+          echo "== Archive: Runner.app Frameworks =="
+          find "$ARCHIVE" -path "*Runner.app/Frameworks*" -maxdepth 8 -type f 2>/dev/null | head -300
 
+          echo "== Archive: Swift stdlibs inside app? =="
+          find "$ARCHIVE" -path "*Runner.app/Frameworks/libswift*.dylib" -maxdepth 10 -type f 2>/dev/null | head -100 || true
+
+          echo "== Archive: SwiftSupport folder? =="
+          find "$ARCHIVE" -path "*SwiftSupport*" -maxdepth 10 -type f 2>/dev/null | head -100 || echo "  ⚠️ NOT PRESENT"
+
+          echo "✅ Exporting IPA..."
           xcodebuild -exportArchive \
             -archivePath build/ios/archive/Runner.xcarchive \
             -exportOptionsPlist ios/ExportOptions.plist \
@@ -223,14 +240,25 @@ jobs:
 
           echo "✅ IPA exported"
 
+          echo "📦 Exported files:"
+          ls -lah build/ios/ipa || true
+
           IPA=$(ls build/ios/ipa/*.ipa 2>/dev/null | head -1)
           if [ -n "$IPA" ]; then
             echo "== SwiftSupport in IPA =="
             unzip -l "$IPA" | grep -E "SwiftSupport/iphoneos/.*dylib" || echo "  NONE"
-            echo "== Runner Frameworks in IPA =="
+
+            echo "== Runner Frameworks in IPA (swift libs) =="
+            unzip -l "$IPA" | grep -E "Payload/Runner.app/Frameworks/libswift.*dylib" || echo "  NONE"
+
+            echo "== Runner Frameworks in IPA (all dylibs) =="
             unzip -l "$IPA" | grep -E "Payload/Runner.app/Frameworks/.*dylib" || echo "  NONE"
+
             echo "== Full IPA structure (top-level) =="
-            unzip -l "$IPA" | head -30
+            unzip -l "$IPA" | head -40
+          else
+            echo "❌ No IPA found in build/ios/ipa"
+            exit 1
           fi
 
       - name: 📤 Upload IPA (artifact backup)
