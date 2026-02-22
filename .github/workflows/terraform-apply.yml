@@ -1,12 +1,16 @@
 # =============================================================================
-# MeetMind — Terraform Apply
+# AuraMeet — Terraform Apply (Production)
 # =============================================================================
 # Applies Terraform changes after merge to main.
 # Uses 'production' environment for manual approval gate.
 #
 # Required GitHub Secrets:
-#   - MEETMIND_OPENAI_API_KEY: OpenAI API key (reused from backend deploy)
-#   - SLACK_WEBHOOK_URL: (optional) Slack notifications
+#   - MEETMIND_OPENAI_API_KEY
+#   - AURAMEET_JWT_SECRET_KEY
+#   - AURAMEET_DB_PASSWORD
+#   - AURAMEET_GOOGLE_CLIENT_ID (optional)
+#   - AURAMEET_SENTRY_DSN (optional)
+#   - SLACK_WEBHOOK_URL (optional)
 # =============================================================================
 name: 🏗️ Terraform Apply
 
@@ -30,9 +34,12 @@ jobs:
     environment: production # Manual approval required
 
     # Inject secrets via TF_VAR_ environment variables
-    # Terraform auto-reads TF_VAR_<name> as variable values
     env:
       TF_VAR_openai_api_key: ${{ secrets.MEETMIND_OPENAI_API_KEY }}
+      TF_VAR_jwt_secret_key: ${{ secrets.AURAMEET_JWT_SECRET_KEY }}
+      TF_VAR_db_password: ${{ secrets.AURAMEET_DB_PASSWORD }}
+      TF_VAR_google_client_id: ${{ secrets.AURAMEET_GOOGLE_CLIENT_ID }}
+      TF_VAR_sentry_dsn: ${{ secrets.AURAMEET_SENTRY_DSN }}
 
     steps:
       - name: 📥 Checkout
@@ -48,14 +55,22 @@ jobs:
 
       - name: 📋 Terraform Init
         working-directory: infra/environments/production
-        run: terraform init -input=false
+        run: |
+          # Override backend profile (CI uses EC2 instance profile, not named profile)
+          terraform init -input=false \
+            -backend-config="profile="
 
       - name: 📊 Terraform Plan
         working-directory: infra/environments/production
+        env:
+          # Override provider profile — CI uses EC2 instance profile
+          TF_VAR_aws_profile: ""
         run: terraform plan -no-color -input=false -out=tfplan
 
       - name: 🚀 Terraform Apply
         working-directory: infra/environments/production
+        env:
+          TF_VAR_aws_profile: ""
         run: terraform apply -auto-approve tfplan
 
       - name: 🔔 Notify Slack
