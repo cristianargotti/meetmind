@@ -1,6 +1,6 @@
 # =============================================================================
 # MeetMind Backend — Production Dockerfile
-# AI-powered Meeting Assistant with faster-whisper STT
+# AI-powered Meeting Assistant API
 #
 # Follows Astral's official uv multi-stage Docker best practices (2026)
 # Pattern from: DARA (Dafiti Automated Response Agent)
@@ -37,17 +37,6 @@ COPY . /app
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked
 
-# Pre-download Parakeet STT model at build time (baked into image).
-# This avoids runtime downloads which fail in VPC-egress containers.
-# Model: nemo-parakeet-tdt-0.6b-v3 INT8 (~800MB)
-#
-# HF_HOME redirects the HuggingFace cache under /app so it gets COPY'd
-# to the runner stage. Without this, the model ends up in /root/.cache/
-# and is lost in the multi-stage build.
-ENV HF_HOME=/app/.hf_cache
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv run python -c "import onnx_asr; onnx_asr.load_model('nemo-parakeet-tdt-0.6b-v3', quantization='int8'); print('Parakeet model pre-downloaded successfully')"
-
 # =============================================================================
 # RUNNER: Production-ready minimal image
 # =============================================================================
@@ -58,7 +47,6 @@ FROM python:3.12-slim-bookworm AS runner
 RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
     ca-certificates \
     curl \
-    libsndfile1 \
     && rm -rf /var/lib/apt/lists/*
 
 # Setup non-root user (security best practice)
@@ -79,12 +67,9 @@ ENV PYTHONUNBUFFERED=1
 
 # Production defaults (secrets injected via env vars at runtime)
 ENV MEETMIND_ENVIRONMENT=production
-ENV MEETMIND_STT_ENGINE=parakeet
 ENV MEETMIND_LLM_PROVIDER=openai
 ENV MEETMIND_DEBUG=false
 
-# HuggingFace cache — must match builder stage so onnx-asr finds pre-downloaded model
-ENV HF_HOME=/app/.hf_cache
 
 # Use non-root user
 USER meetmind
@@ -95,7 +80,7 @@ WORKDIR /app
 # Metadata labels
 LABEL maintainer="Cris <cris@meetmind.ai>" \
     application="meetmind-backend" \
-    description="AI-powered Meeting Assistant — real-time STT + AI copilot"
+    description="AI-powered Meeting Assistant API"
 
 # Health check for Docker Compose / monitoring
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \

@@ -107,7 +107,6 @@ resource "aws_apprunner_service" "main" {
           MEETMIND_JWT_SECRET_KEY   = var.jwt_secret_key
           MEETMIND_GOOGLE_CLIENT_ID = var.google_client_id
           MEETMIND_LLM_PROVIDER     = "openai"
-          MEETMIND_STT_ENGINE       = "parakeet"
           MEETMIND_CORS_ORIGINS     = var.cors_origins
           MEETMIND_LOG_LEVEL        = "INFO"
           MEETMIND_DEBUG            = "false"

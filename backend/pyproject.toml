@@ -17,9 +17,6 @@ dependencies = [
     "structlog>=24.4.0",
     "tenacity>=9.0.0",
     "openai>=2.21.0",
-    "soundfile>=0.13.0",
-    "numpy>=1.26.0",
-    "onnx-asr[cpu,hub]>=0.10.0",
     "asyncpg>=0.30.0",
     "PyJWT[crypto]>=2.9.0",
     "slowapi>=0.1.9",
@@ -53,13 +50,6 @@ select = ["E", "W", "F", "I", "N", "UP", "S", "B", "A", "C4", "SIM", "TCH", "RUF
 
 [tool.coverage.run]
 omit = [
-    "src/meetmind/providers/whisper_stt_service.py",
-    "src/meetmind/providers/parakeet_stt_service.py",
-    "src/meetmind/providers/qwen_stt_service.py",
-    "src/meetmind/providers/qwen_stt.py",
-    "src/meetmind/providers/parakeet_stt.py",
-    "src/meetmind/providers/whisper_stt.py",
-    "src/meetmind/providers/moonshine_stt.py",
     "src/meetmind/models/*",
 ]
 
@@ -72,12 +62,6 @@ warn_unused_ignores = false
 
 [[tool.mypy.overrides]]
 module = [
-    "faster_whisper.*",
-    "torch.*",
-    "qwen_asr.*",
-    "numpy.*",
-    "pyannote.*",
-    "riva.*",
     "jwt.*",
 ]
 ignore_missing_imports = true

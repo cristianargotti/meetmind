@@ -40,27 +40,27 @@ variable "hosted_zone_id" {
 # --- Compute ---
 
 variable "app_runner_cpu" {
-  description = "App Runner vCPU (1024 = 1 vCPU, 2048 = 2 vCPU)"
+  description = "App Runner vCPU (256 = 0.25 vCPU, 1024 = 1 vCPU)"
   type        = number
-  default     = 2048 # 2 vCPU — required for Parakeet ONNX inference
+  default     = 256 # 0.25 vCPU — API-only (I/O-bound), STT runs on-device
 }
 
 variable "app_runner_memory" {
   description = "App Runner memory in MB"
   type        = number
-  default     = 4096 # 4 GB — Parakeet INT8 (~800MB) + Python (~400MB) + inference buffers
+  default     = 512 # 0.5 GB — lightweight API (FastAPI + asyncpg + httpx)
 }
 
 variable "app_runner_max_concurrency" {
   description = "Max concurrent requests per instance"
   type        = number
-  default     = 100
+  default     = 200 # I/O-bound workload handles more concurrency
 }
 
 variable "app_runner_max_instances" {
   description = "Max instances for auto-scaling"
   type        = number
-  default     = 25
+  default     = 5 # Lighter instances scale faster, can increase anytime
 }
 
 variable "app_runner_min_instances" {
