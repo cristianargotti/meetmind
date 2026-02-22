@@ -45,15 +45,15 @@ jobs:
           terraform_wrapper: false
 
       - name: 📋 Terraform Init
-        working-directory: infra
+        working-directory: infra/environments/production
         run: terraform init -input=false
 
       - name: 📊 Terraform Plan
-        working-directory: infra
+        working-directory: infra/environments/production
         run: terraform plan -no-color -input=false -out=tfplan
 
       - name: 🚀 Terraform Apply
-        working-directory: infra
+        working-directory: infra/environments/production
         run: terraform apply -auto-approve tfplan
 
       - name: 🔔 Notify Slack
