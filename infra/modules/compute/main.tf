@@ -77,6 +77,10 @@ resource "aws_apprunner_auto_scaling_configuration_version" "main" {
   max_size                        = var.max_instances
   min_size                        = var.min_instances
 
+  lifecycle {
+    create_before_destroy = true
+  }
+
   tags = { Component = "compute" }
 }
 
