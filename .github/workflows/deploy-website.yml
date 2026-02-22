@@ -1,8 +1,8 @@
 # =============================================================================
-# MeetMind — Website Deploy Pipeline (Astro → ECR → App Runner)
+# MeetMind — Website Deploy Pipeline (Astro → S3 → CloudFront)
 # =============================================================================
-# Builds the Astro site inside an nginx container, pushes to ECR.
-# App Runner auto-deploys when a new image is tagged :latest.
+# Builds the Astro static site, syncs to S3, invalidates CloudFront cache.
+# Replaces previous Docker/ECR/App Runner pipeline.
 # =============================================================================
 name: 🚀 Deploy Website
 
@@ -20,7 +20,7 @@ concurrency:
 
 env:
   AWS_REGION: us-east-1
-  ECR_REPOSITORY: aurameet-website
+  S3_BUCKET: meetmind-website
   ROLE_TO_ASSUME: "arn:aws:iam::755400489315:role/aurameet-github-actions"
 
 permissions:
@@ -29,13 +29,28 @@ permissions:
 
 jobs:
   build-and-deploy:
-    name: Build & Push
+    name: Build & Deploy to S3 + CloudFront
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
 
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+
+      - name: 📦 Install dependencies
+        working-directory: website
+        run: npm ci
+
+      - name: 🏗️ Build Astro site
+        working-directory: website
+        run: npm run build
 
       - name: 🔧 Configure AWS Credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
@@ -43,26 +58,45 @@ jobs:
           role-to-assume: ${{ env.ROLE_TO_ASSUME }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: 🔑 Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
+      - name: 🪣 Sync to S3
+        working-directory: website
+        run: |
+          aws s3 sync dist/ s3://${{ env.S3_BUCKET }}/ \
+            --delete \
+            --cache-control "public, max-age=31536000, immutable" \
+            --exclude "*.html" \
+            --exclude "sitemap*.xml" \
+            --exclude "robots.txt"
 
-      - name: 🏗️ Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+          # HTML files with short cache (revalidate on each visit)
+          aws s3 sync dist/ s3://${{ env.S3_BUCKET }}/ \
+            --cache-control "public, max-age=0, must-revalidate" \
+            --include "*.html" \
+            --include "sitemap*.xml" \
+            --include "robots.txt" \
+            --content-type-map ""
 
-      - name: 🐳 Build and Push Image (AMD64)
-        uses: docker/build-push-action@v5
-        with:
-          context: ./website
-          push: true
-          platforms: linux/amd64
-          tags: |
-            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
-            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          provenance: false
+      - name: 🌐 Get CloudFront Distribution ID
+        id: cf
+        run: |
+          DIST_ID=$(aws cloudfront list-distributions \
+            --query "DistributionList.Items[?Aliases.Items[?contains(@,'aurameet.live')]].Id | [0]" \
+            --output text)
+          echo "distribution_id=$DIST_ID" >> $GITHUB_OUTPUT
+          echo "📋 CloudFront Distribution: $DIST_ID"
+
+      - name: 🔄 Invalidate CloudFront Cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ steps.cf.outputs.distribution_id }} \
+            --paths "/*"
 
       - name: 📢 Notify Status
         if: always()
-        run: echo "Website image pushed. App Runner will deploy automatically."
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ Website deployed to S3 + CloudFront"
+            echo "🌐 https://www.aurameet.live"
+          else
+            echo "❌ Deploy failed"
+          fi
