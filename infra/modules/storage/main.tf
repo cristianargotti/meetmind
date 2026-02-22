@@ -165,26 +165,37 @@ resource "aws_cloudfront_origin_access_control" "website" {
   signing_protocol                  = "sigv4"
 }
 
-# --- CloudFront Function: Redirect naked → www ---
+# --- CloudFront Function: Redirect naked → www + directory index rewrite ---
 
 resource "aws_cloudfront_function" "redirect_www" {
   name    = "${var.project_name}-redirect-www"
   runtime = "cloudfront-js-2.0"
-  comment = "Redirect naked domain to www"
+  comment = "Redirect naked domain to www and rewrite directory URIs"
   publish = true
   code    = <<-EOF
     function handler(event) {
       var request = event.request;
       var host = request.headers.host.value;
+      var uri = request.uri;
+
+      // Redirect naked domain → www
       if (host === '${var.domain_name}') {
         return {
           statusCode: 301,
           statusDescription: 'Moved Permanently',
           headers: {
-            'location': { value: 'https://www.${var.domain_name}' + request.uri }
+            'location': { value: 'https://www.${var.domain_name}' + uri }
           }
         };
       }
+
+      // Rewrite directory URIs → index.html (S3 REST API doesn't do this)
+      if (uri.endsWith('/')) {
+        request.uri += 'index.html';
+      } else if (!uri.includes('.')) {
+        request.uri += '/index.html';
+      }
+
       return request;
     }
   EOF
