@@ -1,6 +1,5 @@
 # =============================================================================
-# Module: Storage — S3 (Website + Recordings)
-# CloudFront will be added after AWS account verification
+# Module: Storage — S3 (Website + Recordings) + CloudFront CDN
 # =============================================================================
 
 variable "project_name" {
@@ -23,6 +22,7 @@ resource "aws_s3_bucket" "website" {
   tags   = { Component = "website" }
 }
 
+# Keep website configuration for S3 origin compatibility
 resource "aws_s3_bucket_website_configuration" "website" {
   bucket = aws_s3_bucket.website.id
 
@@ -30,14 +30,16 @@ resource "aws_s3_bucket_website_configuration" "website" {
   error_document { key = "index.html" }
 }
 
+# Block ALL public access — CloudFront OAC is the only entry point
 resource "aws_s3_bucket_public_access_block" "website" {
   bucket                  = aws_s3_bucket.website.id
-  block_public_acls       = false
-  block_public_policy     = false
-  ignore_public_acls      = false
-  restrict_public_buckets = false
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
 }
 
+# Bucket policy: Allow access ONLY from CloudFront via OAC
 resource "aws_s3_bucket_policy" "website" {
   bucket     = aws_s3_bucket.website.id
   depends_on = [aws_s3_bucket_public_access_block.website]
@@ -45,11 +47,16 @@ resource "aws_s3_bucket_policy" "website" {
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
-      Sid       = "PublicReadGetObject"
+      Sid       = "AllowCloudFrontOAC"
       Effect    = "Allow"
-      Principal = "*"
+      Principal = { Service = "cloudfront.amazonaws.com" }
       Action    = "s3:GetObject"
       Resource  = "${aws_s3_bucket.website.arn}/*"
+      Condition = {
+        StringEquals = {
+          "AWS:SourceArn" = aws_cloudfront_distribution.website.arn
+        }
+      }
     }]
   })
 }
@@ -115,62 +122,7 @@ resource "aws_acm_certificate" "website" {
   }
 }
 
-# --- CloudFront Distribution (COMMENTED - pending AWS account verification) ---
-# Uncomment after resolving AWS Support ticket for CloudFront access.
-
-# resource "aws_cloudfront_distribution" "website" {
-#   origin {
-#     domain_name = aws_s3_bucket_website_configuration.website.website_endpoint
-#     origin_id   = "S3-${aws_s3_bucket.website.id}"
-#
-#     custom_origin_config {
-#       http_port              = 80
-#       https_port             = 443
-#       origin_protocol_policy = "http-only"
-#       origin_ssl_protocols   = ["TLSv1.2"]
-#     }
-#   }
-#
-#   enabled             = true
-#   is_ipv6_enabled     = true
-#   default_root_object = "index.html"
-#
-#   aliases = [var.domain_name, "www.${var.domain_name}"]
-#
-#   default_cache_behavior {
-#     allowed_methods  = ["GET", "HEAD"]
-#     cached_methods   = ["GET", "HEAD"]
-#     target_origin_id = "S3-${aws_s3_bucket.website.id}"
-#
-#     forwarded_values {
-#       query_string = false
-#       cookies { forward = "none" }
-#     }
-#
-#     viewer_protocol_policy = "redirect-to-https"
-#     min_ttl                = 0
-#     default_ttl            = 3600
-#     max_ttl                = 86400
-#   }
-#
-#   viewer_certificate {
-#     acm_certificate_arn      = aws_acm_certificate.website.arn
-#     ssl_support_method       = "sni-only"
-#     minimum_protocol_version = "TLSv1.2_2021"
-#   }
-#
-#   restrictions {
-#     geo_restriction {
-#       restriction_type = "none"
-#     }
-#   }
-#
-#   tags = { Component = "cdn" }
-# }
-
-# --- ACM Validation Records (CloudFront) ---
-
-# --- ACM Validation Records (CloudFront) ---
+# --- ACM Validation Records ---
 
 resource "aws_route53_record" "acm_validation" {
   for_each = toset([var.domain_name, "www.${var.domain_name}"])
@@ -197,6 +149,126 @@ resource "aws_route53_record" "acm_validation" {
   ]
 }
 
+# Wait for cert validation before CloudFront can use it
+resource "aws_acm_certificate_validation" "website" {
+  certificate_arn         = aws_acm_certificate.website.arn
+  validation_record_fqdns = [for r in aws_route53_record.acm_validation : r.fqdn]
+}
+
+# --- CloudFront Origin Access Control (OAC) ---
+
+resource "aws_cloudfront_origin_access_control" "website" {
+  name                              = "${var.project_name}-website-oac"
+  description                       = "OAC for AuraMeet website S3 bucket"
+  origin_access_control_origin_type = "s3"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
+}
+
+# --- CloudFront Function: Redirect naked → www ---
+
+resource "aws_cloudfront_function" "redirect_www" {
+  name    = "${var.project_name}-redirect-www"
+  runtime = "cloudfront-js-2.0"
+  comment = "Redirect naked domain to www"
+  publish = true
+  code    = <<-EOF
+    function handler(event) {
+      var request = event.request;
+      var host = request.headers.host.value;
+      if (host === '${var.domain_name}') {
+        return {
+          statusCode: 301,
+          statusDescription: 'Moved Permanently',
+          headers: {
+            'location': { value: 'https://www.${var.domain_name}' + request.uri }
+          }
+        };
+      }
+      return request;
+    }
+  EOF
+}
+
+# --- CloudFront Distribution ---
+
+resource "aws_cloudfront_distribution" "website" {
+  enabled             = true
+  is_ipv6_enabled     = true
+  default_root_object = "index.html"
+  http_version        = "http2and3"
+  price_class         = "PriceClass_100" # US, Canada, Europe (cheapest)
+  comment             = "AuraMeet website CDN"
+
+  aliases = [var.domain_name, "www.${var.domain_name}"]
+
+  origin {
+    domain_name              = aws_s3_bucket.website.bucket_regional_domain_name
+    origin_id                = "S3-${aws_s3_bucket.website.id}"
+    origin_access_control_id = aws_cloudfront_origin_access_control.website.id
+  }
+
+  default_cache_behavior {
+    allowed_methods  = ["GET", "HEAD", "OPTIONS"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "S3-${aws_s3_bucket.website.id}"
+    compress         = true
+
+    viewer_protocol_policy = "redirect-to-https"
+
+    # Use managed CachingOptimized policy (recommended)
+    cache_policy_id = "658327ea-f89d-4fab-a63d-7e88639e58f6" # CachingOptimized
+
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.redirect_www.arn
+    }
+  }
+
+  # Static assets with long TTL
+  ordered_cache_behavior {
+    path_pattern     = "_assets/*"
+    allowed_methods  = ["GET", "HEAD"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "S3-${aws_s3_bucket.website.id}"
+    compress         = true
+
+    viewer_protocol_policy = "redirect-to-https"
+    cache_policy_id        = "658327ea-f89d-4fab-a63d-7e88639e58f6" # CachingOptimized
+  }
+
+  # SPA/i18n fallback: 404 → index.html for client-side routing
+  custom_error_response {
+    error_code            = 403
+    response_code         = 200
+    response_page_path    = "/index.html"
+    error_caching_min_ttl = 10
+  }
+
+  custom_error_response {
+    error_code            = 404
+    response_code         = 200
+    response_page_path    = "/index.html"
+    error_caching_min_ttl = 10
+  }
+
+  viewer_certificate {
+    acm_certificate_arn      = aws_acm_certificate.website.arn
+    ssl_support_method       = "sni-only"
+    minimum_protocol_version = "TLSv1.2_2021"
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  depends_on = [aws_acm_certificate_validation.website]
+
+  tags = { Component = "cdn" }
+}
+
 # --- Outputs ---
 
 output "website_bucket" {
@@ -215,17 +287,16 @@ output "bucket_arn" {
   value = aws_s3_bucket.recordings.arn
 }
 
-# CloudFront outputs (using S3 endpoint until CloudFront is enabled)
 output "cdn_domain_name" {
-  value = aws_s3_bucket_website_configuration.website.website_endpoint
+  value = aws_cloudfront_distribution.website.domain_name
 }
 
 output "cdn_distribution_id" {
-  value = "pending-cloudfront-verification"
+  value = aws_cloudfront_distribution.website.id
 }
 
 output "cdn_hosted_zone_id" {
-  value = var.hosted_zone_id
+  value = aws_cloudfront_distribution.website.hosted_zone_id
 }
 
 output "website_bucket_arn" {

@@ -43,8 +43,8 @@ module "database" {
 
 # --- Storage (S3 + CloudFront) ---
 module "storage" {
-  source       = "../../modules/storage"
-  project_name = local.name
+  source         = "../../modules/storage"
+  project_name   = local.name
   domain_name    = var.domain_name
   hosted_zone_id = var.hosted_zone_id
 }
@@ -84,12 +84,12 @@ module "ecr" {
 module "dns" {
   source = "../../modules/dns"
 
-  domain_name            = var.domain_name
-  hosted_zone_id         = var.hosted_zone_id
-  app_runner_url         = module.compute.service_url
-  cdn_domain             = module.storage.cdn_domain_name
-  cdn_hosted_zone_id     = module.storage.cdn_hosted_zone_id
-  validation_records     = module.compute.custom_domain_validation_records
+  domain_name        = var.domain_name
+  hosted_zone_id     = var.hosted_zone_id
+  app_runner_url     = module.compute.service_url
+  cdn_domain         = module.storage.cdn_domain_name
+  cdn_hosted_zone_id = module.storage.cdn_hosted_zone_id
+  validation_records = module.compute.custom_domain_validation_records
 }
 
 # --- Monitoring ---

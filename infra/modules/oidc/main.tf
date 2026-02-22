@@ -46,8 +46,8 @@ resource "aws_iam_role_policy" "ecr_push" {
         Resource = "*"
       },
       {
-        Effect = "Allow"
-        Action = "sts:GetCallerIdentity"
+        Effect   = "Allow"
+        Action   = "sts:GetCallerIdentity"
         Resource = "*"
       }
     ]
@@ -74,6 +74,26 @@ resource "aws_iam_role_policy" "s3_deploy" {
           var.website_bucket_arn,
           "${var.website_bucket_arn}/*"
         ]
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "cloudfront_deploy" {
+  name = "cloudfront-deploy"
+  role = aws_iam_role.github_actions.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "cloudfront:CreateInvalidation",
+          "cloudfront:GetInvalidation",
+          "cloudfront:ListDistributions"
+        ]
+        Resource = "*"
       }
     ]
   })
