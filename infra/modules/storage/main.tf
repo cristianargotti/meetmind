@@ -178,8 +178,8 @@ resource "aws_cloudfront_function" "redirect_www" {
       var host = request.headers.host.value;
       var uri = request.uri;
 
-      // Redirect naked domain → www
-      if (host === '${var.domain_name}') {
+      // Redirect naked domain and CloudFront domain → www
+      if (host === '${var.domain_name}' || host.endsWith('.cloudfront.net')) {
         return {
           statusCode: 301,
           statusDescription: 'Moved Permanently',
