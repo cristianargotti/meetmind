@@ -71,21 +71,16 @@ variable "app_runner_min_instances" {
 
 # --- Database ---
 
-variable "db_instance_class" {
-  description = "RDS instance type"
-  type        = string
-  default     = "db.t4g.micro" # Free Tier + Graviton
+variable "aurora_min_capacity" {
+  description = "Aurora Serverless v2 minimum ACUs (0.5 ACU = ~1GB RAM)"
+  type        = number
+  default     = 0.5 # Minimum — scales up automatically
 }
 
-variable "db_allocated_storage" {
-  description = "RDS storage in GB"
+variable "aurora_max_capacity" {
+  description = "Aurora Serverless v2 maximum ACUs (1 ACU = ~2GB RAM)"
   type        = number
-  default     = 20
-
-  validation {
-    condition     = var.db_allocated_storage >= 20 && var.db_allocated_storage <= 100
-    error_message = "DB storage must be 20-100 GB."
-  }
+  default     = 16 # Enough for ~5,000 concurrent users
 }
 
 # --- Secrets (from GitHub Secrets / SSM, NEVER in tfvars) ---

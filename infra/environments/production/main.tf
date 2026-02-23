@@ -28,13 +28,13 @@ module "secrets" {
   google_client_id = var.google_client_id
 }
 
-# --- Database (RDS PostgreSQL — Free Tier) ---
+# --- Database (Aurora Serverless v2 — Auto-scaling PostgreSQL) ---
 module "database" {
   source = "../../modules/database"
 
   project_name      = local.name
-  instance_class    = var.db_instance_class
-  allocated_storage = var.db_allocated_storage
+  min_capacity      = var.aurora_min_capacity
+  max_capacity      = var.aurora_max_capacity
   db_password       = var.db_password
   vpc_id            = module.networking.vpc_id
   subnet_ids        = module.networking.db_subnet_ids
