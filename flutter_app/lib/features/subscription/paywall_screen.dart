@@ -1,5 +1,6 @@
 // ignore_for_file: prefer_const_constructors
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -32,13 +33,31 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
 
   Future<void> _loadOfferings() async {
     final packages = await SubscriptionService.instance.getOfferings();
+    debugPrint('📦 Offerings loaded: ${packages.length} packages');
+    for (final p in packages) {
+      debugPrint('  → ${p.storeProduct.identifier}: ${p.storeProduct.priceString}');
+    }
     if (mounted) {
       setState(() => _packages = packages);
     }
   }
 
   Future<void> _purchase() async {
-    if (_packages.isEmpty) return;
+    if (_packages.isEmpty) {
+      // Retry loading offerings before giving up
+      await _loadOfferings();
+      if (_packages.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Subscription products are not available right now. Please try again later.'),
+              backgroundColor: Colors.red.shade700,
+            ),
+          );
+        }
+        return;
+      }
+    }
 
     setState(() => _isLoading = true);
 
@@ -61,6 +80,13 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
           SnackBar(content: Text(AppLocalizations.of(context)!.paywallWelcome)),
         );
         Navigator.of(context).pop();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Unable to complete purchase. Please try again.'),
+            backgroundColor: Colors.red.shade700,
+          ),
+        );
       }
     }
   }

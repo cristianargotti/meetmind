@@ -1,7 +1,7 @@
 name: meetmind
 description: "The most powerful meeting AI tool"
 publish_to: "none"
-version: 5.5.14+39
+version: 5.5.15+44
 
 environment:
   sdk: ^3.10.1

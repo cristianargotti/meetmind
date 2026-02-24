@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -171,11 +172,11 @@ class SubscriptionService {
 
       _initialized = true;
       _configured = true;
-      debugPrint('✅ RevenueCat initialized');
+      debugPrint('✅ RevenueCat initialized — tier=${_state.tier}, isPro=${_state.isPro}');
     } catch (e) {
       debugPrint('⚠️ RevenueCat init failed: $e');
       // App works in free mode if RevenueCat fails
-      _updateState(_state.copyWith(tier: SubscriptionTier.free));
+      _updateState(_state.copyWith(tier: SubscriptionTier.free, isActive: false));
     }
   }
 
@@ -226,11 +227,12 @@ class SubscriptionService {
       final customerInfo = await Purchases.purchasePackage(package);
       _processCustomerInfo(customerInfo);
       return _state.isPro;
-    } on PurchasesErrorCode catch (e) {
-      if (e == PurchasesErrorCode.purchaseCancelledError) {
+    } on PlatformException catch (e) {
+      final errorCode = PurchasesErrorHelper.getErrorCode(e);
+      if (errorCode == PurchasesErrorCode.purchaseCancelledError) {
         debugPrint('Purchase cancelled by user');
       } else {
-        debugPrint('❌ Purchase error: $e');
+        debugPrint('❌ Purchase error: $errorCode — ${e.message}');
       }
       return false;
     } catch (e) {
@@ -285,13 +287,21 @@ class SubscriptionService {
   }
 
   /// Reset user identity (call on logout).
+  ///
+  /// Always resets local state to free tier, then additionally
+  /// resets RevenueCat identity if configured.
   Future<void> logOut() async {
+    // ALWAYS reset local state to free tier — critical to avoid
+    // Pro override persisting across different user logins.
+    _updateState(const SubscriptionState());
+    debugPrint('🔒 Subscription reset to free on logout');
+
     if (!_configured) return;
     try {
       final customerInfo = await Purchases.logOut();
       _processCustomerInfo(customerInfo);
     } catch (e) {
-      debugPrint('⚠️ Failed to logout user: $e');
+      debugPrint('⚠️ Failed to logout RevenueCat user: $e');
     }
   }
 
@@ -355,6 +365,9 @@ class SubscriptionService {
   void _updateState(SubscriptionState newState) {
     _state = newState;
     _stateController.add(newState);
+    debugPrint('📊 Subscription state: tier=${newState.tier}, '
+        'isActive=${newState.isActive}, isPro=${newState.isPro}, '
+        'meetings=${newState.meetingsThisWeek}');
   }
 
   /// Dispose resources.
