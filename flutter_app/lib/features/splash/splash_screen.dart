@@ -46,7 +46,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
     // Check auth state
     final authState = ref.read(authProvider);
-    if (authState.isAuthenticated) {
+    if (authState.isAuthenticated || authState.isGuest) {
       context.go('/');
     } else {
       context.go('/login');

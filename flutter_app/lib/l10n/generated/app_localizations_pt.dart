@@ -382,6 +382,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get paywallFeatureDigest => 'Resumo Semanal';
 
   @override
+  String get paywallProductsUnavailable =>
+      'Os produtos de assinatura estão temporariamente indisponíveis. Tente novamente em um momento.';
+
+  @override
   String get paywallLegal =>
       'A assinatura renova automaticamente pelo preço indicado, a menos que seja cancelada pelo menos 24 horas antes do final do período atual. O pagamento é cobrado na sua conta Apple ID. Ao assinar, você concorda com nossa Política de Privacidade e Termos de Uso.';
 
@@ -436,6 +440,13 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get privacyDataDesc =>
       '• As transcrições são enviadas aos nossos servidores apenas para análise com IA\n• Os dados são armazenados com segurança e criptografia em repouso\n• Você pode excluir qualquer reunião e seus dados a qualquer momento';
+
+  @override
+  String get privacyAiTitle => '🤖 Processamento IA e Serviços de Terceiros';
+
+  @override
+  String get privacyAiDesc =>
+      '• As transcrições (apenas texto, nunca áudio) são enviadas a provedores externos de IA para análise\n• Provedores de IA: Amazon Web Services (AWS Bedrock) e OpenAI\n• Objetivo: Gerar resumos, insights e ações de reuniões\n• Os provedores de IA processam dados sob acordos rigorosos de processamento\n• Não usamos seus dados para treinar modelos de IA\n• Você pode consultar as políticas de privacidade dos nossos provedores a qualquer momento';
 
   @override
   String get privacySubsTitle => '💳 Assinaturas';
@@ -589,7 +600,7 @@ class AppLocalizationsPt extends AppLocalizations {
       'Aura precisa de acesso ao microfone para transcrever suas reuniões em tempo real.';
 
   @override
-  String get onboardingMicAllow => 'Permitir Microfone';
+  String get onboardingMicAllow => 'Continuar';
 
   @override
   String get onboardingReady => 'Tudo Pronto!';
@@ -704,4 +715,21 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get forgotPasswordError =>
       'Algo deu errado. Por favor, tente novamente.';
+
+  @override
+  String get aiConsentTitle => 'Processamento de Dados com IA';
+
+  @override
+  String get aiConsentBody =>
+      'Aura Meet utiliza serviços de IA de terceiros para analisar as transcrições das suas reuniões e gerar resumos, insights e ações.\n\nO que é compartilhado:\n• Transcrições de reuniões (apenas texto)\n• Nunca suas gravações de áudio\n\nQuem processa os dados:\n• Amazon Web Services (AWS Bedrock)\n• OpenAI\n\nSeus dados de transcrição são processados sob acordos rigorosos de processamento e não são usados para treinar modelos de IA.';
+
+  @override
+  String get aiConsentAgree => 'Aceito';
+
+  @override
+  String get aiConsentDecline => 'Recusar';
+
+  @override
+  String get aiConsentLearnMore =>
+      'Mais informações em nossa Política de Privacidade';
 }

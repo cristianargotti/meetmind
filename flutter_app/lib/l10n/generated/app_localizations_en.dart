@@ -380,6 +380,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paywallFeatureDigest => 'Weekly Digest';
 
   @override
+  String get paywallProductsUnavailable =>
+      'Subscription products are temporarily unavailable. Please try again in a moment.';
+
+  @override
   String get paywallLegal =>
       'Subscription auto-renews at the price shown above unless cancelled at least 24 hours before the end of the current period. Payment is charged to your Apple ID account. By subscribing you agree to our Privacy Policy and Terms of Use.';
 
@@ -434,6 +438,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get privacyDataDesc =>
       '• Transcripts are sent to our servers for AI analysis only\n• Meeting data is stored securely with encryption at rest\n• You can delete any meeting and its data at any time';
+
+  @override
+  String get privacyAiTitle => '🤖 AI Processing & Third-Party Services';
+
+  @override
+  String get privacyAiDesc =>
+      '• Meeting transcripts (text only, never audio) are sent to third-party AI providers for analysis\n• AI providers: Amazon Web Services (AWS Bedrock) and OpenAI\n• Purpose: Generate meeting summaries, insights, and action items\n• AI providers process data under strict data processing agreements\n• We do not use your data to train AI models\n• You can review our AI providers\' privacy policies at any time';
 
   @override
   String get privacySubsTitle => '💳 Subscriptions';
@@ -585,7 +596,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Aura needs microphone access to transcribe your meetings in real-time.';
 
   @override
-  String get onboardingMicAllow => 'Allow Microphone';
+  String get onboardingMicAllow => 'Continue';
 
   @override
   String get onboardingReady => 'You\'re All Set!';
@@ -699,4 +710,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get forgotPasswordError => 'Something went wrong. Please try again.';
+
+  @override
+  String get aiConsentTitle => 'AI Data Processing';
+
+  @override
+  String get aiConsentBody =>
+      'Aura Meet uses third-party AI services to analyze your meeting transcripts and generate summaries, insights, and action items.\n\nWhat is shared:\n• Meeting transcripts (text only)\n• Never your audio recordings\n\nWho processes the data:\n• Amazon Web Services (AWS Bedrock)\n• OpenAI\n\nYour transcript data is processed under strict data processing agreements and is not used to train AI models.';
+
+  @override
+  String get aiConsentAgree => 'I Agree';
+
+  @override
+  String get aiConsentDecline => 'Decline';
+
+  @override
+  String get aiConsentLearnMore => 'Learn more in our Privacy Policy';
 }

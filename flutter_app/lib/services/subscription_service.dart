@@ -52,6 +52,18 @@ class FreeTierLimits {
   static const bool canWeeklyDigest = false;
 }
 
+/// Result of a purchase attempt.
+enum PurchaseResult {
+  /// Purchase completed successfully.
+  success,
+
+  /// User cancelled the purchase dialog.
+  cancelled,
+
+  /// An error occurred during purchase.
+  error,
+}
+
 /// Subscription state.
 class SubscriptionState {
   const SubscriptionState({
@@ -159,22 +171,31 @@ class SubscriptionService {
         return;
       }
 
+      debugPrint('🔑 RevenueCat configuring with key: ${apiKey.substring(0, 8)}...');
       await Purchases.configure(
-        PurchasesConfiguration(apiKey)..appUserID = null, // Anonymous until
+        PurchasesConfiguration(apiKey)..appUserID = null,
       );
+
+      // SDK is configured — mark it immediately so getOfferings works
+      _configured = true;
+      _initialized = true;
 
       // Listen for customer info updates
       Purchases.addCustomerInfoUpdateListener(_onCustomerInfoUpdate);
 
-      // Load initial state
-      await refreshEntitlements();
+      // Load initial state (non-fatal if these fail)
+      try {
+        await refreshEntitlements();
+      } catch (e) {
+        debugPrint('⚠️ Initial entitlement check failed (non-fatal): $e');
+      }
       await _loadWeeklyUsage();
 
-      _initialized = true;
-      _configured = true;
-      debugPrint('✅ RevenueCat initialized — tier=${_state.tier}, isPro=${_state.isPro}');
+      debugPrint('✅ RevenueCat initialized — configured=$_configured, tier=${_state.tier}, isPro=${_state.isPro}');
     } catch (e) {
       debugPrint('⚠️ RevenueCat init failed: $e');
+      _initialized = true;
+      _configured = false;
       // App works in free mode if RevenueCat fails
       _updateState(_state.copyWith(tier: SubscriptionTier.free, isActive: false));
     }
@@ -221,23 +242,27 @@ class SubscriptionService {
   }
 
   /// Purchase a package.
-  Future<bool> purchasePackage(Package package) async {
-    if (!_configured) return false;
+  ///
+  /// Returns [PurchaseResult] to differentiate between success, cancellation,
+  /// and actual errors. This prevents showing error messages when the user
+  /// simply cancels the purchase dialog.
+  Future<PurchaseResult> purchasePackage(Package package) async {
+    if (!_configured) return PurchaseResult.error;
     try {
       final customerInfo = await Purchases.purchasePackage(package);
       _processCustomerInfo(customerInfo);
-      return _state.isPro;
+      return _state.isPro ? PurchaseResult.success : PurchaseResult.error;
     } on PlatformException catch (e) {
       final errorCode = PurchasesErrorHelper.getErrorCode(e);
       if (errorCode == PurchasesErrorCode.purchaseCancelledError) {
         debugPrint('Purchase cancelled by user');
-      } else {
-        debugPrint('❌ Purchase error: $errorCode — ${e.message}');
+        return PurchaseResult.cancelled;
       }
-      return false;
+      debugPrint('❌ Purchase error: $errorCode — ${e.message}');
+      return PurchaseResult.error;
     } catch (e) {
       debugPrint('❌ Purchase error: $e');
-      return false;
+      return PurchaseResult.error;
     }
   }
 
@@ -295,6 +320,11 @@ class SubscriptionService {
     // Pro override persisting across different user logins.
     _updateState(const SubscriptionState());
     debugPrint('🔒 Subscription reset to free on logout');
+
+    // Clear persisted meeting usage so next user starts fresh
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_weekStartKey);
+    await prefs.remove(_weekCountKey);
 
     if (!_configured) return;
     try {

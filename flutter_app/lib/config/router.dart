@@ -39,6 +39,9 @@ GoRouter buildRouter(WidgetRef ref) {
       // If still loading auth state, don't redirect yet
       if (authState.isLoading) return null;
 
+      // Guest mode — allow access to all routes (Apple 5.1.1 compliance)
+      if (authState.isGuest) return null;
+
       // Not authenticated → send to login
       if (!authState.isAuthenticated) return '/login';
 

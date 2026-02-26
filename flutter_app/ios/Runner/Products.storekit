@@ -1,0 +1,95 @@
+{
+  "identifier" : "C3AECDA5",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+
+  ],
+  "settings" : {
+    "_applicationInternalID" : "6759219835",
+    "_developerTeamID" : "9L6258YNVJ",
+    "_failTransactionsEnabled" : false,
+    "_lastSynchronizedDate" : "2026-02-26T12:00:00Z",
+    "_locale" : "en_US",
+    "_storefront" : "USA",
+    "_storeKitErrors" : [
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Load Products"
+      }
+    ]
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "21586498",
+      "localizations" : [
+
+      ],
+      "name" : "Aura Meet Pro",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "14.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "6745489914",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Unlimited meetings, AI insights, and full export",
+              "displayName" : "Aura Pro Monthly",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "aura_pro_monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Aura Pro Monthly",
+          "subscriptionGroupID" : "21586498",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "119.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "6745490153",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Unlimited meetings, AI insights, and full export — save 33%",
+              "displayName" : "Aura Pro Yearly",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "aura_pro_yearly",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Aura Pro Yearly",
+          "subscriptionGroupID" : "21586498",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:meetmind/config/theme.dart';
+import 'package:meetmind/features/meeting/widgets/ai_consent_dialog.dart';
 import 'package:meetmind/features/subscription/widgets/free_limit_banner.dart';
 import 'package:meetmind/l10n/generated/app_localizations.dart';
 import 'package:meetmind/models/meeting_models.dart';
@@ -17,7 +18,9 @@ final _recentMeetingsProvider = FutureProvider<List<Map<String, dynamic>>>((
   ref,
 ) async {
   // Re-fetch whenever auth state changes
-  ref.watch(authProvider);
+  final auth = ref.watch(authProvider);
+  // Guest mode — no backend, return empty
+  if (auth.isGuest) return [];
   final api = MeetingApiService();
   try {
     return await api.listMeetings(limit: 5);
@@ -30,7 +33,8 @@ final _recentMeetingsProvider = FutureProvider<List<Map<String, dynamic>>>((
 
 /// Provider that fetches pending action items count.
 final _pendingActionsCountProvider = FutureProvider<int>((ref) async {
-  ref.watch(authProvider);
+  final auth = ref.watch(authProvider);
+  if (auth.isGuest) return 0;
   final api = MeetingApiService();
   try {
     final items = await api.getPendingActions(limit: 100);
@@ -157,9 +161,11 @@ class HomeScreen extends ConsumerWidget {
 
               // Quick Start Card — tappable to start meeting
               GestureDetector(
-                onTap: () {
+                onTap: () async {
                   final canStart = ref.read(canStartMeetingProvider);
                   if (canStart) {
+                    final consent = await showAiConsentIfNeeded(context);
+                    if (!context.mounted || !consent) return;
                     context.push('/meeting');
                   } else {
                     context.push('/paywall');
@@ -386,9 +392,11 @@ class HomeScreen extends ConsumerWidget {
 
       // FAB — Start Meeting (gated by subscription)
       floatingActionButton: FloatingActionButton.large(
-        onPressed: () {
+        onPressed: () async {
           final canStart = ref.read(canStartMeetingProvider);
           if (canStart) {
+            final consent = await showAiConsentIfNeeded(context);
+            if (!context.mounted || !consent) return;
             context.push('/meeting');
           } else {
             context.push('/paywall');

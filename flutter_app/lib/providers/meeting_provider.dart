@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meetmind/models/meeting_models.dart';
+import 'package:meetmind/providers/auth_provider.dart';
 import 'package:meetmind/services/meeting_api_service.dart';
 import 'package:meetmind/services/notification_service.dart';
 import 'package:meetmind/services/permission_service.dart';
@@ -125,18 +126,21 @@ class MeetingNotifier extends StateNotifier<MeetingSession?> {
     final DateTime endTime = DateTime.now();
     final int durationSecs = endTime.difference(state!.startTime).inSeconds;
 
-    // Persist meeting end to backend
-    try {
-      final MeetingApiService api = _ref.read(meetingApiProvider);
-      await api.endMeeting(
-        meetingId: state!.id,
-        title: state!.title,
-        durationSecs: durationSecs,
-      );
-      debugPrint('[MeetingNotifier] Meeting ended on backend');
-    } catch (e) {
-      debugPrint('[MeetingNotifier] End meeting API failed: $e');
-      // Non-critical — local state still updates
+    // Persist meeting end to backend (skip for guests)
+    final authState = _ref.read(authProvider);
+    if (!authState.isGuest) {
+      try {
+        final MeetingApiService api = _ref.read(meetingApiProvider);
+        await api.endMeeting(
+          meetingId: state!.id,
+          title: state!.title,
+          durationSecs: durationSecs,
+        );
+        debugPrint('[MeetingNotifier] Meeting ended on backend');
+      } catch (e) {
+        debugPrint('[MeetingNotifier] End meeting API failed: $e');
+        // Non-critical — local state still updates
+      }
     }
 
     state = state!.copyWith(
@@ -213,6 +217,13 @@ class MeetingNotifier extends StateNotifier<MeetingSession?> {
 
   Future<void> _flushTranscripts() async {
     if (_pendingSegments.isEmpty || state == null) return;
+
+    // Guest mode — skip API calls, transcription is local only
+    final authState = _ref.read(authProvider);
+    if (authState.isGuest) {
+      _pendingSegments.clear();
+      return;
+    }
 
     // If we've failed too many times in a row, drop the queue
     if (_flushFailures >= _maxFlushRetries) {
@@ -341,7 +352,7 @@ class MeetingNotifier extends StateNotifier<MeetingSession?> {
 
       final String answer = response['answer'] as String? ?? '';
       final bool isError = response['error'] as bool? ?? false;
-      final int? latencyMs = response['latency_ms'] as int?;
+      final int? latencyMs = (response['latency_ms'] as num?)?.toInt();
       final String? modelTier = response['model_tier'] as String?;
 
       final CopilotMessage aiMsg = CopilotMessage(

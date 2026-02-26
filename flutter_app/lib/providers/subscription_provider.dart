@@ -22,7 +22,7 @@ class SubscriptionNotifier extends StateNotifier<SubscriptionState> {
   }
 
   /// Purchase a package.
-  Future<bool> purchase(Package package) async {
+  Future<PurchaseResult> purchase(Package package) async {
     return SubscriptionService.instance.purchasePackage(package);
   }
 

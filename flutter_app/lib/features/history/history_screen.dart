@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:meetmind/config/theme.dart';
+import 'package:meetmind/providers/auth_provider.dart';
 import 'package:meetmind/services/meeting_api_service.dart';
 
 /// Meeting history screen — browse past sessions with search & swipe delete.
-class HistoryScreen extends StatefulWidget {
+class HistoryScreen extends ConsumerStatefulWidget {
   const HistoryScreen({super.key});
 
   @override
-  State<HistoryScreen> createState() => _HistoryScreenState();
+  ConsumerState<HistoryScreen> createState() => _HistoryScreenState();
 }
 
-class _HistoryScreenState extends State<HistoryScreen> {
+class _HistoryScreenState extends ConsumerState<HistoryScreen> {
   final MeetingApiService _api = MeetingApiService();
   List<Map<String, dynamic>> _meetings = [];
   bool _isLoading = true;
@@ -34,6 +36,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   /// Load meetings from the backend API.
   Future<void> _loadMeetings() async {
+    // Guest mode — skip API call, show empty list
+    final authState = ref.read(authProvider);
+    if (authState.isGuest) {
+      if (mounted) {
+        setState(() {
+          _meetings = [];
+          _isLoading = false;
+        });
+      }
+      return;
+    }
+
     setState(() {
       _isLoading = true;
       _error = null;

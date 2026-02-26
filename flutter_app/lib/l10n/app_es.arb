@@ -128,6 +128,7 @@
   "paywallFeatureAskAura": "Pregunta a Aura",
   "paywallFeatureExport": "Exportación Completa",
   "paywallFeatureDigest": "Resumen Semanal",
+  "paywallProductsUnavailable": "Los productos de suscripción no están disponibles temporalmente. Inténtalo de nuevo en un momento.",
   "paywallLegal": "La suscripción se renueva automáticamente al precio indicado, a menos que se cancele al menos 24 horas antes del final del período actual. El pago se carga a tu cuenta de Apple ID. Al suscribirte aceptas nuestra Política de Privacidad y Términos de Uso.",
 
   "freeLimitBannerRemaining": "{remaining} reunión(es) restante(s) esta semana",
@@ -148,6 +149,8 @@
   "privacyAudioDesc": "• El reconocimiento de voz se ejecuta EN TU DISPOSITIVO\n• Ningún audio se envía a nuestros servidores ni se almacena en la nube\n• Los datos de audio permanecen en tu dispositivo en todo momento",
   "privacyDataTitle": "📝 Datos de Reuniones",
   "privacyDataDesc": "• Las transcripciones se envían a nuestros servidores solo para análisis con IA\n• Los datos se almacenan de forma segura con cifrado en reposo\n• Puedes eliminar cualquier reunión y sus datos en cualquier momento",
+  "privacyAiTitle": "🤖 Procesamiento IA y Servicios de Terceros",
+  "privacyAiDesc": "• Las transcripciones (solo texto, nunca audio) se envían a proveedores externos de IA para análisis\n• Proveedores de IA: Amazon Web Services (AWS Bedrock) y OpenAI\n• Propósito: Generar resúmenes, hallazgos y acciones de reuniones\n• Los proveedores de IA procesan datos bajo acuerdos estrictos de procesamiento\n• No usamos tus datos para entrenar modelos de IA\n• Puedes consultar las políticas de privacidad de nuestros proveedores en cualquier momento",
   "privacySubsTitle": "💳 Suscripciones",
   "privacySubsDesc": "• Nunca vemos ni almacenamos tus datos de pago\n• Apple/Google maneja todo el procesamiento de pagos",
   "privacyRightsTitle": "🔒 Tus Derechos",
@@ -198,7 +201,7 @@
   "onboardingLanguageDesc": "Selecciona el idioma de la app y de la transcripción.",
   "onboardingMic": "Acceso al Micrófono",
   "onboardingMicDesc": "Aura necesita acceso al micrófono para transcribir tus reuniones en tiempo real.",
-  "onboardingMicAllow": "Permitir Micrófono",
+  "onboardingMicAllow": "Continuar",
   "onboardingReady": "¡Todo Listo!",
   "onboardingReadyDesc": "Inicia tu primera reunión y deja que Aura haga el resto.",
   "onboardingGetStarted": "Comenzar",
@@ -267,5 +270,11 @@
   "forgotPasswordSent": "¡Enlace enviado!",
   "forgotPasswordCheckInbox": "Revisa tu bandeja de entrada para un enlace de restablecimiento de contraseña. Puede tardar unos minutos.",
   "forgotPasswordBackToLogin": "Volver al Login",
-  "forgotPasswordError": "Algo salió mal. Por favor intenta de nuevo."
+  "forgotPasswordError": "Algo salió mal. Por favor intenta de nuevo.",
+
+  "aiConsentTitle": "Procesamiento de Datos con IA",
+  "aiConsentBody": "Aura Meet utiliza servicios de IA de terceros para analizar las transcripciones de tus reuniones y generar resúmenes, hallazgos y acciones.\n\nQué se comparte:\n• Transcripciones de reuniones (solo texto)\n• Nunca tus grabaciones de audio\n\nQuién procesa los datos:\n• Amazon Web Services (AWS Bedrock)\n• OpenAI\n\nTus datos de transcripción se procesan bajo acuerdos estrictos de procesamiento y no se usan para entrenar modelos de IA.",
+  "aiConsentAgree": "Acepto",
+  "aiConsentDecline": "Rechazar",
+  "aiConsentLearnMore": "Más información en nuestra Política de Privacidad"
 }

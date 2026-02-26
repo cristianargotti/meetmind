@@ -808,6 +808,12 @@ abstract class AppLocalizations {
   /// **'Weekly Digest'**
   String get paywallFeatureDigest;
 
+  /// No description provided for @paywallProductsUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription products are temporarily unavailable. Please try again in a moment.'**
+  String get paywallProductsUnavailable;
+
   /// No description provided for @paywallLegal.
   ///
   /// In en, this message translates to:
@@ -903,6 +909,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'• Transcripts are sent to our servers for AI analysis only\n• Meeting data is stored securely with encryption at rest\n• You can delete any meeting and its data at any time'**
   String get privacyDataDesc;
+
+  /// No description provided for @privacyAiTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'🤖 AI Processing & Third-Party Services'**
+  String get privacyAiTitle;
+
+  /// No description provided for @privacyAiDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'• Meeting transcripts (text only, never audio) are sent to third-party AI providers for analysis\n• AI providers: Amazon Web Services (AWS Bedrock) and OpenAI\n• Purpose: Generate meeting summaries, insights, and action items\n• AI providers process data under strict data processing agreements\n• We do not use your data to train AI models\n• You can review our AI providers\' privacy policies at any time'**
+  String get privacyAiDesc;
 
   /// No description provided for @privacySubsTitle.
   ///
@@ -1177,7 +1195,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingMicAllow.
   ///
   /// In en, this message translates to:
-  /// **'Allow Microphone'**
+  /// **'Continue'**
   String get onboardingMicAllow;
 
   /// No description provided for @onboardingReady.
@@ -1395,6 +1413,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Something went wrong. Please try again.'**
   String get forgotPasswordError;
+
+  /// No description provided for @aiConsentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Data Processing'**
+  String get aiConsentTitle;
+
+  /// No description provided for @aiConsentBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Aura Meet uses third-party AI services to analyze your meeting transcripts and generate summaries, insights, and action items.\n\nWhat is shared:\n• Meeting transcripts (text only)\n• Never your audio recordings\n\nWho processes the data:\n• Amazon Web Services (AWS Bedrock)\n• OpenAI\n\nYour transcript data is processed under strict data processing agreements and is not used to train AI models.'**
+  String get aiConsentBody;
+
+  /// No description provided for @aiConsentAgree.
+  ///
+  /// In en, this message translates to:
+  /// **'I Agree'**
+  String get aiConsentAgree;
+
+  /// No description provided for @aiConsentDecline.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get aiConsentDecline;
+
+  /// No description provided for @aiConsentLearnMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn more in our Privacy Policy'**
+  String get aiConsentLearnMore;
 }
 
 class _AppLocalizationsDelegate

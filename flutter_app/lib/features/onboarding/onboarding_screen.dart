@@ -371,14 +371,13 @@ class _MicPermissionPage extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 32),
-          ElevatedButton.icon(
+          ElevatedButton(
             onPressed: onAllow,
-            icon: const Icon(Icons.mic),
-            label: Text(l10n.onboardingMicAllow),
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
               backgroundColor: MeetMindTheme.success,
             ),
+            child: Text(l10n.onboardingMicAllow),
           ),
         ],
       ),

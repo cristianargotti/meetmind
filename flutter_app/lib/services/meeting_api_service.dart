@@ -14,10 +14,17 @@ class MeetingApiService {
   final http.Client _client;
 
   /// Base URL for the REST API.
+  ///
+  /// Omits port when it's the default for the scheme (443 for HTTPS, 80 for HTTP)
+  /// to avoid issues with reverse proxies and CDNs.
   String get _baseUrl {
     final config = AppConfig.instance;
     final protocol = config.protocol == 'wss' ? 'https' : 'http';
-    return '$protocol://${config.host}:${config.port}';
+    final isDefaultPort = (protocol == 'https' && config.port == 443) ||
+        (protocol == 'http' && config.port == 80);
+    return isDefaultPort
+        ? '$protocol://${config.host}'
+        : '$protocol://${config.host}:${config.port}';
   }
 
   /// Default request headers (includes auth token when available).

@@ -1,6 +1,5 @@
 // ignore_for_file: prefer_const_constructors
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -33,10 +32,6 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
 
   Future<void> _loadOfferings() async {
     final packages = await SubscriptionService.instance.getOfferings();
-    debugPrint('📦 Offerings loaded: ${packages.length} packages');
-    for (final p in packages) {
-      debugPrint('  → ${p.storeProduct.identifier}: ${p.storeProduct.priceString}');
-    }
     if (mounted) {
       setState(() => _packages = packages);
     }
@@ -45,13 +40,20 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   Future<void> _purchase() async {
     if (_packages.isEmpty) {
       // Retry loading offerings before giving up
+      setState(() => _isLoading = true);
       await _loadOfferings();
+      if (mounted) setState(() => _isLoading = false);
       if (_packages.isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Subscription products are not available right now. Please try again later.'),
-              backgroundColor: Colors.red.shade700,
+              content: Text(
+                AppLocalizations.of(context)!.paywallProductsUnavailable,
+              ),
+              action: SnackBarAction(
+                label: AppLocalizations.of(context)!.commonRetry,
+                onPressed: _purchase,
+              ),
             ),
           );
         }
@@ -70,23 +72,29 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       orElse: () => _packages.first,
     );
 
-    final success =
+    final result =
         await ref.read(subscriptionProvider.notifier).purchase(package);
 
     if (mounted) {
       setState(() => _isLoading = false);
-      if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.paywallWelcome)),
-        );
-        Navigator.of(context).pop();
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Unable to complete purchase. Please try again.'),
-            backgroundColor: Colors.red.shade700,
-          ),
-        );
+      switch (result) {
+        case PurchaseResult.success:
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content:
+                    Text(AppLocalizations.of(context)!.paywallWelcome)),
+          );
+          Navigator.of(context).pop();
+        case PurchaseResult.cancelled:
+          // User cancelled — do nothing (no error message)
+          break;
+        case PurchaseResult.error:
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.commonError),
+              backgroundColor: Colors.red.shade700,
+            ),
+          );
       }
     }
   }

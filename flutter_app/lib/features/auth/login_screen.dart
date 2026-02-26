@@ -277,7 +277,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   child: CircularProgressIndicator(strokeWidth: 2),
                 ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
+
+              // Continue as guest (Apple requirement — 5.1.1)
+              TextButton(
+                onPressed: authState.isLoading
+                    ? null
+                    : () async {
+                        await ref.read(authProvider.notifier).skipLogin();
+                        if (!context.mounted) return;
+                        context.go('/');
+                      },
+                child: Text(
+                  l10n.loginSkip,
+                  style: TextStyle(
+                    color: MeetMindTheme.accent.withValues(alpha: 0.7),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ).animate().fadeIn(delay: 500.ms),
+
+              const SizedBox(height: 16),
 
               // Legal links
               Row(
