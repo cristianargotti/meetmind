@@ -187,6 +187,19 @@ class MeetingApiService {
     });
   }
 
+  // ─── Ask Aura (RAG — cross-meeting search) ──────────────────
+
+  /// Ask Aura a question using RAG across all meeting history.
+  ///
+  /// Returns AI answer with source meeting references.
+  Future<Map<String, dynamic>> askAura({
+    required String question,
+  }) async {
+    return await _post('/api/ask-aura', {
+      'question': question,
+    });
+  }
+
   // ─── Internal ─────────────────────────────────────────────────
 
   /// Perform a GET request and parse JSON response.

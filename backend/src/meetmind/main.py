@@ -695,6 +695,12 @@ class SummaryRequest(BaseModel):
     language: str = "es"
 
 
+class AskAuraRequest(BaseModel):
+    """Ask Aura RAG question request."""
+
+    question: str
+
+
 @app.post("/api/meetings/{meeting_id}/transcript")
 @limiter.limit("30/minute")
 async def ingest_transcript(
@@ -770,4 +776,33 @@ async def generate_summary(
         meeting_id=meeting_id,
         full_transcript=body.full_transcript,
         language=body.language,
+    )
+
+
+# ─── Ask Aura (RAG — cross-meeting search) ───────────────────
+
+
+@app.post("/api/ask-aura")
+@limiter.limit("10/minute")
+async def ask_aura(
+    request: Request,
+    body: AskAuraRequest,
+    current_user: dict[str, Any] = _auth_dep,
+) -> dict[str, Any]:
+    """Ask Aura a question using RAG across all meeting history.
+
+    Performs semantic search across the user's past meetings,
+    retrieves relevant transcript segments, and generates an
+    AI answer with source references.
+
+    Args:
+        body: Question to ask.
+        current_user: Injected by auth dependency.
+
+    Returns:
+        AI answer with sources and metadata.
+    """
+    return await meeting_manager.ask_aura(
+        question=body.question,
+        user_id=current_user["user_id"],
     )

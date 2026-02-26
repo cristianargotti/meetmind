@@ -37,6 +37,13 @@ class Settings(BaseSettings):
     # Screening
     screening_interval_seconds: int = 5
 
+    # Embeddings (for RAG — Ask Aura)
+    embedding_api_key: str = ""  # Defaults to openai_api_key if empty
+    embedding_base_url: str = "https://api.openai.com/v1"
+    embedding_model: str = "text-embedding-3-small"
+    embedding_dimensions: int = 1536
+    rag_top_k: int = 10
+
     # Cost Optimization
     session_budget_usd: float = 1.00
     enable_transcript_compression: bool = True

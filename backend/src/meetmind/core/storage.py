@@ -153,6 +153,16 @@ async def _create_schema(conn: asyncpg.Connection) -> None:
             updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
         );
 
+        CREATE TABLE IF NOT EXISTS segment_embeddings (
+            id              BIGSERIAL PRIMARY KEY,
+            meeting_id      TEXT NOT NULL REFERENCES meetings(id) ON DELETE CASCADE,
+            user_id         TEXT REFERENCES users(id) ON DELETE CASCADE,
+            chunk_text      TEXT NOT NULL,
+            speaker         TEXT,
+            embedding       vector(1536) NOT NULL,
+            created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+
         -- Indexes for fast queries
         CREATE INDEX IF NOT EXISTS idx_segments_meeting
             ON transcript_segments(meeting_id, segment_index);
@@ -168,6 +178,12 @@ async def _create_schema(conn: asyncpg.Connection) -> None:
 
         CREATE INDEX IF NOT EXISTS idx_meetings_user
             ON meetings(user_id, started_at DESC);
+
+        CREATE INDEX IF NOT EXISTS idx_embeddings_user
+            ON segment_embeddings(user_id);
+
+        CREATE INDEX IF NOT EXISTS idx_embeddings_meeting
+            ON segment_embeddings(meeting_id);
 
         -- Migration: add user_id to existing meetings if not present
         DO $$ BEGIN
@@ -717,3 +733,88 @@ async def delete_user_account(user_id: str) -> bool:
     if deleted:
         logger.info("user_account_deleted", user_id=user_id)
     return deleted
+
+
+# ─── Embeddings (RAG — Ask Aura) ──────────────────────────────
+
+
+async def save_segment_embeddings(
+    meeting_id: str,
+    user_id: str | None,
+    chunks: list[dict[str, Any]],
+) -> int:
+    """Bulk-insert segment embeddings for RAG search.
+
+    Args:
+        meeting_id: The meeting these segments belong to.
+        user_id: Owner's user ID for scoped search.
+        chunks: List of dicts with 'text', 'speaker', 'embedding' keys.
+
+    Returns:
+        Number of embeddings saved.
+    """
+    if not chunks:
+        return 0
+
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        records = [
+            (
+                meeting_id,
+                user_id,
+                chunk["text"],
+                chunk.get("speaker"),
+                chunk["embedding"],
+            )
+            for chunk in chunks
+        ]
+        await conn.executemany(
+            """
+            INSERT INTO segment_embeddings
+                (meeting_id, user_id, chunk_text, speaker, embedding)
+            VALUES ($1, $2, $3, $4, $5)
+            """,
+            records,
+        )
+    logger.info("embeddings_saved", meeting_id=meeting_id, count=len(chunks))
+    return len(chunks)
+
+
+async def semantic_search(
+    query_embedding: str,
+    user_id: str,
+    *,
+    top_k: int = 10,
+) -> list[dict[str, Any]]:
+    """Search segment embeddings by cosine similarity.
+
+    Args:
+        query_embedding: The query vector as a pgvector string (e.g. '[0.1,0.2,...]').
+        user_id: Scope search to this user's meetings only.
+        top_k: Number of results to return.
+
+    Returns:
+        List of dicts with chunk_text, speaker, meeting_id, meeting_title,
+        started_at, and similarity score.
+    """
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(
+            """
+            SELECT se.chunk_text,
+                   se.speaker,
+                   se.meeting_id,
+                   m.title AS meeting_title,
+                   m.started_at,
+                   1 - (se.embedding <=> $1::vector) AS similarity
+            FROM segment_embeddings se
+            JOIN meetings m ON m.id = se.meeting_id
+            WHERE se.user_id = $2
+            ORDER BY se.embedding <=> $1::vector
+            LIMIT $3
+            """,
+            query_embedding,
+            user_id,
+            top_k,
+        )
+    return [dict(r) for r in rows]

@@ -19,6 +19,7 @@ from meetmind.agents.screening_agent import ScreeningAgent
 from meetmind.agents.summary_agent import SummaryAgent
 from meetmind.config.settings import settings
 from meetmind.core import storage
+from meetmind.core.embeddings import EmbeddingService
 from meetmind.core.transcript import TranscriptManager
 from meetmind.providers.factory import create_llm_provider
 from meetmind.utils.cost_tracker import BudgetExceededError, CostTracker
@@ -43,6 +44,7 @@ class MeetingManager:
         self._analysis_agent: AnalysisAgent | None = None
         self._copilot_agent: CopilotAgent | None = None
         self._summary_agent: SummaryAgent | None = None
+        self._embedding_service: EmbeddingService | None = None
         # Per-meeting session state (meeting_id → state)
         self._transcripts: dict[str, TranscriptManager] = {}
         self._cost_trackers: dict[str, CostTracker] = {}
@@ -60,6 +62,14 @@ class MeetingManager:
         self._analysis_agent = AnalysisAgent(provider)
         self._copilot_agent = CopilotAgent(provider)
         self._summary_agent = SummaryAgent(provider)
+
+        # Initialize embedding service for RAG (graceful — Ask Aura is optional)
+        try:
+            self._embedding_service = EmbeddingService()
+            logger.info("embedding_service_ready")
+        except ValueError:
+            logger.warning("embedding_service_unavailable", reason="no API key configured")
+
         logger.info("agents_initialized", provider=settings.llm_provider)
 
     @property
@@ -160,6 +170,15 @@ class MeetingManager:
             await storage.save_segments(meeting_id, segments)
         except Exception as e:
             logger.warning("transcript_persist_failed", error=str(e))
+
+        # Generate embeddings for RAG (non-blocking — errors are non-fatal)
+        if self._embedding_service:
+            try:
+                valid_segs = [s for s in segments if s.get("text", "").strip()]
+                if valid_segs:
+                    await self._embedding_service.embed_and_store(meeting_id, user_id, valid_segs)
+            except Exception as e:
+                logger.warning("embedding_generation_failed", error=str(e))
 
         # Run screening if buffer threshold reached
         if transcript.should_screen() and self._screening_agent:
@@ -366,6 +385,120 @@ class MeetingManager:
             "summary": summary_data,
             "latency_ms": result.latency_ms,
             "error": result.title == "Summary Error",
+        }
+
+    async def ask_aura(
+        self,
+        question: str,
+        user_id: str,
+    ) -> dict[str, Any]:
+        """Answer a question using RAG across all user meetings.
+
+        1. Embed the question.
+        2. Semantic search pgvector for relevant segments.
+        3. Build RAG context and send to copilot LLM.
+
+        Args:
+            question: The user's question.
+            user_id: Owner's user ID (scopes search).
+
+        Returns:
+            Dict with answer, sources, and metadata.
+        """
+        if not self._embedding_service:
+            return {
+                "answer": "Ask Aura requires an embedding API key to be configured.",
+                "error": True,
+                "sources": [],
+            }
+
+        if not self._copilot_agent:
+            return {
+                "answer": "AI agents are not initialized.",
+                "error": True,
+                "sources": [],
+            }
+
+        import time
+
+        start = time.monotonic()
+
+        # 1. Semantic search
+        try:
+            results = await self._embedding_service.search(question, user_id)
+        except Exception as e:
+            logger.warning("ask_aura_search_failed", error=str(e))
+            return {
+                "answer": f"Search failed: {e}",
+                "error": True,
+                "sources": [],
+            }
+
+        if not results:
+            return {
+                "answer": "No relevant meeting data found. Start recording meetings first!",
+                "error": False,
+                "sources": [],
+                "latency_ms": round((time.monotonic() - start) * 1000, 1),
+            }
+
+        # 2. Build RAG context
+        rag_context = self._embedding_service.build_rag_context(results)
+
+        # 3. Send to copilot with RAG context
+        rag_prompt = (
+            f"## Relevant Meeting History (from semantic search)\n\n"
+            f"{rag_context}\n\n"
+            f"---\n\n"
+            f"## User's Question\n\n"
+            f"{question}\n\n"
+            f"Answer based on the meeting history above. "
+            f"Reference specific meetings and speakers when relevant. "
+            f"If the data doesn't contain the answer, say so honestly."
+        )
+
+        try:
+            response = await self._copilot_agent.respond(question, rag_prompt)
+        except Exception as e:
+            logger.warning("ask_aura_llm_failed", error=str(e))
+            return {
+                "answer": f"AI temporarily unavailable: {e}",
+                "error": True,
+                "sources": [],
+            }
+
+        latency_ms = round((time.monotonic() - start) * 1000, 1)
+
+        # Build source references
+        sources = []
+        seen_meetings: set[str] = set()
+        for r in results:
+            mid = r["meeting_id"]
+            if mid not in seen_meetings:
+                seen_meetings.add(mid)
+                sources.append(
+                    {
+                        "meeting_id": mid,
+                        "title": r.get("meeting_title") or "Untitled",
+                        "date": str(r.get("started_at", ""))[:10],
+                        "similarity": round(r.get("similarity", 0), 3),
+                    }
+                )
+
+        logger.info(
+            "ask_aura_response",
+            question_length=len(question),
+            sources_count=len(sources),
+            segments_found=len(results),
+            latency_ms=latency_ms,
+        )
+
+        return {
+            "answer": response.answer,
+            "latency_ms": latency_ms,
+            "model_tier": response.model_tier,
+            "sources": sources,
+            "error": response.answer.startswith("⚠️"),
         }
 
 
