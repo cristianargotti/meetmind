@@ -16,9 +16,10 @@ const featureColors = ['#8B5CF6', '#06D6A0', '#F97316', '#EC4899'];
       <h2 class="section-title">{t.features.title}</h2>
       <p class="section-subtitle">{t.features.subtitle}</p>
     </div>
-    <div class="features-grid">
+    <div class="bento-grid">
       {featureKeys.map((key, i) => (
-        <div class="feature-card glass-card animate-on-scroll" style={`animation-delay: ${i * 0.1}s`}>
+        <div class={`bento-card glass-card animate-on-scroll ${i === 0 ? 'bento-featured' : ''}`} style={`animation-delay: ${i * 0.1}s`}>
+          <div class="bento-glow" style={`--glow-color: ${featureColors[i]}`} aria-hidden="true"></div>
           <div class="feature-icon-wrap" style={`--accent-color: ${featureColors[i]}`}>
             <div class="feature-icon" set:html={featureIcons[i]} />
           </div>
@@ -31,18 +32,40 @@ const featureColors = ['#8B5CF6', '#06D6A0', '#F97316', '#EC4899'];
 </section>
 
 <style>
-  .features-grid {
+  /* ─── Bento Grid Layout (2026 Trend) ─── */
+  .bento-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: var(--space-lg);
+    gap: var(--space-md);
   }
-  .feature-card {
-    padding: var(--space-lg);
+  .bento-card {
+    padding: var(--space-xl) var(--space-lg);
+    position: relative;
+    overflow: hidden;
     transition: transform var(--transition-medium), box-shadow var(--transition-medium);
+    border: 1px solid var(--border-dark);
   }
-  .feature-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 16px 40px rgba(0,0,0,0.2);
+  .bento-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    border-color: rgba(255,255,255,0.1);
+  }
+  .bento-glow {
+    position: absolute;
+    bottom: -60px;
+    right: -60px;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    background: var(--glow-color);
+    opacity: 0.03;
+    filter: blur(60px);
+    pointer-events: none;
+    transition: opacity var(--transition-medium), transform var(--transition-medium);
+  }
+  .bento-card:hover .bento-glow {
+    opacity: 0.1;
+    transform: scale(1.3);
   }
   .feature-icon-wrap {
     width: 52px;
@@ -53,10 +76,11 @@ const featureColors = ['#8B5CF6', '#06D6A0', '#F97316', '#EC4899'];
     align-items: center;
     justify-content: center;
     margin-bottom: var(--space-md);
-    transition: background var(--transition-medium);
+    transition: background var(--transition-medium), transform var(--transition-medium);
   }
-  .feature-card:hover .feature-icon-wrap {
-    background: color-mix(in srgb, var(--accent-color) 20%, transparent);
+  .bento-card:hover .feature-icon-wrap {
+    background: color-mix(in srgb, var(--accent-color) 22%, transparent);
+    transform: scale(1.08);
   }
   .feature-icon {
     width: 24px;
@@ -75,10 +99,39 @@ const featureColors = ['#8B5CF6', '#06D6A0', '#F97316', '#EC4899'];
     line-height: 1.7;
   }
 
+  /* ─── Bento Featured Card ─── */
+  .bento-featured {
+    border-color: rgba(139, 92, 246, 0.15);
+  }
+  .bento-featured .feature-icon-wrap {
+    width: 60px;
+    height: 60px;
+    border-radius: 16px;
+  }
+  .bento-featured .feature-icon {
+    width: 28px;
+    height: 28px;
+  }
+  .bento-featured .feature-title {
+    font-size: var(--fs-h2);
+  }
+
+  /* ─── Responsive Bento ─── */
   @media (min-width: 640px) {
-    .features-grid { grid-template-columns: repeat(2, 1fr); }
+    .bento-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .bento-featured {
+      grid-column: span 2;
+    }
   }
   @media (min-width: 1024px) {
-    .features-grid { grid-template-columns: repeat(4, 1fr); }
+    .bento-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+    .bento-featured {
+      grid-column: span 2;
+    }
   }
 </style>
+

@@ -3,12 +3,23 @@ const { t } = Astro.props;
 ---
 
 <section class="hero" id="hero">
+  <!-- Floating particles -->
+  <div class="hero-particles" aria-hidden="true">
+    <div class="particle" style="--x: 15%; --y: 20%; --size: 3px; --dur: 8s; --delay: 0s;"></div>
+    <div class="particle" style="--x: 85%; --y: 30%; --size: 2px; --dur: 12s; --delay: -3s;"></div>
+    <div class="particle" style="--x: 45%; --y: 70%; --size: 4px; --dur: 10s; --delay: -5s;"></div>
+    <div class="particle" style="--x: 70%; --y: 15%; --size: 2px; --dur: 9s; --delay: -2s;"></div>
+    <div class="particle" style="--x: 25%; --y: 80%; --size: 3px; --dur: 11s; --delay: -7s;"></div>
+    <div class="particle" style="--x: 90%; --y: 60%; --size: 2px; --dur: 14s; --delay: -4s;"></div>
+    <div class="particle" style="--x: 55%; --y: 40%; --size: 3px; --dur: 7s; --delay: -1s;"></div>
+    <div class="particle" style="--x: 10%; --y: 55%; --size: 2px; --dur: 13s; --delay: -6s;"></div>
+  </div>
   <div class="container hero-grid">
     <!-- Left: Copy -->
     <div class="hero-content animate-on-scroll">
       <span class="badge hero-badge">{t.hero.tagline}</span>
       <h1 class="hero-title">
-        <span class="text-gradient">{t.hero.title}</span>
+        <span class="text-gradient hero-title-shimmer">{t.hero.title}</span>
       </h1>
       <p class="hero-subtitle">{t.hero.subtitle}</p>
       <div class="hero-actions">
@@ -22,8 +33,8 @@ const { t } = Astro.props;
         </a>
       </div>
       <div class="store-badges">
-        <a href="#" aria-label="Download on the App Store">
-          <img src="/app-store-badge.svg" alt="App Store" width="140" height="42" loading="lazy" />
+        <a href="https://apps.apple.com/us/app/aura-meet/id6759219835" aria-label="Download on the App Store" target="_blank" rel="noopener noreferrer">
+          <img src="/app-store-badge.svg" alt="Download on the App Store" width="140" height="42" loading="lazy" />
         </a>
         <span class="android-soon">Android — Próximamente</span>
       </div>
@@ -148,6 +159,54 @@ const { t } = Astro.props;
     align-items: center;
     padding-top: calc(var(--nav-height) + var(--space-xl));
     padding-bottom: var(--space-2xl);
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* ─── Floating Particles ─── */
+  .hero-particles {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .particle {
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    width: var(--size);
+    height: var(--size);
+    background: var(--primary-light);
+    border-radius: 50%;
+    opacity: 0.3;
+    animation: particleFloat var(--dur) ease-in-out infinite var(--delay);
+  }
+  @keyframes particleFloat {
+    0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.2; }
+    25% { transform: translate(15px, -25px) scale(1.3); opacity: 0.5; }
+    50% { transform: translate(-10px, -50px) scale(0.8); opacity: 0.3; }
+    75% { transform: translate(20px, -20px) scale(1.1); opacity: 0.4; }
+  }
+
+  /* ─── Title Shimmer ─── */
+  .hero-title-shimmer {
+    background: linear-gradient(
+      135deg,
+      #8B5CF6 0%,
+      #A78BFA 25%,
+      #EC4899 50%,
+      #A78BFA 75%,
+      #8B5CF6 100%
+    );
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: shimmerGradient 4s ease-in-out infinite;
+  }
+  @keyframes shimmerGradient {
+    0%, 100% { background-position: 0% center; }
+    50% { background-position: 100% center; }
   }
   .hero-grid {
     display: grid;

@@ -8,17 +8,14 @@ const { t } = Astro.props;
       <div class="cta-bg-glow" aria-hidden="true"></div>
       <h2 class="cta-title">{t.cta.title}</h2>
       <p class="cta-subtitle">{t.cta.subtitle}</p>
-      <a href="#" class="btn btn-primary cta-btn">
+      <a href="https://apps.apple.com/us/app/aura-meet/id6759219835" class="btn btn-primary cta-btn" target="_blank" rel="noopener noreferrer">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         {t.cta.button}
       </a>
       <p class="cta-trust-text">{t.cta.noCreditCard}</p>
       <div class="cta-badges">
-        <a href="#" aria-label="Download on the App Store">
-          <img src="/app-store-badge.svg" alt="App Store" width="140" height="42" loading="lazy" />
-        </a>
-        <a href="#" aria-label="Get it on Google Play">
-          <img src="/google-play-badge.svg" alt="Google Play" width="140" height="42" loading="lazy" />
+        <a href="https://apps.apple.com/us/app/aura-meet/id6759219835" aria-label="Download on the App Store" target="_blank" rel="noopener noreferrer">
+          <img src="/app-store-badge.svg" alt="Download on the App Store" width="140" height="42" loading="lazy" />
         </a>
       </div>
     </div>
@@ -32,6 +29,14 @@ const { t } = Astro.props;
     position: relative;
     overflow: hidden;
     border-color: rgba(139, 92, 246, 0.15);
+    background: linear-gradient(var(--glass-bg), var(--glass-bg)) padding-box,
+                linear-gradient(135deg, rgba(139,92,246,0.4), rgba(236,72,153,0.3), rgba(6,214,160,0.2)) border-box;
+    border: 1px solid transparent;
+    animation: glowBorder 6s ease-in-out infinite;
+  }
+  @keyframes glowBorder {
+    0%, 100% { box-shadow: 0 0 20px rgba(139,92,246,0.1), inset 0 0 20px rgba(139,92,246,0.02); }
+    50% { box-shadow: 0 0 40px rgba(139,92,246,0.2), 0 0 80px rgba(236,72,153,0.08), inset 0 0 30px rgba(139,92,246,0.04); }
   }
   .cta-bg-glow {
     position: absolute;

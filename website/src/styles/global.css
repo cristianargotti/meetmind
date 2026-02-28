@@ -97,6 +97,21 @@ body {
   overflow-x: hidden;
 }
 
+/* ─── Scroll Progress Bar ─── */
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0%;
+  height: 3px;
+  background: var(--brand-gradient);
+  background-size: 200% auto;
+  animation: shimmer 3s ease infinite;
+  z-index: 10001;
+  transition: width 80ms linear;
+  will-change: width;
+}
+
 a {
   color: inherit;
   text-decoration: none;
@@ -209,6 +224,8 @@ button:focus-visible {
 
 .section {
   padding: var(--space-3xl) 0;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 600px;
 }
 
 .section-header {
@@ -395,6 +412,24 @@ button:focus-visible {
 .animate-on-scroll.visible {
   opacity: 1;
   transform: translateY(0);
+}
+
+/* ─── Will-change hints for key animations ─── */
+.hero-phone,
+.particle,
+.gradient-mesh::before,
+.gradient-mesh::after {
+  will-change: transform;
+}
+
+/* ─── Reduced motion preference ─── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .scroll-progress { display: none; }
 }
 
 /* ============================================

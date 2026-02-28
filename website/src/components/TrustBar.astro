@@ -6,7 +6,7 @@ const { t } = Astro.props;
   <div class="container trust-bar-inner">
     {t.trustBar.stats.map((stat: any, i: number) => (
       <div class="trust-stat animate-on-scroll" style={`animation-delay: ${i * 0.1}s`}>
-        <span class="trust-value">{stat.value}</span>
+        <span class="trust-value" data-count-target={stat.value}>{stat.value}</span>
         <span class="trust-label">{stat.label}</span>
       </div>
     ))}
@@ -41,6 +41,7 @@ const { t } = Astro.props;
     -webkit-text-fill-color: transparent;
     background-clip: text;
     line-height: 1.1;
+    font-variant-numeric: tabular-nums;
   }
   .trust-label {
     font-size: var(--fs-caption);
@@ -56,3 +57,44 @@ const { t } = Astro.props;
     }
   }
 </style>
+
+<script>
+  function animateCounters() {
+    const counters = document.querySelectorAll('[data-count-target]');
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const el = entry.target as HTMLElement;
+            const target = el.dataset.countTarget || '';
+            // Extract numeric part and suffix (e.g., "99%" -> 99, "%")
+            const match = target.match(/^([0-9.]+)(.*)$/);
+            if (!match) return;
+            const endVal = parseFloat(match[1]);
+            const suffix = match[2];
+            const duration = 1800;
+            const startTime = performance.now();
+
+            function update(now: number) {
+              const elapsed = now - startTime;
+              const progress = Math.min(elapsed / duration, 1);
+              // Ease out cubic
+              const eased = 1 - Math.pow(1 - progress, 3);
+              const current = endVal * eased;
+              el.textContent =
+                (Number.isInteger(endVal) ? Math.round(current) : current.toFixed(1)) + suffix;
+              if (progress < 1) requestAnimationFrame(update);
+            }
+            el.textContent = '0' + suffix;
+            requestAnimationFrame(update);
+            observer.unobserve(el);
+          }
+        });
+      },
+      { threshold: 0.3 }
+    );
+    counters.forEach((c) => observer.observe(c));
+  }
+  animateCounters();
+</script>
+

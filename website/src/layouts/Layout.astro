@@ -83,6 +83,9 @@ const alternates = [
     "operatingSystem": "iOS",
     "applicationCategory": "BusinessApplication",
     "description": description,
+    "url": siteUrl,
+    "downloadUrl": "https://apps.apple.com/us/app/aura-meet/id6759219835",
+    "installUrl": "https://apps.apple.com/us/app/aura-meet/id6759219835",
     "offers": {
       "@type": "Offer",
       "price": "0",
@@ -107,6 +110,8 @@ const alternates = [
   )}
 </head>
 <body>
+  <!-- Scroll progress bar -->
+  <div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
   <a href="#main-content" class="skip-link">Skip to content</a>
   <div class="gradient-mesh" aria-hidden="true"></div>
   <noscript><style>.animate-on-scroll { opacity: 1 !important; transform: none !important; }</style></noscript>
@@ -126,6 +131,17 @@ const alternates = [
       { threshold: 0.1, rootMargin: '0px 0px -50px 0px' }
     );
     document.querySelectorAll('.animate-on-scroll').forEach(el => observer.observe(el));
+
+    // Scroll progress bar
+    const progressBar = document.getElementById('scrollProgress');
+    if (progressBar) {
+      window.addEventListener('scroll', () => {
+        const scrollTop = window.scrollY;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        const scrollPercent = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+        progressBar.style.width = `${scrollPercent}%`;
+      }, { passive: true });
+    }
   </script>
 </body>
 </html>
