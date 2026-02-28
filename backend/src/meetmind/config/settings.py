@@ -45,7 +45,7 @@ class Settings(BaseSettings):
 
     # Auth (zero-cost: Google + Apple OAuth)
     jwt_secret_key: str = ""  # Auto-generated if empty; set in .env for production
-    jwt_access_minutes: int = 15
+    jwt_access_minutes: int = 10080  # 7 days — avoids 401s without app-side auto-refresh
     jwt_refresh_days: int = 30
     google_client_id: str = (
         "190972367615-4ft721hggursqog484ftlibtthkeeskm.apps.googleusercontent.com"
