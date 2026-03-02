@@ -21,6 +21,9 @@
   "homeAiListening": "A IA está ouvindo e analisando...",
   "homeTranscribeRealtime": "Aura vai transcrever e analisar em tempo real",
   "homeLive": "AO VIVO",
+  "homeGreetingMorning": "Bom dia",
+  "homeGreetingAfternoon": "Boa tarde",
+  "homeGreetingEvening": "Boa noite",
 
   "meetingTitle": "Reunião",
   "meetingRecording": "Gravando",

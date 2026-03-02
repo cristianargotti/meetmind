@@ -60,10 +60,10 @@ class HomeScreen extends ConsumerWidget {
     final avatarUrl = user?['avatar_url'] as String? ?? '';
     final hour = DateTime.now().hour;
     final greeting = hour < 12
-        ? 'Good morning'
+        ? l10n.homeGreetingMorning
         : hour < 18
-            ? 'Good afternoon'
-            : 'Good evening';
+            ? l10n.homeGreetingAfternoon
+            : l10n.homeGreetingEvening;
 
     return Scaffold(
       body: SafeArea(

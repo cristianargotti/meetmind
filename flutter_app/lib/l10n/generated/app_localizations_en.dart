@@ -65,6 +65,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeLive => 'LIVE';
 
   @override
+  String get homeGreetingMorning => 'Good morning';
+
+  @override
+  String get homeGreetingAfternoon => 'Good afternoon';
+
+  @override
+  String get homeGreetingEvening => 'Good evening';
+
+  @override
   String get meetingTitle => 'Meeting';
 
   @override

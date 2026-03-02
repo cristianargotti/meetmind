@@ -21,6 +21,9 @@
   "homeAiListening": "AI is listening and analyzing...",
   "homeTranscribeRealtime": "Aura will transcribe and analyze in real-time",
   "homeLive": "LIVE",
+  "homeGreetingMorning": "Good morning",
+  "homeGreetingAfternoon": "Good afternoon",
+  "homeGreetingEvening": "Good evening",
 
   "meetingTitle": "Meeting",
   "meetingRecording": "Recording",
