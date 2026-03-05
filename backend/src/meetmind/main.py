@@ -47,6 +47,7 @@ from meetmind.core.auth import (
     verify_google_token,
     verify_password,
 )
+from meetmind.utils.email_service import email_service
 
 logger = structlog.get_logger(__name__)
 
@@ -754,20 +755,76 @@ async def generate_summary(
     request: Request,
     meeting_id: str,
     body: SummaryRequest,
+    background_tasks: BackgroundTasks,
     current_user: dict[str, Any] = _auth_dep,
 ) -> dict[str, Any]:
-    """Generate a post-meeting summary.
+    """Generate a post-meeting summary and email it to the user.
 
     Args:
         meeting_id: The meeting to summarize.
         body: Full transcript and language.
+        background_tasks: FastAPI background task runner.
         current_user: Injected by auth dependency.
 
     Returns:
         Summary with key points, action items, and decisions.
     """
-    return await meeting_manager.run_summary(
+    result = await meeting_manager.run_summary(
         meeting_id=meeting_id,
         full_transcript=body.full_transcript,
         language=body.language,
     )
+
+    # Fire-and-forget email — never blocks the API response
+    user = await storage.get_user(current_user["user_id"])
+    if user and user.get("email_notifications_enabled", True):
+        meeting = await storage.get_meeting(meeting_id)
+        background_tasks.add_task(
+            email_service.send_meeting_summary,
+            user_email=user["email"],
+            user_name=user.get("name", ""),
+            meeting_id=meeting_id,
+            meeting_title=meeting.get("title", "Meeting") if meeting else "Meeting",
+            meeting_date=meeting.get("started_at") if meeting else None,
+            duration_secs=meeting.get("duration_secs") if meeting else None,
+            summary=result,
+            language=body.language,
+        )
+
+    return result
+
+
+# ─── User Settings ───────────────────────────────────────────────
+
+
+class UserSettingsRequest(BaseModel):
+    """User settings update request."""
+
+    email_notifications: bool | None = None
+
+
+@app.patch("/api/auth/settings")
+@limiter.limit("10/minute")
+async def update_settings(
+    request: Request,
+    body: UserSettingsRequest,
+    current_user: dict[str, Any] = _auth_dep,
+) -> dict[str, Any]:
+    """Update user notification preferences.
+
+    Args:
+        body: Fields to update (email_notifications).
+        current_user: Injected by auth dependency.
+
+    Returns:
+        Updated settings.
+    """
+    updated = await storage.update_user_settings(
+        current_user["user_id"],
+        email_notifications_enabled=body.email_notifications,
+    )
+    if not updated:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {
+        "email_notifications_enabled": updated["email_notifications_enabled"],
+    }

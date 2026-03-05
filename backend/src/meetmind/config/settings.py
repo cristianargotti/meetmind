@@ -64,6 +64,11 @@ class Settings(BaseSettings):
     # Logging
     log_level: str = "INFO"
 
+    # Amazon SES (email summaries)
+    ses_region: str = "us-east-1"
+    ses_sender: str = ""           # e.g. noreply@aurameet.live  — empty = email disabled
+    ses_sender_name: str = "Aura Meet"
+
     model_config = {"env_prefix": "MEETMIND_", "env_file": ".env"}
 
 

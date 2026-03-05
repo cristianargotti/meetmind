@@ -106,3 +106,14 @@ module "oidc" {
   github_repo        = "cristianargotti/meetmind"
   website_bucket_arn = module.storage.website_bucket_arn
 }
+
+# --- SES (Email Summaries) ---
+module "ses" {
+  source = "../../modules/ses"
+
+  domain_name                = var.domain_name
+  route53_zone_id            = var.hosted_zone_id
+  aws_region                 = var.aws_region
+  project_name               = local.name
+  apprunner_instance_role_id = module.compute.instance_role_id
+}

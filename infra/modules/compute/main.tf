@@ -115,6 +115,10 @@ resource "aws_apprunner_service" "main" {
           MEETMIND_LOG_LEVEL        = "INFO"
           MEETMIND_DEBUG            = "false"
           SENTRY_DSN                = var.sentry_dsn
+          # SES — no secrets needed, App Runner instance role handles auth
+          MEETMIND_SES_SENDER      = "noreply@${var.domain_name}"
+          MEETMIND_SES_SENDER_NAME = "Aura Meet"
+          MEETMIND_SES_REGION      = var.aws_region
         }
       }
     }

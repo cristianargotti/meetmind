@@ -85,6 +85,9 @@ async def _create_schema(conn: asyncpg.Connection) -> None:
         -- Add password_hash column for email/password auth (idempotent)
         ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT;
 
+        -- Add email notifications preference (idempotent)
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS email_notifications_enabled BOOLEAN NOT NULL DEFAULT TRUE;
+
         CREATE TABLE IF NOT EXISTS meetings (
             id              TEXT PRIMARY KEY,
             user_id         TEXT REFERENCES users(id) ON DELETE CASCADE,
@@ -717,3 +720,28 @@ async def delete_user_account(user_id: str) -> bool:
     if deleted:
         logger.info("user_account_deleted", user_id=user_id)
     return deleted
+
+
+async def update_user_settings(
+    user_id: str,
+    *,
+    email_notifications_enabled: bool | None = None,
+) -> dict[str, Any] | None:
+    """Update user preferences (email notifications, etc.)."""
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            """
+            UPDATE users
+            SET
+                email_notifications_enabled = COALESCE($2, email_notifications_enabled),
+                updated_at = NOW()
+            WHERE id = $1
+            RETURNING id, email, name, email_notifications_enabled
+            """,
+            user_id,
+            email_notifications_enabled,
+        )
+    if row:
+        logger.info("user_settings_updated", user_id=user_id)
+    return dict(row) if row else None
