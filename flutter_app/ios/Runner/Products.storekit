@@ -23,7 +23,7 @@
   },
   "subscriptionGroups" : [
     {
-      "id" : "21586498",
+      "id" : "21938150",
       "localizations" : [
 
       ],
@@ -51,7 +51,7 @@
           "productID" : "aura_pro_monthly",
           "recurringSubscriptionPeriod" : "P1M",
           "referenceName" : "Aura Pro Monthly",
-          "subscriptionGroupID" : "21586498",
+          "subscriptionGroupID" : "21938150",
           "type" : "RecurringSubscription",
           "winbackOffers" : [
 
@@ -79,7 +79,7 @@
           "productID" : "aura_pro_yearly",
           "recurringSubscriptionPeriod" : "P1Y",
           "referenceName" : "Aura Pro Yearly",
-          "subscriptionGroupID" : "21586498",
+          "subscriptionGroupID" : "21938150",
           "type" : "RecurringSubscription",
           "winbackOffers" : [
 

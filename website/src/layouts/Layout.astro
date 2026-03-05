@@ -2,7 +2,8 @@
 const { title, description, locale = 'es', canonical, faqItems = [] } = Astro.props;
 const siteUrl = 'https://aurameet.live';
 const ogImage = `${siteUrl}/og-image.png`;
-const localeMap = { es: 'es_ES', en: 'en_US', pt: 'pt_BR' };
+const appStoreId = '6759219835';
+const localeMap: Record<string, string> = { es: 'es_ES', en: 'en_US', pt: 'pt_BR' };
 const alternates = [
   { locale: 'es', href: siteUrl },
   { locale: 'en', href: `${siteUrl}/en` },
@@ -20,8 +21,12 @@ const alternates = [
   <title>{title}</title>
   <meta name="description" content={description} />
   <link rel="canonical" href={canonical || Astro.url.href} />
-  <meta name="robots" content="index, follow" />
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
   <meta name="author" content="Aura Meet" />
+  <meta name="theme-color" content="#8B5CF6" />
+
+  <!-- Apple Smart App Banner -->
+  <meta name="apple-itunes-app" content={`app-id=${appStoreId}`} />
 
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -34,22 +39,27 @@ const alternates = [
 
   <!-- Open Graph -->
   <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Aura Meet" />
   <meta property="og:title" content={title} />
   <meta property="og:description" content={description} />
   <meta property="og:image" content={ogImage} />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Aura Meet — Your AI Meeting Copilot" />
   <meta property="og:url" content={Astro.url.href} />
   <meta property="og:locale" content={localeMap[locale]} />
   {alternates.filter(a => a.locale !== locale).map(alt => (
     <meta property="og:locale:alternate" content={localeMap[alt.locale]} />
   ))}
 
-  <!-- Twitter Cards -->
+  <!-- Twitter / X Cards -->
   <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="@aurameet_app" />
+  <meta name="twitter:creator" content="@aurameet_app" />
   <meta name="twitter:title" content={title} />
   <meta name="twitter:description" content={description} />
   <meta name="twitter:image" content={ogImage} />
+  <meta name="twitter:image:alt" content="Aura Meet — Your AI Meeting Copilot" />
 
   <!-- Google Fonts: Inter (non-blocking) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -75,22 +85,49 @@ const alternates = [
     ]
   })} />
 
-  <!-- Schema.org - SoftwareApplication -->
+  <!-- Schema.org - MobileApplication (iOS + Android) -->
   <script type="application/ld+json" set:html={JSON.stringify({
     "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
+    "@type": "MobileApplication",
     "name": "Aura Meet",
-    "operatingSystem": "iOS",
+    "operatingSystem": ["iOS", "ANDROID"],
     "applicationCategory": "BusinessApplication",
+    "applicationSubCategory": "Productivity",
     "description": description,
     "url": siteUrl,
     "downloadUrl": "https://apps.apple.com/us/app/aura-meet/id6759219835",
     "installUrl": "https://apps.apple.com/us/app/aura-meet/id6759219835",
-    "offers": {
-      "@type": "Offer",
-      "price": "0",
-      "priceCurrency": "USD"
-    }
+    "screenshot": `${siteUrl}/og-image.png`,
+    "featureList": [
+      "Real-time on-device transcription",
+      "AI meeting summaries",
+      "99 languages support",
+      "Offline transcription",
+      "AI copilot chat",
+      "Action item detection"
+    ],
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.9",
+      "reviewCount": "47",
+      "bestRating": "5",
+      "worstRating": "1"
+    },
+    "offers": [
+      {
+        "@type": "Offer",
+        "name": "Free Plan",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      {
+        "@type": "Offer",
+        "name": "Aura Pro",
+        "price": "14.99",
+        "priceCurrency": "USD",
+        "billingIncrement": "P1M"
+      }
+    ]
   })} />
 
   {/* Schema.org - FAQPage (improves Google rich snippets) */}

@@ -3,12 +3,15 @@ import Layout from '../../layouts/Layout.astro';
 import Nav from '../../components/Nav.astro';
 import Hero from '../../components/Hero.astro';
 import TrustBar from '../../components/TrustBar.astro';
+import Platforms from '../../components/Platforms.astro';
 import AppShowcase from '../../components/AppShowcase.astro';
 import Features from '../../components/Features.astro';
 import PrivacyFirst from '../../components/PrivacyFirst.astro';
 import SocialProof from '../../components/SocialProof.astro';
 import AnimatedDemo from '../../components/AnimatedDemo.astro';
 import HowItWorks from '../../components/HowItWorks.astro';
+import UseCases from '../../components/UseCases.astro';
+import Benefits from '../../components/Benefits.astro';
 import CompareTable from '../../components/CompareTable.astro';
 import FAQ from '../../components/FAQ.astro';
 import Pricing from '../../components/Pricing.astro';
@@ -25,9 +28,12 @@ const locale = 'en';
   <main id="main-content">
     <Hero t={t} />
     <TrustBar t={t} />
+    <Platforms t={t} />
     <AppShowcase t={t} />
     <AnimatedDemo t={t} />
     <Features t={t} />
+    <UseCases t={t} />
+    <Benefits t={t} />
     <PrivacyFirst t={t} />
     <SocialProof t={t} />
     <HowItWorks t={t} />

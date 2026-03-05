@@ -1,0 +1,140 @@
+---
+const { t } = Astro.props;
+
+const platforms = [
+  {
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>`,
+    label: t.platforms.items[0],
+    color: '#8B5CF6',
+  },
+  {
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>`,
+    label: t.platforms.items[1],
+    color: '#2D8CFF',
+  },
+  {
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15.6 11.6L22 7v10l-6.4-4.5v-1zM4 5h9a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V7a2 2 0 012-2z"/></svg>`,
+    label: t.platforms.items[2],
+    color: '#34A853',
+  },
+  {
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>`,
+    label: t.platforms.items[3],
+    color: '#6264A7',
+  },
+  {
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>`,
+    label: t.platforms.items[4],
+    color: '#06D6A0',
+  },
+  {
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.8 19.8 0 01-8.63-3.07A19.5 19.5 0 013.07 9.8 19.8 19.8 0 01.22 1.18 2 2 0 012.18 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>`,
+    label: t.platforms.items[5],
+    color: '#EC4899',
+  },
+];
+---
+
+<section class="platforms-section" id="platforms">
+  <div class="container">
+    <div class="platforms-header animate-on-scroll">
+      <p class="platforms-tagline">{t.platforms.tagline}</p>
+      <h2 class="platforms-title">{t.platforms.title} <em class="italic-accent">{t.platforms.titleAccent}</em></h2>
+    </div>
+    <div class="pills-row animate-on-scroll" style="animation-delay: 0.15s">
+      {platforms.map((p) => (
+        <div class="platform-pill" style={`--pill-color: ${p.color}`}>
+          <span class="pill-icon" set:html={p.icon} />
+          <span class="pill-label">{p.label}</span>
+        </div>
+      ))}
+    </div>
+    <p class="platforms-note animate-on-scroll" style="animation-delay: 0.3s">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+      {t.platforms.note}
+    </p>
+  </div>
+</section>
+
+<style>
+  .platforms-section {
+    padding: var(--space-2xl) 0;
+    text-align: center;
+    border-top: 1px solid var(--border-dark);
+    border-bottom: 1px solid var(--border-dark);
+    background: rgba(22, 25, 34, 0.25);
+  }
+  .platforms-header {
+    margin-bottom: var(--space-xl);
+  }
+  .platforms-tagline {
+    font-size: var(--fs-caption);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--primary-light);
+    font-weight: 600;
+    margin-bottom: var(--space-sm);
+  }
+  .platforms-title {
+    font-size: clamp(1.5rem, 3.5vw, 2.5rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--text-primary);
+    line-height: 1.2;
+  }
+  .italic-accent {
+    font-style: italic;
+    background: var(--brand-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 900;
+  }
+  .pills-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-sm);
+    max-width: 800px;
+    margin: 0 auto var(--space-lg);
+  }
+  .platform-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.25rem;
+    border-radius: 100px;
+    background: color-mix(in srgb, var(--pill-color) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--pill-color) 25%, transparent);
+    color: var(--text-primary);
+    font-size: var(--fs-small);
+    font-weight: 500;
+    transition: all var(--transition-medium);
+    cursor: default;
+  }
+  .platform-pill:hover {
+    background: color-mix(in srgb, var(--pill-color) 18%, transparent);
+    border-color: color-mix(in srgb, var(--pill-color) 50%, transparent);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px color-mix(in srgb, var(--pill-color) 20%, transparent);
+  }
+  .pill-icon {
+    width: 18px;
+    height: 18px;
+    color: var(--pill-color);
+    flex-shrink: 0;
+  }
+  .pill-icon :global(svg) { width: 100%; height: 100%; }
+  .platforms-note {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: var(--fs-small);
+    color: var(--text-secondary);
+    background: var(--accent-dim);
+    border: 1px solid rgba(6, 214, 160, 0.2);
+    padding: 0.5rem 1.25rem;
+    border-radius: 100px;
+    font-weight: 500;
+  }
+</style>

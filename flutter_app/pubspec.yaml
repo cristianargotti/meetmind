@@ -1,7 +1,7 @@
 name: meetmind
 description: "The most powerful meeting AI tool"
 publish_to: "none"
-version: 1.0.0+2
+version: 1.1.1+2
 
 environment:
   sdk: ^3.10.1
@@ -50,6 +50,10 @@ dependencies:
   # Sharing & Links
   share_plus: ^10.0.0
   url_launcher: ^6.3.0
+
+  # PDF Export
+  pdf: ^3.11.1
+  printing: ^5.13.3
 
   # Authentication
   google_sign_in: ^6.2.2

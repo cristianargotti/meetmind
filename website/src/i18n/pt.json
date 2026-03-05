@@ -402,5 +402,110 @@
         "support": "Suporte",
         "deleteAccount": "Excluir Conta",
         "copyright": "© 2026 Aura Meet. Todos os direitos reservados."
+    },
+    "platforms": {
+        "tagline": "Compatível com tudo",
+        "title": "Funciona com qualquer reunião,",
+        "titleAccent": "online ou presencial",
+        "note": "Sem necessidade de bot. Sem internet obrigatória. Só toque e fale.",
+        "items": [
+            "Reunião presencial",
+            "Zoom",
+            "Google Meet",
+            "Microsoft Teams",
+            "Gravação de áudio/vídeo",
+            "Ligação telefônica"
+        ]
+    },
+    "useCases": {
+        "badge": "Casos de Uso Reais",
+        "title": "Para cada tipo de reunião",
+        "subtitle": "Descubra como profissionais de diferentes áreas usam o Aura Meet para capturar cada conversa importante.",
+        "cases": {
+            "standup": {
+                "tabLabel": "Standup de Equipe",
+                "title": "Daily Standup",
+                "description": "Capture o progresso de cada membro, identifique bloqueios e gere itens de ação automaticamente ao terminar. Sem anotar nada.",
+                "benefits": [
+                    "Itens de ação automáticos",
+                    "Quem disse o quê, em segundos",
+                    "Compartilhe o resumo com a equipe"
+                ],
+                "mockTitle": "Standup Semanal",
+                "mockNotif": "3 itens de ação detectados"
+            },
+            "planning": {
+                "tabLabel": "Sprint Planning",
+                "title": "Sprint Planning",
+                "description": "Documente decisões técnicas, tickets priorizados e estimativas. Obtenha um resumo executivo pronto para Jira ou Notion.",
+                "benefits": [
+                    "Decisões rastreáveis",
+                    "Resumo exportável",
+                    "Contexto para equipe remota"
+                ],
+                "mockTitle": "Sprint Planning Q1",
+                "mockNotif": "Decisões detectadas: 4"
+            },
+            "client": {
+                "tabLabel": "Calls com Clientes",
+                "title": "Ligações de Negócio",
+                "description": "Foque na conversa, não em anotar. Aura captura compromissos, objeções e acordos-chave das suas ligações comerciais.",
+                "benefits": [
+                    "Compromissos identificados",
+                    "Sem distrações na ligação",
+                    "Follow-up redigido pela IA"
+                ],
+                "mockTitle": "Call com Cliente",
+                "mockNotif": "Acordo detectado"
+            },
+            "interview": {
+                "tabLabel": "Entrevistas",
+                "title": "Entrevistas de Emprego",
+                "description": "Transcreva e analise respostas de candidatos. Identifique competências-chave e gere notas de avaliação estruturadas.",
+                "benefits": [
+                    "Análise por competências",
+                    "Notas objetivas sem viés",
+                    "Compare candidatos facilmente"
+                ],
+                "mockTitle": "Entrevista — Senior Dev",
+                "mockNotif": "Pontos fortes: 3"
+            },
+            "workshop": {
+                "tabLabel": "Aulas e Workshops",
+                "title": "Aulas e Workshops",
+                "description": "Capture cada conceito, pergunta e conclusão das suas sessões educacionais. Obtenha notas estruturadas ao terminar a aula.",
+                "benefits": [
+                    "Conceitos-chave destacados",
+                    "Perguntas do grupo capturadas",
+                    "Revisão rápida pós-sessão"
+                ],
+                "mockTitle": "Workshop de Design",
+                "mockNotif": "Conceitos-chave: 8"
+            }
+        }
+    },
+    "benefits": {
+        "badge": "Nossas vantagens",
+        "title": "Quando dizemos privacidade total,",
+        "titleAccent": "falamos sério.",
+        "subtitle": "O Aura Meet é o único assistente de reuniões que processa tudo no seu dispositivo. Sem bots. Sem servidores. Sem compromissos.",
+        "items": {
+            "privacy": {
+                "title": "100% On-Device",
+                "description": "A transcrição roda no seu celular. Seu áudio nunca chega a nenhum servidor externo."
+            },
+            "realtime": {
+                "title": "Copiloto em Tempo Real",
+                "description": "Faça perguntas durante a reunião, não depois. Aura ouve e responde enquanto você fala."
+            },
+            "price": {
+                "title": "Preço Justo",
+                "description": "Poder de nível enterprise a uma fração do custo. Sem surpresas, sem taxas ocultas."
+            },
+            "offline": {
+                "title": "Funciona Offline",
+                "description": "A transcrição funciona sem internet. Perfeita para entrevistas de campo, reuniões em voo ou áreas sem cobertura."
+            }
+        }
     }
 }

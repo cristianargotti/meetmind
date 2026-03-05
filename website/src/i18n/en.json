@@ -402,5 +402,110 @@
         "support": "Support",
         "deleteAccount": "Delete Account",
         "copyright": "© 2026 Aura Meet. All rights reserved."
+    },
+    "platforms": {
+        "tagline": "Compatible with everything",
+        "title": "Works with any meeting,",
+        "titleAccent": "online or in-person",
+        "note": "No bot needed. No internet required. Just tap and talk.",
+        "items": [
+            "In-person meeting",
+            "Zoom",
+            "Google Meet",
+            "Microsoft Teams",
+            "Audio/video recording",
+            "Phone call"
+        ]
+    },
+    "useCases": {
+        "badge": "Real-World Use Cases",
+        "title": "For every kind of meeting",
+        "subtitle": "Discover how professionals from different fields use Aura Meet to capture every important conversation.",
+        "cases": {
+            "standup": {
+                "tabLabel": "Team Standup",
+                "title": "Daily Standup",
+                "description": "Capture each team member's progress, identify blockers, and automatically generate action items when you're done. No note-taking needed.",
+                "benefits": [
+                    "Automatic action items",
+                    "Who said what, in seconds",
+                    "Share the summary with the team"
+                ],
+                "mockTitle": "Weekly Standup",
+                "mockNotif": "3 action items detected"
+            },
+            "planning": {
+                "tabLabel": "Sprint Planning",
+                "title": "Sprint Planning",
+                "description": "Document technical decisions, prioritized tickets, and estimates. Get an executive summary ready for Jira or Notion.",
+                "benefits": [
+                    "Traceable decisions",
+                    "Exportable summary",
+                    "Context for the remote team"
+                ],
+                "mockTitle": "Sprint Planning Q1",
+                "mockNotif": "Decisions detected: 4"
+            },
+            "client": {
+                "tabLabel": "Client Calls",
+                "title": "Business Calls",
+                "description": "Focus on the conversation, not on taking notes. Aura captures commitments, objections, and key agreements from your sales calls.",
+                "benefits": [
+                    "Commitments identified",
+                    "No distractions on the call",
+                    "AI-drafted follow-up"
+                ],
+                "mockTitle": "Client Call",
+                "mockNotif": "Agreement detected"
+            },
+            "interview": {
+                "tabLabel": "Interviews",
+                "title": "Job Interviews",
+                "description": "Transcribe and analyze candidate responses. Identify key competencies and generate structured evaluation notes.",
+                "benefits": [
+                    "Competency analysis",
+                    "Objective, unbiased notes",
+                    "Compare candidates easily"
+                ],
+                "mockTitle": "Interview — Senior Dev",
+                "mockNotif": "Key strengths: 3"
+            },
+            "workshop": {
+                "tabLabel": "Classes & Workshops",
+                "title": "Classes & Workshops",
+                "description": "Capture every concept, question, and conclusion from your educational sessions. Get structured notes when class is over.",
+                "benefits": [
+                    "Key concepts highlighted",
+                    "Group questions captured",
+                    "Quick post-session review"
+                ],
+                "mockTitle": "Design Workshop",
+                "mockNotif": "Key concepts: 8"
+            }
+        }
+    },
+    "benefits": {
+        "badge": "Our advantages",
+        "title": "When we say total privacy,",
+        "titleAccent": "we mean it.",
+        "subtitle": "Aura Meet is the only meeting assistant that processes everything on your device. No bots. No servers. No compromises.",
+        "items": {
+            "privacy": {
+                "title": "100% On-Device",
+                "description": "Transcription runs on your phone. Your audio never reaches any external server."
+            },
+            "realtime": {
+                "title": "Real-Time Copilot",
+                "description": "Ask questions during the meeting, not after. Aura listens and responds while you talk."
+            },
+            "price": {
+                "title": "Fair Price",
+                "description": "Enterprise-level power at a fraction of the cost. No surprises, no hidden fees."
+            },
+            "offline": {
+                "title": "Works Offline",
+                "description": "Transcription works without internet. Perfect for field interviews, airborne meetings, or areas with no coverage."
+            }
+        }
     }
 }
