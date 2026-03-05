@@ -14,8 +14,8 @@
         "tagline": "Sua reunião, sua vantagem",
         "title": "Seu copiloto de reuniões com IA",
         "subtitle": "Transcrição em tempo real, análise inteligente e resumos automáticos. Não perca nenhum detalhe importante das suas reuniões.",
-        "cta": "Baixar Grátis",
-        "ctaSecondary": "Ver Demo",
+        "cta": "Transcrever minha próxima reunião grátis",
+        "ctaSecondary": "Ver como funciona",
         "phone": {
             "meetingTitle": "Standup Semanal",
             "tabTranscript": "Transcrição",
@@ -127,6 +127,26 @@
             {
                 "question": "Como cancelo minha assinatura?",
                 "answer": "Você pode cancelar a qualquer momento pela App Store ou Google Play. Sem multas, taxas ocultas ou períodos de fidelidade."
+            },
+            {
+                "question": "Funciona em reuniões presenciais?",
+                "answer": "Sim, e essa é uma das nossas maiores diferenciais. Ao contrário de bots que entram em chamadas do Zoom ou Meet, o Aura Meet usa o microfone do iPhone e funciona em qualquer lugar: salas presenciais, cafés, conferências — mesmo sem internet."
+            },
+            {
+                "question": "Posso transcrever arquivos de áudio já gravados?",
+                "answer": "Em breve. Atualmente a transcrição funciona em tempo real durante a reunião. O upload de arquivos de áudio/vídeo está no nosso roadmap para as próximas versões."
+            },
+            {
+                "question": "Quão precisa é a transcrição?",
+                "answer": "Muito precisa. Usamos o chip neural do iPhone para reconhecimento de voz, atingindo precisão de nível profissional nos 99 idiomas suportados. O desempenho pode variar conforme a qualidade do microfone e o ruído ambiente."
+            },
+            {
+                "question": "Está disponível para Android?",
+                "answer": "O Aura Meet está disponível atualmente para iOS. A versão Android está em desenvolvimento e chegará em breve. Você pode se cadastrar para ser notificado."
+            },
+            {
+                "question": "O que é o Ask Aura?",
+                "answer": "O Ask Aura é seu copiloto de IA. Você pode fazer perguntas em tempo real durante a reunião ('O que a Maria disse sobre o orçamento?') ou consultar o histórico de reuniões anteriores. Disponível no plano Pro."
             }
         ]
     },
@@ -165,9 +185,9 @@
     },
     "cta": {
         "title": "Potencialize suas reuniões com IA",
-        "subtitle": "Baixe o Aura Meet e transforme cada conversa em ação",
-        "button": "Baixar Grátis",
-        "noCreditCard": "Sem cartão de crédito. Sem compromisso."
+        "subtitle": "Comece grátis hoje. Sem cartão de crédito, sem configuração.",
+        "button": "Começar grátis — zero configuração",
+        "noCreditCard": "Sem cartão de crédito · Cancele quando quiser"
     },
     "trustBar": {
         "stats": [
@@ -402,6 +422,17 @@
         "support": "Suporte",
         "deleteAccount": "Excluir Conta",
         "copyright": "© 2026 Aura Meet. Todos os direitos reservados."
+    },
+    "trustLogos": {
+        "label": "Profissionais de todos os setores confiam no Aura Meet",
+        "items": [
+            "Startups & Tech",
+            "Educação",
+            "Consultoria",
+            "Saúde",
+            "Mídia & Conteúdo",
+            "Equipes Remotas"
+        ]
     },
     "platforms": {
         "tagline": "Compatível com tudo",
