@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:meetmind/config/theme.dart';
+import 'package:meetmind/providers/subscription_provider.dart';
 import 'package:meetmind/services/export_service.dart';
 import 'package:meetmind/services/meeting_api_service.dart';
 import 'package:meetmind/services/meeting_pdf_service.dart';
 
 /// Meeting detail screen — view a past meeting's transcript, summary, insights.
-class MeetingDetailScreen extends StatefulWidget {
+class MeetingDetailScreen extends ConsumerStatefulWidget {
   /// Create meeting detail screen.
   const MeetingDetailScreen({required this.meetingId, super.key});
 
@@ -17,10 +19,10 @@ class MeetingDetailScreen extends StatefulWidget {
   final String meetingId;
 
   @override
-  State<MeetingDetailScreen> createState() => _MeetingDetailScreenState();
+  ConsumerState<MeetingDetailScreen> createState() => _MeetingDetailScreenState();
 }
 
-class _MeetingDetailScreenState extends State<MeetingDetailScreen>
+class _MeetingDetailScreenState extends ConsumerState<MeetingDetailScreen>
     with SingleTickerProviderStateMixin {
   final MeetingApiService _api = MeetingApiService();
   Map<String, dynamic>? _meeting;
@@ -205,15 +207,16 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen>
       appBar: AppBar(
         title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
         actions: [
-          // Ask Aura button
-          IconButton(
-            icon: const Icon(
-              Icons.auto_awesome,
-              color: MeetMindTheme.primary,
+          // Ask Aura button — Pro only
+          if (ref.watch(isProProvider))
+            IconButton(
+              icon: const Icon(
+                Icons.auto_awesome,
+                color: MeetMindTheme.primary,
+              ),
+              tooltip: 'Ask Aura',
+              onPressed: () => context.push('/meeting/${widget.meetingId}/ask-aura'),
             ),
-            tooltip: 'Ask Aura',
-            onPressed: () => context.push('/meeting/${widget.meetingId}/ask-aura'),
-          ),
           // Share PDF button — primary action
           IconButton(
             icon: const Icon(Icons.ios_share_rounded),
