@@ -5,12 +5,29 @@ import 'package:go_router/go_router.dart';
 import 'package:meetmind/config/theme.dart';
 import 'package:meetmind/l10n/generated/app_localizations.dart';
 import 'package:meetmind/providers/subscription_provider.dart';
+import 'package:meetmind/services/meeting_api_service.dart';
 
-/// Ask Aura — RAG-powered chat with meeting history.
+/// Ask Aura — AI copilot chat backed by the real backend.
 ///
-/// Pro-gated feature. Backend integration in Sprint 2.
+/// Supports two modes:
+///   - Live mode: called from within an active recording session,
+///     passes the in-progress transcript as context.
+///   - History mode: called from the meeting detail screen,
+///     transcript_context is empty and the server loads it from the DB.
+///
+/// Pro-gated — non-Pro users see the paywall CTA.
 class AskAuraScreen extends ConsumerStatefulWidget {
-  const AskAuraScreen({super.key});
+  const AskAuraScreen({
+    super.key,
+    required this.meetingId,
+    this.transcriptContext = '',
+  });
+
+  /// ID of the meeting to ask questions about.
+  final String meetingId;
+
+  /// Live transcript context (empty = server loads from DB).
+  final String transcriptContext;
 
   @override
   ConsumerState<AskAuraScreen> createState() => _AskAuraScreenState();
@@ -18,36 +35,83 @@ class AskAuraScreen extends ConsumerStatefulWidget {
 
 class _AskAuraScreenState extends ConsumerState<AskAuraScreen> {
   final TextEditingController _controller = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   final List<_ChatMessage> _messages = [];
+  bool _isLoading = false;
 
   @override
   void dispose() {
     _controller.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
-  void _sendMessage() {
-    final text = _controller.text.trim();
-    if (text.isEmpty) return;
+  Future<void> _sendMessage([String? prefillText]) async {
+    final text = (prefillText ?? _controller.text).trim();
+    if (text.isEmpty || _isLoading) return;
 
     setState(() {
       _messages.add(_ChatMessage(text: text, isUser: true));
       _controller.clear();
+      _isLoading = true;
     });
 
-    // Simulate AI response (replace with real backend call in Sprint 2)
-    Future.delayed(const Duration(seconds: 1), () {
+    _scrollToBottom();
+
+    try {
+      final result = await MeetingApiService().askCopilot(
+        meetingId: widget.meetingId,
+        question: text,
+        transcriptContext: widget.transcriptContext,
+      );
+
+      final answer = result['answer'] as String? ?? '—';
+      final isError = result['error'] == true;
+
       if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
         setState(() {
           _messages.add(
             _ChatMessage(
-              text: '🧠 ${l10n.commonLoading}',
+              text: answer,
               isUser: false,
-              isPlaceholder: true,
+              isError: isError,
             ),
           );
+          _isLoading = false;
         });
+        _scrollToBottom();
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _messages.add(
+            _ChatMessage(
+              text: '⚠️ ${e.toString()}',
+              isUser: false,
+              isError: true,
+            ),
+          );
+          _isLoading = false;
+        });
+        _scrollToBottom();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: MeetMindTheme.error,
+          ),
+        );
+      }
+    }
+  }
+
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
       }
     });
   }
@@ -135,14 +199,16 @@ class _AskAuraScreenState extends ConsumerState<AskAuraScreen> {
           // Chat messages
           Expanded(
             child: _messages.isEmpty
-                ? _EmptyState()
+                ? _EmptyState(onSuggestionTap: _sendMessage)
                 : ListView.builder(
+                    controller: _scrollController,
                     padding: const EdgeInsets.all(16),
-                    reverse: true,
-                    itemCount: _messages.length,
+                    itemCount: _messages.length + (_isLoading ? 1 : 0),
                     itemBuilder: (context, index) {
-                      final msg = _messages[_messages.length - 1 - index];
-                      return _ChatBubble(message: msg);
+                      if (_isLoading && index == _messages.length) {
+                        return const _TypingIndicator();
+                      }
+                      return _ChatBubble(message: _messages[index]);
                     },
                   ),
           ),
@@ -165,6 +231,7 @@ class _AskAuraScreenState extends ConsumerState<AskAuraScreen> {
                   Expanded(
                     child: TextField(
                       controller: _controller,
+                      enabled: !_isLoading,
                       onSubmitted: (_) => _sendMessage(),
                       decoration: InputDecoration(
                         hintText: l10n.askAuraPlaceholder,
@@ -186,10 +253,20 @@ class _AskAuraScreenState extends ConsumerState<AskAuraScreen> {
                   ),
                   const SizedBox(width: 8),
                   IconButton.filled(
-                    onPressed: _sendMessage,
-                    icon: const Icon(Icons.send_rounded, size: 20),
+                    onPressed: _isLoading ? null : _sendMessage,
+                    icon: _isLoading
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Icon(Icons.send_rounded, size: 20),
                     style: IconButton.styleFrom(
-                      backgroundColor: MeetMindTheme.primary,
+                      backgroundColor:
+                          _isLoading ? Colors.white24 : MeetMindTheme.primary,
                     ),
                   ),
                 ],
@@ -202,8 +279,61 @@ class _AskAuraScreenState extends ConsumerState<AskAuraScreen> {
   }
 }
 
+/// Animated typing indicator shown while waiting for the AI response.
+class _TypingIndicator extends StatelessWidget {
+  const _TypingIndicator();
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: MeetMindTheme.darkCard,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(16),
+            topRight: Radius.circular(16),
+            bottomRight: Radius.circular(16),
+            bottomLeft: Radius.circular(4),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.auto_awesome, size: 14, color: MeetMindTheme.primary),
+            const SizedBox(width: 8),
+            ...List.generate(3, (i) {
+              return Container(
+                margin: const EdgeInsets.symmetric(horizontal: 2),
+                width: 6,
+                height: 6,
+                decoration: const BoxDecoration(
+                  color: Colors.white38,
+                  shape: BoxShape.circle,
+                ),
+              )
+                  .animate(onPlay: (c) => c.repeat())
+                  .fadeIn(
+                    duration: 400.ms,
+                    delay: (i * 150).ms,
+                  )
+                  .fadeOut(duration: 400.ms, delay: ((i * 150) + 400).ms);
+            }),
+          ],
+        ),
+      ),
+    ).animate().fadeIn(duration: 200.ms);
+  }
+}
+
 /// Suggested questions empty state.
 class _EmptyState extends ConsumerWidget {
+  const _EmptyState({required this.onSuggestionTap});
+
+  final void Function(String) onSuggestionTap;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
@@ -251,42 +381,45 @@ class _EmptyState extends ConsumerWidget {
           ...suggestions.map(
             (s) => Padding(
               padding: const EdgeInsets.only(bottom: 12),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 14,
-                ),
-                decoration: BoxDecoration(
-                  color: MeetMindTheme.darkCard,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: MeetMindTheme.darkBorder.withValues(alpha: 0.5),
+              child: GestureDetector(
+                onTap: () => onSuggestionTap(s),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
                   ),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.lightbulb_outline,
-                      size: 18,
-                      color: MeetMindTheme.warning,
+                  decoration: BoxDecoration(
+                    color: MeetMindTheme.darkCard,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: MeetMindTheme.darkBorder.withValues(alpha: 0.5),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        s,
-                        style: const TextStyle(
-                          color: Colors.white60,
-                          fontSize: 14,
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.lightbulb_outline,
+                        size: 18,
+                        color: MeetMindTheme.warning,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          s,
+                          style: const TextStyle(
+                            color: Colors.white60,
+                            fontSize: 14,
+                          ),
                         ),
                       ),
-                    ),
-                    const Icon(
-                      Icons.arrow_forward_ios,
-                      size: 12,
-                      color: Colors.white24,
-                    ),
-                  ],
+                      const Icon(
+                        Icons.arrow_forward_ios,
+                        size: 12,
+                        color: Colors.white24,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -314,14 +447,20 @@ class _ChatBubble extends StatelessWidget {
           maxWidth: MediaQuery.of(context).size.width * 0.78,
         ),
         decoration: BoxDecoration(
-          color:
-              message.isUser ? MeetMindTheme.primary : MeetMindTheme.darkCard,
+          color: message.isError
+              ? MeetMindTheme.error.withValues(alpha: 0.15)
+              : message.isUser
+                  ? MeetMindTheme.primary
+                  : MeetMindTheme.darkCard,
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(16),
             topRight: const Radius.circular(16),
             bottomLeft: Radius.circular(message.isUser ? 16 : 4),
             bottomRight: Radius.circular(message.isUser ? 4 : 16),
           ),
+          border: message.isError
+              ? Border.all(color: MeetMindTheme.error.withValues(alpha: 0.3))
+              : null,
         ),
         child: Text(
           message.text,
@@ -340,10 +479,10 @@ class _ChatMessage {
   const _ChatMessage({
     required this.text,
     required this.isUser,
-    this.isPlaceholder = false,
+    this.isError = false,
   });
 
   final String text;
   final bool isUser;
-  final bool isPlaceholder;
+  final bool isError;
 }

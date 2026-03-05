@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:meetmind/config/theme.dart';
+import 'package:meetmind/services/export_service.dart';
 import 'package:meetmind/services/meeting_api_service.dart';
+import 'package:meetmind/services/meeting_pdf_service.dart';
 
 /// Meeting detail screen — view a past meeting's transcript, summary, insights.
 class MeetingDetailScreen extends StatefulWidget {
@@ -127,6 +130,26 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen>
     }
   }
 
+  /// Share meeting as a branded PDF via native share sheet.
+  Future<void> _sharePdf() async {
+    if (_meeting == null) return;
+    try {
+      await MeetingPdfService.instance.sharePdf(_meeting!);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('PDF export failed: $e')),
+        );
+      }
+    }
+  }
+
+  /// Share meeting as plain text via native share sheet.
+  Future<void> _shareText() async {
+    if (_meeting == null) return;
+    await ExportService.instance.shareMeeting(_meeting!);
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -182,13 +205,53 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen>
       appBar: AppBar(
         title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
         actions: [
+          // Ask Aura button
+          IconButton(
+            icon: const Icon(
+              Icons.auto_awesome,
+              color: MeetMindTheme.primary,
+            ),
+            tooltip: 'Ask Aura',
+            onPressed: () => context.push('/meeting/${widget.meetingId}/ask-aura'),
+          ),
+          // Share PDF button — primary action
+          IconButton(
+            icon: const Icon(Icons.ios_share_rounded),
+            tooltip: 'Share PDF',
+            onPressed: _sharePdf,
+          ),
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert_rounded),
             onSelected: (value) {
-              if (value == 'copy_transcript') _copyTranscript();
-              if (value == 'copy_summary') _copySummary();
+              switch (value) {
+                case 'share_pdf':
+                  _sharePdf();
+                case 'share_text':
+                  _shareText();
+                case 'copy_transcript':
+                  _copyTranscript();
+                case 'copy_summary':
+                  _copySummary();
+              }
             },
             itemBuilder: (_) => [
+              const PopupMenuItem(
+                value: 'share_pdf',
+                child: ListTile(
+                  leading: Icon(Icons.picture_as_pdf_rounded, size: 20, color: MeetMindTheme.error),
+                  title: Text('Share as PDF'),
+                  dense: true,
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'share_text',
+                child: ListTile(
+                  leading: Icon(Icons.share_rounded, size: 20, color: MeetMindTheme.primary),
+                  title: Text('Share as Text'),
+                  dense: true,
+                ),
+              ),
+              const PopupMenuDivider(),
               const PopupMenuItem(
                 value: 'copy_transcript',
                 child: ListTile(
@@ -280,7 +343,12 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen>
               controller: _tabController,
               children: [
                 _TranscriptTab(segments: segments),
-                _SummaryTab(meeting: _meeting!, onCopySummary: _copySummary),
+                _SummaryTab(
+                  meeting: _meeting!,
+                  onCopySummary: _copySummary,
+                  onSharePdf: _sharePdf,
+                  onShareText: _shareText,
+                ),
                 _InsightsTab(insights: insights),
               ],
             ),
@@ -363,10 +431,17 @@ class _TranscriptTab extends StatelessWidget {
 
 /// Summary tab — overview, key points, action items, decisions.
 class _SummaryTab extends StatelessWidget {
-  const _SummaryTab({required this.meeting, required this.onCopySummary});
+  const _SummaryTab({
+    required this.meeting,
+    required this.onCopySummary,
+    required this.onSharePdf,
+    required this.onShareText,
+  });
 
   final Map<String, dynamic> meeting;
   final VoidCallback onCopySummary;
+  final VoidCallback onSharePdf;
+  final VoidCallback onShareText;
 
   @override
   Widget build(BuildContext context) {
@@ -452,20 +527,50 @@ class _SummaryTab extends StatelessWidget {
             MeetMindTheme.warning,
           ),
 
-          // Copy button
-          const SizedBox(height: 16),
+          // Export buttons
+          const SizedBox(height: 20),
           SizedBox(
             width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: onCopySummary,
-              icon: const Icon(Icons.copy_rounded, size: 16),
-              label: const Text('Copy Summary'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: MeetMindTheme.primary,
-                side: const BorderSide(color: MeetMindTheme.darkBorder),
-                padding: const EdgeInsets.symmetric(vertical: 12),
+            child: ElevatedButton.icon(
+              onPressed: onSharePdf,
+              icon: const Icon(Icons.picture_as_pdf_rounded, size: 16),
+              label: const Text('Share as PDF'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: MeetMindTheme.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
               ),
             ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: onCopySummary,
+                  icon: const Icon(Icons.copy_rounded, size: 14),
+                  label: const Text('Copy'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: MeetMindTheme.primary,
+                    side: const BorderSide(color: MeetMindTheme.darkBorder),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: onShareText,
+                  icon: const Icon(Icons.share_rounded, size: 14),
+                  label: const Text('Share Text'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: MeetMindTheme.textSecondary,
+                    side: const BorderSide(color: MeetMindTheme.darkBorder),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

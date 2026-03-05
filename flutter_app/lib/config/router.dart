@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-// Hidden for launch — Sprint 2
-// import 'package:meetmind/features/ask_aura/ask_aura_screen.dart';
+import 'package:meetmind/features/ask_aura/ask_aura_screen.dart';
 import 'package:meetmind/features/auth/forgot_password_screen.dart';
 import 'package:meetmind/features/auth/login_screen.dart';
 // Hidden for launch — Sprint 3
@@ -100,12 +99,14 @@ GoRouter buildRouter(WidgetRef ref) {
         builder: (context, state) =>
             LegalScreen(type: state.pathParameters['type'] ?? 'privacy'),
       ),
-      // Hidden for launch — Ask Aura (Sprint 2) & Weekly Digest (Sprint 3)
-      // GoRoute(
-      //   path: '/ask-aura',
-      //   name: 'ask-aura',
-      //   builder: (context, state) => const AskAuraScreen(),
-      // ),
+      GoRoute(
+        path: '/meeting/:id/ask-aura',
+        name: 'ask-aura',
+        builder: (context, state) => AskAuraScreen(
+          meetingId: state.pathParameters['id']!,
+          transcriptContext: state.uri.queryParameters['context'] ?? '',
+        ),
+      ),
       // GoRoute(
       //   path: '/digest',
       //   name: 'digest',
