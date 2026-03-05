@@ -16,6 +16,7 @@ const KEYS = {
     ACCESS_TOKEN: 'aura_access_token',
     REFRESH_TOKEN: 'aura_refresh_token',
     USER: 'aura_user',
+    IS_PRO: 'aura_is_pro',
 };
 
 // ─── Public API ────────────────────────────────────────────────────
@@ -50,9 +51,10 @@ export async function signIn() {
         [KEYS.ACCESS_TOKEN]: data.access_token,
         [KEYS.REFRESH_TOKEN]: data.refresh_token,
         [KEYS.USER]: data.user,
+        [KEYS.IS_PRO]: data.user?.is_pro ?? false,
     });
 
-    return { user: data.user, accessToken: data.access_token };
+    return { user: data.user, accessToken: data.access_token, isPro: data.user?.is_pro ?? false };
 }
 
 /**
@@ -69,7 +71,17 @@ export async function signOut() {
         KEYS.ACCESS_TOKEN,
         KEYS.REFRESH_TOKEN,
         KEYS.USER,
+        KEYS.IS_PRO,
     ]);
+}
+
+/**
+ * Check if current user has a Pro subscription.
+ * @returns {Promise<boolean>}
+ */
+export async function getIsPro() {
+    const stored = await chrome.storage.local.get(KEYS.IS_PRO);
+    return stored[KEYS.IS_PRO] ?? false;
 }
 
 /**

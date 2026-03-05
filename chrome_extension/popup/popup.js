@@ -12,7 +12,7 @@
  *   - i18n (EN/ES/PT) via i18n.js
  */
 
-import { signIn, signOut, getUser } from '../auth/auth.js';
+import { signIn, signOut, getUser, getIsPro } from '../auth/auth.js';
 
 // ─── DOM Elements ──────────────────────────
 
@@ -111,13 +111,13 @@ async function checkAuthAndRender() {
         appScreen.style.display = 'none';
         return;
     }
-    showApp(user);
+    const isPro = await getIsPro();
+    showApp(user, isPro);
 }
 
-function showApp(user) {
+function showApp(user, isPro = false) {
     loginScreen.style.display = 'none';
     appScreen.style.display = 'block';
-    // Show user info in header
     if (user?.avatar_url) {
         userAvatar.src = user.avatar_url;
         userAvatar.style.display = 'inline-block';
@@ -126,6 +126,17 @@ function showApp(user) {
         userName.textContent = user.name.split(' ')[0];
     }
     userInfo.style.display = 'flex';
+
+    // Pro gate — lock Copilot tab for free users
+    const copilotTab = document.querySelector('[data-tab="copilot"]');
+    if (copilotTab && !isPro) {
+        copilotTab.classList.add('tab--locked');
+        copilotTab.title = 'Upgrade to Aura Pro to use Ask Aura';
+        copilotTab.addEventListener('click', (e) => {
+            e.stopImmediatePropagation();
+            chrome.tabs.create({ url: 'https://aurameet.live/pricing' });
+        }, { capture: true });
+    }
 }
 
 if (googleSigninBtn) {
@@ -133,8 +144,8 @@ if (googleSigninBtn) {
         googleSigninBtn.disabled = true;
         googleSigninBtn.textContent = 'Signing in...';
         try {
-            const { user } = await signIn();
-            showApp(user);
+            const { user, isPro } = await signIn();
+            showApp(user, isPro);
         } catch (err) {
             googleSigninBtn.disabled = false;
             googleSigninBtn.innerHTML = `<span style="color:#EF4444">⚠️ ${err.message}</span>`;

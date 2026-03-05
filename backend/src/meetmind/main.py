@@ -242,6 +242,8 @@ async def auth_login(request: Request, body: AuthLoginRequest) -> AuthTokenRespo
             "email": user["email"],
             "name": user.get("name", ""),
             "avatar_url": user.get("avatar_url", ""),
+            "subscription_tier": user.get("subscription_tier", "free"),
+            "is_pro": user.get("subscription_tier", "free") in ("pro", "team"),
         },
     )
 
@@ -362,12 +364,15 @@ async def auth_me(
     user = await storage.get_user(current_user["user_id"])
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    tier = user.get("subscription_tier", "free")
     return {
         "id": user["id"],
         "email": user["email"],
         "name": user.get("name", ""),
         "avatar_url": user.get("avatar_url", ""),
         "provider": user["provider"],
+        "subscription_tier": tier,
+        "is_pro": tier in ("pro", "team"),
         "created_at": str(user["created_at"]),
     }
 

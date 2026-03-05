@@ -88,6 +88,9 @@ async def _create_schema(conn: asyncpg.Connection) -> None:
         -- Add email notifications preference (idempotent)
         ALTER TABLE users ADD COLUMN IF NOT EXISTS email_notifications_enabled BOOLEAN NOT NULL DEFAULT TRUE;
 
+        -- Add subscription tier (idempotent) — updated by RevenueCat webhook
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_tier TEXT NOT NULL DEFAULT 'free';
+
         CREATE TABLE IF NOT EXISTS meetings (
             id              TEXT PRIMARY KEY,
             user_id         TEXT REFERENCES users(id) ON DELETE CASCADE,

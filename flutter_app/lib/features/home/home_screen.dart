@@ -26,8 +26,6 @@ final _recentMeetingsProvider = FutureProvider<List<Map<String, dynamic>>>((
     return await api.listMeetings(limit: 5);
   } catch (_) {
     return [];
-  } finally {
-    api.dispose();
   }
 });
 
@@ -41,8 +39,6 @@ final _pendingActionsCountProvider = FutureProvider<int>((ref) async {
     return items.length;
   } catch (_) {
     return 0;
-  } finally {
-    api.dispose();
   }
 });
 

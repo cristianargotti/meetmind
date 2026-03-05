@@ -70,8 +70,14 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
       }
     } catch (e) {
       if (mounted) {
+        String errorMsg = 'Connection error';
+        if (e.toString().contains('TimeoutException')) {
+          errorMsg = 'Server is slow — tap Retry';
+        } else if (e.toString().contains('SocketException')) {
+          errorMsg = 'No internet connection';
+        }
         setState(() {
-          _error = 'Connection error';
+          _error = errorMsg;
           _isLoading = false;
         });
       }

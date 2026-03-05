@@ -113,6 +113,6 @@ class ExportService {
     bool fullExport = true,
   }) async {
     final text = formatMeetingText(meeting, fullExport: fullExport);
-    await SharePlus.instance.share(ShareParams(text: text));
+    await Share.share(text);
   }
 }

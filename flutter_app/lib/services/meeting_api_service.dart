@@ -6,10 +6,15 @@ import 'package:meetmind/services/auth_service.dart';
 
 /// REST API service for meeting history and stats.
 ///
-/// Communicates with the MeetMind backend's REST endpoints
-/// for meeting CRUD, action items, and dashboard stats.
+/// Uses a shared singleton HTTP client for connection reuse (TCP+TLS).
+/// This avoids the ~0.5-2s handshake overhead per request on mobile.
 class MeetingApiService {
-  MeetingApiService({http.Client? client}) : _client = client ?? http.Client();
+  MeetingApiService._() : _client = http.Client();
+
+  static final MeetingApiService _instance = MeetingApiService._();
+
+  /// Shared singleton instance — reuses HTTP connections.
+  factory MeetingApiService({http.Client? client}) => _instance;
 
   final http.Client _client;
 
@@ -194,7 +199,7 @@ class MeetingApiService {
     final uri = Uri.parse('$_baseUrl$path');
     final response = await _client
         .get(uri, headers: _headers)
-        .timeout(const Duration(seconds: 10));
+        .timeout(const Duration(seconds: 30));
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body) as Map<String, dynamic>;
