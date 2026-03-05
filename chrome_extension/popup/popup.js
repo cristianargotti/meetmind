@@ -13,6 +13,7 @@
  */
 
 import { signIn, signOut, getUser, getIsPro } from '../auth/auth.js';
+import { initHistory } from './history.js';
 
 // ─── DOM Elements ──────────────────────────
 
@@ -70,6 +71,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Initialize i18n (auto-detect or load persisted locale)
     await initI18n();
+
+    // 2. History module (runs after auth is confirmed)
+    initHistory((id) => { activeMeetingId = id; });
 
     // Load saved settings
     const stored = await chrome.storage.local.get(['backendUrl', 'isCapturing']);

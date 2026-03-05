@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aura Meet</title>
+    <link rel="stylesheet" href="sidepanel.css">
+</head>
+
+<body>
+    <header class="sp-header">
+        <div class="sp-header__left">
+            <span class="sp-logo">✦</span>
+            <span class="sp-title">Aura Meet</span>
+        </div>
+        <div class="sp-status" id="sp-status">
+            <span class="sp-status__dot"></span>
+            <span class="sp-status__text">Not recording</span>
+        </div>
+    </header>
+
+    <!-- Live Transcript -->
+    <section class="sp-section">
+        <div class="sp-section__title">📝 Live Transcript</div>
+        <div class="sp-transcript" id="sp-transcript">
+            <div class="sp-transcript__empty">Start a capture to see live transcription here.</div>
+        </div>
+    </section>
+
+    <!-- Live Insights -->
+    <section class="sp-section">
+        <div class="sp-section__title">🔮 Insights</div>
+        <div class="sp-insights" id="sp-insights">
+            <div class="sp-insights__empty">Insights will appear during your meeting.</div>
+        </div>
+    </section>
+
+    <!-- Copilot -->
+    <section class="sp-section sp-copilot">
+        <div class="sp-section__title">✦ Ask Aura</div>
+        <div class="sp-chat" id="sp-chat">
+            <div class="sp-chat__welcome">Ask anything about the meeting...</div>
+        </div>
+        <div class="sp-chat__bar">
+            <input type="text" id="sp-input" class="sp-input" placeholder="Ask Aura...">
+            <button id="sp-send" class="sp-send-btn">↑</button>
+        </div>
+    </section>
+
+    <script type="module" src="sidepanel.js"></script>
+</body>
+
+</html>

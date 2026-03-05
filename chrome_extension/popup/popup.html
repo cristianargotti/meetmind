@@ -84,12 +84,18 @@
             <!-- Status -->
             <p class="status-text" id="status-text" data-i18n="captureReady">Ready to capture tab audio</p>
 
-            <!-- Tab Navigation -->
+            <!-- Tab Navigation (live capture) -->
             <nav class="tabs" id="tab-nav" style="display: none;">
-                <button class="tab tab--active" data-tab="transcript" data-i18n="tabTranscript">📝 Transcript</button>
-                <button class="tab" data-tab="insights" data-i18n="tabInsights">🔮 Insights</button>
-                <button class="tab" data-tab="copilot" data-i18n="tabAura">🧠 Aura</button>
-                <button class="tab" data-tab="summary" data-i18n="tabSummary">📊 Summary</button>
+                <button class="tab tab--active" data-tab="transcript">📝 Live</button>
+                <button class="tab" data-tab="insights">🔮 Insights</button>
+                <button class="tab" data-tab="copilot">✦ Aura</button>
+                <button class="tab" data-tab="summary">📊 Summary</button>
+            </nav>
+
+            <!-- History nav (visible when NOT capturing) -->
+            <nav class="tabs" id="history-nav">
+                <button class="tab tab--active" data-section="history">🕒 History</button>
+                <button class="tab" data-section="actions">✅ Actions</button>
             </nav>
 
             <!-- Tab: Transcript -->
@@ -168,6 +174,32 @@
                 </div>
             </section>
         </main>
+
+        <!-- Section: History -->
+        <section id="section-history" class="history-section">
+            <div class="history-search">
+                <input type="text" id="history-search" class="history-search__input"
+                    placeholder="🔍 Search meetings...">
+            </div>
+            <div id="history-list" class="history-list">
+                <div class="history-empty" id="history-empty">
+                    <span class="history-empty__icon">🕒</span>
+                    <p>No meetings yet</p>
+                    <span>Start your first capture to see it here</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Action Items -->
+        <section id="section-actions" class="actions-section" style="display:none;">
+            <div id="actions-list" class="actions-list">
+                <div class="actions-empty" id="actions-empty">
+                    <span class="actions-empty__icon">✅</span>
+                    <p>No pending actions</p>
+                    <span>Action items from meetings appear here</span>
+                </div>
+            </div>
+        </section>
 
         <!-- Footer -->
         <footer class="footer">
