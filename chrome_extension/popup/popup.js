@@ -2,6 +2,7 @@
  * Aura Meet Chrome Extension — Popup Logic.
  *
  * Handles:
+ *   - Auth gate: shows login screen or main app based on session
  *   - Start/stop capture via service worker
  *   - Live transcript and insight display
  *   - Tab navigation (Transcript ↔ Aura ↔ Summary)
@@ -10,6 +11,8 @@
  *   - Settings (backend URL, language, transcription language)
  *   - i18n (EN/ES/PT) via i18n.js
  */
+
+import { signIn, signOut, getUser } from '../auth/auth.js';
 
 // ─── DOM Elements ──────────────────────────
 
@@ -55,22 +58,23 @@ const costFill = document.getElementById('cost-fill');
 
 let isCapturing = false;
 let insights = [];
-let backendUrl = 'ws://localhost:8000/ws';
+let backendUrl = 'wss://api.aurameet.live/ws';
 let copilotWaiting = false;
 let lastSummaryData = null;
 
 // ─── Init ──────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // 1. Auth gate — show login or app
+    await checkAuthAndRender();
+
     // Initialize i18n (auto-detect or load persisted locale)
     await initI18n();
 
     // Load saved settings
     const stored = await chrome.storage.local.get(['backendUrl', 'isCapturing']);
-    if (stored.backendUrl) {
-        backendUrl = stored.backendUrl;
-        backendUrlInput.value = backendUrl;
-    }
+    backendUrl = stored.backendUrl || 'wss://api.aurameet.live/ws';
+    backendUrlInput.value = backendUrl;
 
     // Sync language selectors with persisted values
     if (uiLanguageSelect) uiLanguageSelect.value = getLocale();
@@ -87,13 +91,75 @@ document.addEventListener('DOMContentLoaded', async () => {
     initTabs();
 });
 
+// ─── Auth Flow ─────────────────────────────────────────────────
+
+const loginScreen = document.getElementById('login-screen');
+const appScreen = document.getElementById('app-screen');
+const googleSigninBtn = document.getElementById('google-signin-btn');
+const userInfo = document.getElementById('user-info');
+const userAvatar = document.getElementById('user-avatar');
+const userName = document.getElementById('user-name');
+const signoutBtn = document.getElementById('signout-btn');
+
+/**
+ * Show login or main app based on current auth state.
+ */
+async function checkAuthAndRender() {
+    const user = await getUser();
+    if (!user) {
+        loginScreen.style.display = 'flex';
+        appScreen.style.display = 'none';
+        return;
+    }
+    showApp(user);
+}
+
+function showApp(user) {
+    loginScreen.style.display = 'none';
+    appScreen.style.display = 'block';
+    // Show user info in header
+    if (user?.avatar_url) {
+        userAvatar.src = user.avatar_url;
+        userAvatar.style.display = 'inline-block';
+    }
+    if (user?.name) {
+        userName.textContent = user.name.split(' ')[0];
+    }
+    userInfo.style.display = 'flex';
+}
+
+if (googleSigninBtn) {
+    googleSigninBtn.addEventListener('click', async () => {
+        googleSigninBtn.disabled = true;
+        googleSigninBtn.textContent = 'Signing in...';
+        try {
+            const { user } = await signIn();
+            showApp(user);
+        } catch (err) {
+            googleSigninBtn.disabled = false;
+            googleSigninBtn.innerHTML = `<span style="color:#EF4444">⚠️ ${err.message}</span>`;
+            setTimeout(() => {
+                googleSigninBtn.innerHTML = 'Continue with Google';
+                googleSigninBtn.disabled = false;
+            }, 3000);
+        }
+    });
+}
+
+if (signoutBtn) {
+    signoutBtn.addEventListener('click', async () => {
+        await signOut();
+        userInfo.style.display = 'none';
+        loginScreen.style.display = 'flex';
+        appScreen.style.display = 'none';
+    });
+}
+
 // ─── Dashboard Navigation ──────────────────
 
 if (dashboardBtn) {
     dashboardBtn.addEventListener('click', () => {
-        // Open the Aura Web Dashboard
-        // TODO: Make this URL configurable in settings or derive from backendUrl
-        chrome.tabs.create({ url: 'http://localhost:8000' });
+        chrome.tabs.create({ url: 'https://aurameet.live' });
     });
 }
 
@@ -322,33 +388,43 @@ function handleScreening(message) {
 
 // ─── Copilot Chat ──────────────────────────
 
+/** Currently active meeting ID (set after saving a meeting). */
+let activeMeetingId = null;
+
 /**
- * Send a copilot query to the backend.
+ * Send a copilot query — uses REST API (POST /api/meetings/:id/copilot).
  */
-function sendCopilotQuery() {
+async function sendCopilotQuery() {
     const question = chatInput.value.trim();
     if (!question || copilotWaiting) return;
 
-    // Remove welcome message
     const welcome = chatMessages.querySelector('.chat-welcome');
     if (welcome) welcome.remove();
 
-    // Add user bubble
     addChatBubble(question, 'user');
-
-    // Show typing indicator
     showTypingIndicator();
     copilotWaiting = true;
     chatSendBtn.disabled = true;
-
-    // Send to service worker → backend
-    chrome.runtime.sendMessage({
-        type: 'COPILOT_QUERY',
-        question,
-    });
-
     chatInput.value = '';
     chatInput.focus();
+
+    try {
+        const { apiFetch } = await import('../auth/auth.js');
+        const meetingId = activeMeetingId || 'live';
+        const data = await apiFetch(`/api/meetings/${meetingId}/copilot`, {
+            method: 'POST',
+            body: JSON.stringify({ question }),
+        });
+        removeTypingIndicator();
+        copilotWaiting = false;
+        chatSendBtn.disabled = false;
+        addChatBubble(data.answer || data.response || '', 'ai');
+    } catch (err) {
+        removeTypingIndicator();
+        copilotWaiting = false;
+        chatSendBtn.disabled = false;
+        addChatBubble('⚠️ ' + err.message, 'error');
+    }
 }
 
 /**
@@ -441,16 +517,34 @@ const generateSummaryBtn = document.getElementById('generate-summary-btn');
 const copySummaryBtn = document.getElementById('copy-summary-btn');
 
 /**
- * Request summary generation from backend.
+ * Request summary generation — uses REST API (POST /api/meetings/:id/summary).
  */
-function generateSummary() {
+async function generateSummary() {
+    if (!activeMeetingId) {
+        summaryEmpty.style.display = 'none';
+        summaryLoading.style.display = 'flex';
+        summaryContent.style.display = 'none';
+
+        try {
+            const { apiFetch } = await import('../auth/auth.js');
+            const data = await apiFetch(`/api/meetings/${activeMeetingId}/summary`, {
+                method: 'POST',
+            });
+            summaryLoading.style.display = 'none';
+            lastSummaryData = data.summary || data;
+            renderSummary(lastSummaryData);
+        } catch (err) {
+            summaryLoading.style.display = 'none';
+            summaryEmpty.style.display = 'flex';
+            summaryEmpty.querySelector('.summary-empty__text').innerHTML = `⚠️ ${err.message}`;
+        }
+        return;
+    }
+    // Fallback: ask via service worker (WS, legacy)
     summaryEmpty.style.display = 'none';
     summaryLoading.style.display = 'flex';
     summaryContent.style.display = 'none';
-
-    chrome.runtime.sendMessage({
-        type: 'GENERATE_SUMMARY',
-    });
+    chrome.runtime.sendMessage({ type: 'GENERATE_SUMMARY' });
 }
 
 /**
@@ -648,7 +742,7 @@ closeSettingsBtn.addEventListener('click', () => {
 });
 
 saveSettingsBtn.addEventListener('click', async () => {
-    backendUrl = backendUrlInput.value.trim() || 'ws://localhost:8000/ws';
+    backendUrl = backendUrlInput.value.trim() || 'wss://api.aurameet.live/ws';
     await chrome.storage.local.set({ backendUrl });
 
     // Save language selections

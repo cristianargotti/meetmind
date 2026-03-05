@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Aura Meet — AI Meeting Assistant",
   "description": "Capture tab audio from Google Meet, Zoom, and Teams. Get real-time AI insights powered by Aura.",
-  "version": "0.5.0",
+  "version": "1.0.0",
   "icons": {
     "16": "icons/icon-16.png",
     "48": "icons/icon-48.png",
@@ -24,12 +24,19 @@
     "offscreen",
     "storage",
     "activeTab",
-    "identity"
+    "identity",
+    "sidePanel",
+    "tabs"
   ],
+  "side_panel": {
+    "default_path": "sidepanel/sidepanel.html"
+  },
   "host_permissions": [
     "ws://localhost:8000/*",
     "wss://localhost:8000/*",
     "http://localhost:8000/*",
-    "https://*.aurameet.io/*"
+    "https://api.aurameet.live/*",
+    "wss://api.aurameet.live/*",
+    "https://aurameet.live/*"
   ]
 }

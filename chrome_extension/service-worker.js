@@ -192,7 +192,7 @@ async function handleStartCapture(backendUrl) {
     await chrome.runtime.sendMessage({
       type: 'OFFSCREEN_START',
       streamId,
-      backendUrl: backendUrl || 'ws://localhost:8000/ws',
+      backendUrl: backendUrl || 'wss://api.aurameet.live/ws',
     });
 
     isCapturing = true;
