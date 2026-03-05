@@ -202,8 +202,8 @@
                 "description": "Transcrição instantânea palavra por palavra enquanto você fala. Sem espera, sem buffer, sem atrasos."
             },
             {
-                "title": "Modelo Whisper Otimizado",
-                "description": "Usamos o Whisper da OpenAI otimizado para mobile. Precisão profissional com um modelo compacto que roda no seu dispositivo."
+                "title": "Motor Neural On-Device",
+                "description": "Nosso motor de reconhecimento de voz roda 100% no seu dispositivo usando o chip neural do iPhone. Sem servidores externos, sem latência de rede."
             },
             {
                 "title": "Dados Criptografados em Trânsito",

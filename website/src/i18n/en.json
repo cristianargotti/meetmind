@@ -202,8 +202,8 @@
                 "description": "Instant word-by-word transcription as you speak. No waiting, no buffering, no delays."
             },
             {
-                "title": "Optimized Whisper Model",
-                "description": "We use OpenAI's Whisper optimized for mobile. Professional accuracy with a compact model that runs on your device."
+                "title": "On-Device Neural Engine",
+                "description": "Our speech recognition engine runs 100% on your device using the iPhone's neural chip. No external servers, no network latency."
             },
             {
                 "title": "Encrypted Data in Transit",

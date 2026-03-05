@@ -202,8 +202,8 @@
                 "description": "Transcripción instantánea palabra por palabra mientras hablas. Sin esperas, sin buffer, sin delays."
             },
             {
-                "title": "Modelo Whisper Optimizado",
-                "description": "Usamos Whisper de OpenAI optimizado para móvil. Precisión profesional con un modelo compacto que corre en tu dispositivo."
+                "title": "Motor Neural On-Device",
+                "description": "Nuestro motor de reconocimiento de voz corre 100% en tu dispositivo usando el chip neural del iPhone. Sin servidores externos, sin latencia de red."
             },
             {
                 "title": "Datos Cifrados en Tránsito",
@@ -426,7 +426,11 @@
                 "tabLabel": "Standup de Equipo",
                 "title": "Daily Standup",
                 "description": "Captura el progreso de cada miembro, identifica bloqueos y genera los action items automáticamente al finalizar. Sin tomar notas.",
-                "benefits": ["Action items automáticos", "Quién dijo qué, en segundos", "Comparte el resumen con el equipo"],
+                "benefits": [
+                    "Action items automáticos",
+                    "Quién dijo qué, en segundos",
+                    "Comparte el resumen con el equipo"
+                ],
                 "mockTitle": "Standup Semanal",
                 "mockNotif": "3 action items detectados"
             },
@@ -434,7 +438,11 @@
                 "tabLabel": "Sprint Planning",
                 "title": "Sprint Planning",
                 "description": "Documenta decisiones técnicas, tickets priorizados y estimaciones. Obtén un resumen ejecutivo listo para Jira o Notion.",
-                "benefits": ["Decisiones trazables", "Resumen exportable", "Contexto para el equipo remoto"],
+                "benefits": [
+                    "Decisiones trazables",
+                    "Resumen exportable",
+                    "Contexto para el equipo remoto"
+                ],
                 "mockTitle": "Sprint Planning Q1",
                 "mockNotif": "Decisiones detectadas: 4"
             },
@@ -442,7 +450,11 @@
                 "tabLabel": "Calls con Clientes",
                 "title": "Llamadas de Negocio",
                 "description": "Enfócate en la conversación, no en apuntar. Aura captura compromisos, objeciones y acuerdos clave de tus llamadas comerciales.",
-                "benefits": ["Compromisos identificados", "Sin distracciones en la llamada", "Follow-up redactado por IA"],
+                "benefits": [
+                    "Compromisos identificados",
+                    "Sin distracciones en la llamada",
+                    "Follow-up redactado por IA"
+                ],
                 "mockTitle": "Call con Cliente",
                 "mockNotif": "Acuerdo detectado"
             },
@@ -450,7 +462,11 @@
                 "tabLabel": "Entrevistas",
                 "title": "Entrevistas de Trabajo",
                 "description": "Transcribe y analiza respuestas de candidatos. Identifica competencias clave y genera notas de evaluación estructuradas.",
-                "benefits": ["Análisis por competencias", "Notas objetivas sin sesgo", "Compara candidatos fácilmente"],
+                "benefits": [
+                    "Análisis por competencias",
+                    "Notas objetivas sin sesgo",
+                    "Compara candidatos fácilmente"
+                ],
                 "mockTitle": "Entrevista — Senior Dev",
                 "mockNotif": "Fortalezas destacadas: 3"
             },
@@ -458,7 +474,11 @@
                 "tabLabel": "Clases y Talleres",
                 "title": "Clases y Workshops",
                 "description": "Captura cada concepto, pregunta y conclusión de tus sesiones educativas. Obtén notas estructuradas al terminar la clase.",
-                "benefits": ["Conceptos clave resaltados", "Preguntas del grupo capturadas", "Repaso rápido post-sesión"],
+                "benefits": [
+                    "Conceptos clave resaltados",
+                    "Preguntas del grupo capturadas",
+                    "Repaso rápido post-sesión"
+                ],
                 "mockTitle": "Workshop de Diseño",
                 "mockNotif": "Conceptos clave: 8"
             }
